@@ -33,6 +33,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
         {user && (
           <div className="flex items-center space-x-4">
             <button
+              id="nav-scenarios-btn"
               onClick={() => onNavigate('tracks')}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                 currentView === 'tracks' || currentView === 'scenarios'
@@ -44,6 +45,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
             </button>
 
             <button
+              id="nav-progress-btn"
               onClick={() => onNavigate('progress')}
               className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                 currentView === 'progress'
@@ -56,6 +58,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
 
             {user.role === 'group_admin' || user.role === 'super_admin' ? (
               <button
+                id="nav-admin-btn"
                 onClick={() => onNavigate('admin')}
                 className={`flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition ${
                   currentView === 'admin'

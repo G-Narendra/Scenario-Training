@@ -97,14 +97,14 @@
 - [x] GATE 7: Dashboards show verified correct metrics against seeded test dataset
 
 ## Phase 8: Admin Console
-- [ ] 8.1 Cohort management: creation, 30-day window, passcode rotation, member view
-- [ ] 8.2 Scenario manager: form editor, YAML editor with live validation, preview
-- [ ] 8.3 Skill and rubric editor
-- [ ] 8.4 Prompt & feedback evaluator tuning
-- [ ] 8.5 Usage and cost tracking dashboard
-- [ ] 8.6 Audit log viewer
-- [ ] 8.7 Full admin lifecycle tests
-- [ ] GATE 8: Owner manages complete cohort lifecycle from UI without code changes
+- [x] 8.1 Cohort management: creation, 30-day window, passcode rotation, member view
+- [x] 8.2 Scenario manager: form editor, YAML editor with live validation, preview
+- [x] 8.3 Skill and rubric editor
+- [x] 8.4 Prompt & feedback evaluator tuning
+- [x] 8.5 Usage and cost tracking dashboard
+- [x] 8.6 Audit log viewer
+- [x] 8.7 Full admin lifecycle tests
+- [x] GATE 8: Owner manages complete cohort lifecycle from UI without code changes
 
 ## Phase 9: Security, Performance & Hardening
 - [ ] 9.1 STRIDE threat model in `docs/SECURITY.md`

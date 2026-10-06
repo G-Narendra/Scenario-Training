@@ -149,8 +149,8 @@ class ProgressService:
             key=lambda x: _ensure_utc(x.ended_at or x.started_at) or datetime.min.replace(tzinfo=timezone.utc),
         )
         for s in sorted_for_trend:
-            dt = _ensure_utc(s.ended_at or s.started_at)
-            date_str = dt.strftime("%Y-%m-%d") if dt else ""
+            trend_dt = _ensure_utc(s.ended_at or s.started_at)
+            date_str = trend_dt.strftime("%Y-%m-%d") if trend_dt else ""
             scen_title = s.scenario.title if s.scenario else "Scenario"
             trends.append(
                 ScoreTrendPoint(
@@ -335,9 +335,13 @@ class ProgressService:
                 round(sum(e.overall_score for e in m_evals) / len(m_evals), 1) if m_evals else None
             )
 
-            last_active = None
+            last_active: Optional[datetime] = None
             if m_sessions:
-                valid_starts = [_ensure_utc(s.started_at) for s in m_sessions if s.started_at is not None]
+                valid_starts: List[datetime] = [
+                    u_dt
+                    for s in m_sessions
+                    if (u_dt := _ensure_utc(s.started_at)) is not None
+                ]
                 if valid_starts:
                     last_active = max(valid_starts)
 

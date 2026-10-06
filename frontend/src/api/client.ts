@@ -1,4 +1,7 @@
 import {
+  AdminCohort,
+  AdminScenarioVersion,
+  AuditLogEntry,
   CohortProgress,
   FeedbackReport,
   ScenarioDetail,
@@ -6,6 +9,7 @@ import {
   SimulationSession,
   Track,
   TraineeProgress,
+  UsageSummary,
   User,
 } from '../types';
 
@@ -152,6 +156,143 @@ export const api = {
       throw new ApiError('Failed to export CSV', response.status);
     }
     return response.blob();
+  },
+
+  // Admin Cohorts
+  async listAdminCohorts(): Promise<AdminCohort[]> {
+    return request<AdminCohort[]>('/admin/cohorts');
+  },
+
+  async createCohort(payload: {
+    name: string;
+    description?: string;
+    duration_days?: number;
+    track_access?: string;
+    max_members?: number;
+    budget_cap_usd?: number;
+  }): Promise<AdminCohort> {
+    return request<AdminCohort>('/admin/cohorts', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async rotateCohortPasscode(
+    cohortId: string,
+    gracePeriodMinutes: number = 0
+  ): Promise<{
+    cohort_id: string;
+    new_passcode: string;
+    previous_passcode_valid_until?: string;
+  }> {
+    return request(`/admin/cohorts/${cohortId}/passcodes/rotate`, {
+      method: 'POST',
+      body: JSON.stringify({ grace_period_minutes: gracePeriodMinutes }),
+    });
+  },
+
+  async extendCohort(cohortId: string, days: number): Promise<AdminCohort> {
+    return request<AdminCohort>(`/admin/cohorts/${cohortId}/extend`, {
+      method: 'POST',
+      body: JSON.stringify({ additional_days: days }),
+    });
+  },
+
+  async revokeCohortSessions(cohortId: string): Promise<{ message: string }> {
+    return request(`/admin/cohorts/${cohortId}/revoke-sessions`, {
+      method: 'POST',
+    });
+  },
+
+  // Admin Scenarios Studio
+  async listAdminScenarios(): Promise<any[]> {
+    return request<any[]>('/admin/scenarios');
+  },
+
+  async getAdminScenarioDetail(id: string): Promise<any> {
+    return request<any>(`/admin/scenarios/${id}`);
+  },
+
+  async publishScenario(id: string): Promise<any> {
+    return request<any>(`/admin/scenarios/${id}/publish`, { method: 'POST' });
+  },
+
+  async archiveScenario(id: string): Promise<any> {
+    return request<any>(`/admin/scenarios/${id}/archive`, { method: 'POST' });
+  },
+
+  async duplicateScenario(id: string): Promise<any> {
+    return request<any>(`/admin/scenarios/${id}/duplicate`, { method: 'POST' });
+  },
+
+  async deleteScenario(id: string): Promise<any> {
+    return request<any>(`/admin/scenarios/${id}`, { method: 'DELETE' });
+  },
+
+  async validateScenarioYaml(
+    yamlContent: string
+  ): Promise<{ valid: boolean; errors: string[]; warnings: string[]; scenario_preview?: any }> {
+    const res = await fetch(`${API_BASE}/admin/scenarios/validate`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain',
+        ...getAuthHeader(),
+      },
+      body: yamlContent,
+    });
+    return res.json();
+  },
+
+  async importScenarioYaml(yamlContent: string): Promise<any> {
+    const res = await fetch(`${API_BASE}/admin/scenarios/import`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'text/plain',
+        ...getAuthHeader(),
+      },
+      body: yamlContent,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new ApiError(err.detail || 'Import failed', res.status);
+    }
+    return res.json();
+  },
+
+  async generateAiScenarioDraft(payload: {
+    prompt: string;
+    track_key?: string;
+    difficulty?: number;
+  }): Promise<any> {
+    return request('/admin/scenarios/ai-draft', {
+      method: 'POST',
+      body: JSON.stringify(payload),
+    });
+  },
+
+  async getScenarioVersions(id: string): Promise<AdminScenarioVersion[]> {
+    return request<AdminScenarioVersion[]>(`/admin/scenarios/${id}/versions`);
+  },
+
+  async restoreScenarioVersion(id: string, version: number): Promise<any> {
+    return request(`/admin/scenarios/${id}/versions/${version}/restore`, {
+      method: 'POST',
+    });
+  },
+
+  // Admin Analytics & Observability
+  async getAdminAuditLogs(
+    action?: string,
+    limit: number = 50
+  ): Promise<{ items: AuditLogEntry[]; total: number }> {
+    const qs = action
+      ? `?action=${encodeURIComponent(action)}&limit=${limit}`
+      : `?limit=${limit}`;
+    return request(`/admin/audit-logs${qs}`);
+  },
+
+  async getAdminUsage(): Promise<UsageSummary> {
+    return request<UsageSummary>('/admin/usage');
   },
 
   // Streaming message exchange via SSE

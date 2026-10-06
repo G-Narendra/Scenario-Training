@@ -9,6 +9,7 @@ import { FeedbackReportPage } from './pages/FeedbackReportPage';
 import { api } from './api/client';
 import { SimulationSession } from './types';
 import { ProgressPage } from './pages/ProgressPage';
+import { AdminConsolePage } from './pages/AdminConsolePage';
 
 const AppContent: React.FC = () => {
   const { isAuthenticated, loading } = useAuth();
@@ -103,18 +104,7 @@ const AppContent: React.FC = () => {
         )}
 
         {currentView === 'admin' && (
-          <div className="mx-auto max-w-5xl py-16 px-4 text-center">
-            <h2 className="text-3xl font-bold text-white">Admin Management Console</h2>
-            <p className="mt-3 text-slate-400">
-              Cohort and scenario content management console configured.
-            </p>
-            <button
-              onClick={() => setCurrentView('tracks')}
-              className="mt-6 rounded-xl bg-slate-800 px-6 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-700 transition"
-            >
-              Return to Flight Deck
-            </button>
-          </div>
+          <AdminConsolePage />
         )}
       </main>
     </div>

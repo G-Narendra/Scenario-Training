@@ -198,3 +198,50 @@ export interface CohortProgress {
   members: CohortMemberProgress[];
 }
 
+export interface AdminCohort {
+  id: string;
+  name: string;
+  description?: string;
+  starts_at: string;
+  expires_at: string;
+  is_active: boolean;
+  max_members: number;
+  budget_cap_usd: number;
+  track_access: string[];
+  initial_passcode?: string;
+}
+
+export interface AdminScenarioVersion {
+  id: string;
+  scenario_id: string;
+  version: number;
+  snapshot: any;
+  changed_by?: string;
+  change_note?: string;
+  created_at: string;
+}
+
+export interface AuditLogEntry {
+  id: string;
+  actor_id?: string;
+  action: string;
+  entity: string;
+  entity_id?: string;
+  details: Record<string, any>;
+  ip?: string;
+  created_at: string;
+}
+
+export interface UsageSummary {
+  total_tokens: number;
+  total_audio_seconds: number;
+  total_cost_usd: number;
+  breakdown_by_type: Array<{
+    type: string;
+    total_units: number;
+    total_cost_usd: number;
+  }>;
+  recent_events_count: number;
+}
+
+

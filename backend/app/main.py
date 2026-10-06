@@ -10,6 +10,7 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
+from backend.app.api.admin_analytics import router as admin_analytics_router
 from backend.app.api.admin_cohorts import router as admin_cohorts_router
 from backend.app.api.admin_scenarios import router as admin_scenarios_router
 from backend.app.api.auth import router as auth_router
@@ -54,6 +55,7 @@ app.include_router(admin_scenarios_router)
 app.include_router(sessions_router)
 app.include_router(voice_router)
 app.include_router(progress_router)
+app.include_router(admin_analytics_router)
 
 
 @app.middleware("http")

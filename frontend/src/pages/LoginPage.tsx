@@ -10,10 +10,11 @@ export const LoginPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formatPasscode = (val: string) => {
-    // Strip non-alphanumeric, uppercase, group into XXXX-XXXX
-    const clean = val.replace(/[^a-zA-Z0-9]/g, '').toUpperCase().slice(0, 8);
-    if (clean.length > 4) {
-      return `${clean.slice(0, 4)}-${clean.slice(4)}`;
+    // Keep uppercase alphanumeric and hyphens, up to 20 chars
+    const clean = val.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase().slice(0, 20);
+    // If user entered raw 8-character code without hyphen, format as XXXX-XXXX
+    if (!clean.includes('-') && clean.length > 4) {
+      return `${clean.slice(0, 4)}-${clean.slice(4, 8)}`;
     }
     return clean;
   };
@@ -26,8 +27,8 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setError(null);
 
-    if (!passcode || passcode.length < 8) {
-      setError('Please provide a valid 8-character cohort passcode (e.g. K7QM-4PXD).');
+    if (!passcode || passcode.trim().length < 4) {
+      setError('Please provide a valid cohort passcode (e.g. DEMO-PASS or K7QM-4PXD).');
       return;
     }
 

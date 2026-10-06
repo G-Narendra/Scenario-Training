@@ -175,4 +175,32 @@
   - Playwright E2E browser tests: Both `simulation_flow.spec.ts` (with Progress page verification) and `voice_flow.spec.ts` passed (100% green).
 - **Result**: GATE 7 PASSED
 
+## 2026-10-06 - Phase 8: Admin Console, Scenario Studio & Usage Telemetry
+- **Role**: Backend Engineer / Frontend Engineer / Solution Architect / Security / QA Engineer
+- **Changes**:
+  - Implemented admin analytics & audit log schemas in `backend/app/schemas/admin_analytics.py`: `UsageSummary`, `CostBreakdown`, `AuditLogEntry`, `AuditLogListResponse`.
+  - Created admin analytics endpoints in `backend/app/api/admin_analytics.py`:
+    - `GET /api/admin/usage`: comprehensive billing telemetry, token usage, audio duration, estimated USD spend, and granular type breakdown.
+    - `GET /api/admin/audit-logs`: system-wide governance audit trail with timestamp, action, actor, entity, IP, and details with optional action filtering.
+  - Mounted admin analytics router in `backend/app/main.py`.
+  - Added auto-assignment of `group_admin` role in `access_service.py:authenticate_passcode` when logging in with admin passcode (`ADMIN-PASS`).
+  - Added `ADMIN-PASS` passcode in `scripts/seed.py` for administrator access.
+  - Built full `AdminConsolePage.tsx` with:
+    - Tab 1: Cohort Management (creation with 30-day window, passcode rotation with grace period, duration extensions, session revocation, member caps, spend caps).
+    - Tab 2: Scenario Studio & Content Manager (table of scenarios, version history modal, version snapshot restore, draft publishing/archiving/duplication/deletion, live YAML editor with schema validation, AI scenario generator).
+    - Tab 3: Usage & Costs (KPI metrics for total tokens, voice duration, estimated spend, event counts, breakdown by model/audio).
+    - Tab 4: System Audit & Compliance Log (filterable table by action with timestamps, actor IDs, entities, IPs, and details).
+  - Added Admin navigation button and role pill in `Navbar.tsx` for admin roles, with seamless view routing in `App.tsx`.
+  - Extended frontend API client in `frontend/src/api/client.ts` with all admin methods (`listAdminCohorts`, `createCohort`, `rotateCohortPasscode`, `extendCohort`, `revokeCohortSessions`, `listAdminScenarios`, `publishScenario`, `archiveScenario`, `duplicateScenario`, `deleteScenario`, `validateScenarioYaml`, `importScenarioYaml`, `generateAiScenarioDraft`, `getScenarioVersions`, `restoreScenarioVersion`, `getAdminAuditLogs`, `getAdminUsage`).
+  - Authored Playwright E2E admin test suite in `frontend/tests/admin_flow.spec.ts` testing admin login with `ADMIN-PASS`, cohort creation, scenario YAML schema validation, Usage & Costs tab, and Audit Logs tab.
+- **Tests Run**:
+  - Backend integration tests in `backend/tests/integration/test_admin_analytics.py` (usage summary, audit logs with action filter, trainee 403 Forbidden checks).
+  - All 87 unit and integration tests passing (2 live provider tests skipped).
+  - Total backend code coverage: **87%** across 2549 statements.
+  - Ruff linter: 0 errors across entire workspace.
+  - Mypy type checker: Success (0 issues in 52 source files).
+  - Frontend production build: `npm run build` completed with zero TypeScript errors.
+  - Playwright E2E browser test suite: All 3 tests passed (`admin_flow.spec.ts`, `simulation_flow.spec.ts`, `voice_flow.spec.ts`) in 21.9s.
+- **Result**: GATE 8 PASSED
+
 

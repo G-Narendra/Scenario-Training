@@ -277,10 +277,18 @@ class AccessService:
         user = (await db.execute(user_stmt)).scalar_one_or_none()
 
         if not user:
+            role = (
+                "group_admin"
+                if (
+                    "admin" in (matched_passcode.label or "").lower()
+                    or "admin" in clean_code.lower()
+                )
+                else "trainee"
+            )
             user = User(
                 cohort_id=matched_cohort.id,
                 display_name=display_name,
-                role="trainee",
+                role=role,
                 is_active=True,
                 last_login_at=now,
             )

@@ -41,11 +41,34 @@ async def seed_demo_cohort(db):
             valid_until=now + timedelta(days=30),
             max_uses=1000,
         )
-        db.add(passcode)
+        admin_passcode = Passcode(
+            cohort_id=cohort.id,
+            code_hash=hash_passcode("ADMIN-PASS"),
+            label="Administrator Passcode",
+            valid_from=now,
+            valid_until=now + timedelta(days=30),
+            max_uses=1000,
+        )
+        db.add_all([passcode, admin_passcode])
         await db.commit()
-        print("Demo cohort and DEMO-PASS passcode seeded successfully.")
+        print("Demo cohort, DEMO-PASS, and ADMIN-PASS seeded successfully.")
     else:
-        print("Demo cohort already exists.")
+        # Check if ADMIN-PASS exists
+        stmt_admin = select(Passcode).where(Passcode.cohort_id == cohort.id, Passcode.label == "Administrator Passcode")
+        admin_code = (await db.execute(stmt_admin)).scalar_one_or_none()
+        if not admin_code:
+            admin_code = Passcode(
+                cohort_id=cohort.id,
+                code_hash=hash_passcode("ADMIN-PASS"),
+                label="Administrator Passcode",
+                valid_from=now,
+                valid_until=now + timedelta(days=30),
+                max_uses=1000,
+            )
+            db.add(admin_code)
+            await db.commit()
+            print("Added ADMIN-PASS to existing demo cohort.")
+        print("Demo cohort verified.")
 
 
 async def seed_skills(db):
