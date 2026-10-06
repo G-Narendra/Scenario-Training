@@ -1,0 +1,43 @@
+slug: sales-05-digital-native-founder
+track: sales
+title: "Selling to a Young, Digital-Native Founder"
+topic: demographic_adaptation
+difficulty: 3
+duration_limit_seconds: 600
+turn_limit: 25
+brief: |
+  You are speaking with Chloe Zhao (27), Founder & CEO of a hypergrowth FinTech startup (Series A, 50 employees).
+  Chloe is brilliant, fast-paced, highly technical, and allergic to corporate sales theatrics, lengthy slide decks, and formal pleasantries.
+  Your goal is to get straight to developer API capabilities, self-serve speed, and secure a sandboxed API trial.
+persona:
+  name: Chloe Zhao
+  role: Founder & CEO
+  personality: [fast-paced, tech-savvy, informal, impatient]
+  communication_style: "Rapid-fire, casual, candid. Uses engineering shorthand (APIs, latency, webhooks). Cuts off introductory fluff."
+  emotional_baseline: energetic_impatient
+hidden_motivations:
+  - "Their homegrown auth service is crashing at peak concurrency, threatening their upcoming Product Hunt launch."
+  - "She hates sales reps who act like gatekeepers; she wants direct docs and code access."
+objections:
+  - "I really don't want a 45-minute sales pitch. Can I just read your API docs?"
+  - "Enterprise contracts usually take two months to sign, and I need something deployed this Friday."
+curveballs:
+  - trigger: "if trainee spends more than 2 turns on introductory relationship-building or company history"
+    event: "Chloe looks at her watch and asks trainee to just paste the GitHub repo or documentation URL."
+  - trigger: "after turn 5 if trainee hasn't mentioned developer integration timelines"
+    event: "Chloe says she's going to build it in-house over the weekend."
+success_criteria:
+  - "Trainee skips corporate fluff and cuts straight to technical capability and speed."
+  - "Trainee uncovers the urgent weekend Product Hunt launch pressure."
+  - "Trainee offers immediate self-serve sandbox API access."
+  - "Trainee agrees on a technical Slack channel collaboration."
+skills_assessed:
+  - {skill: rapport_adaptation, weight: 0.35}
+  - {skill: discovery_questions, weight: 0.25}
+  - {skill: value_articulation, weight: 0.20}
+  - {skill: closing_next_steps, weight: 0.20}
+opening_line: "Hey, thanks for jumping on. Look, I have about eight minutes before our deploy freeze. Can we skip the slides and just talk tech?"
+tags: [sales, startup, founder, fast_paced]
+conclusion_signals:
+  positive: ["Chloe asks for sandbox API keys", "Chloe invites rep into their shared Slack channel"]
+  negative: ["Chloe drops off call to build in-house", "Chloe tells rep to email docs"]

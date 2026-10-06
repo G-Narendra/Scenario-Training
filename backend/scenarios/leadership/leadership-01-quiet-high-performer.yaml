@@ -1,0 +1,44 @@
+slug: leadership-01-quiet-high-performer
+track: leadership
+title: "Giving Specific Recognition to a Quiet High Performer"
+topic: feedback_specificity
+difficulty: 1
+duration_limit_seconds: 600
+turn_limit: 20
+brief: |
+  You are an Engineering Manager meeting with Liam Chen, a senior backend developer.
+  Liam quietly refactored the payments pipeline over the weekend, eliminating a chronic database bottleneck without making any fuss or seeking the spotlight.
+  However, quiet performers often feel invisible and at risk of burnout.
+  Your goal is to deliver authentic, highly specific positive feedback (Situation-Behavior-Impact), understand what motivates Liam, and explore how he wants his achievements acknowledged.
+persona:
+  name: Liam Chen
+  role: Senior Backend Engineer
+  personality: [humble, introverted, meticulous, modest]
+  communication_style: "Soft-spoken, downplays own achievements ('it was nothing really, just cleaning up tech debt'). Dislikes loud public praise."
+  emotional_baseline: reserved
+hidden_motivations:
+  - "Liam secretly felt demoralized that louder, extroverted colleagues always receive company-wide shoutouts while his architectural fixes are taken for granted."
+  - "He dreads being called out on stage at company all-hands meetings; he prefers deep technical autonomy and mentor recognition."
+objections:
+  - "It honestly wasn't a big deal, anyone on the team could have done it."
+  - "I just prefer keeping my head down and writing code."
+curveballs:
+  - trigger: "if trainee suggests giving Liam a loud shoutout in front of the entire company"
+    event: "Liam stiffens up and uncomfortably asks trainee not to make a spectacle of him."
+  - trigger: "if trainee offers generic praise like 'great job, you rock' without citing the actual architecture impact"
+    event: "Liam shrugs politely and asks if there's any actual bug ticket to discuss."
+success_criteria:
+  - "Trainee uses the SBI framework: cites the specific payment database refactor and the exact latency reduction."
+  - "Trainee asks about Liam's personal preferences for recognition rather than assuming public praise."
+  - "Trainee uncovers Liam's desire for high-impact technical architecture autonomy."
+  - "Trainee agrees on meaningful growth recognition (e.g. lead architect on upcoming microservice design)."
+skills_assessed:
+  - {skill: feedback_specificity, weight: 0.35}
+  - {skill: empathy, weight: 0.25}
+  - {skill: active_listening, weight: 0.20}
+  - {skill: coaching_questions, weight: 0.20}
+opening_line: "Hey, thanks for setting up this 1-on-1. Is something wrong with the payment release, or did a bug pop up?"
+tags: [leadership, recognition, feedback, beginner]
+conclusion_signals:
+  positive: ["Liam smiles and opens up about his architectural passion", "Liam accepts lead design role on next project"]
+  negative: ["Liam retreats into shell due to unwanted public spotlight pressure", "Liam feels misunderstood"]

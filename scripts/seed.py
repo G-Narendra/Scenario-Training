@@ -1,0 +1,87 @@
+import asyncio
+import os
+import sys
+import glob
+import yaml
+
+# Ensure project root is in sys.path
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from sqlalchemy import select
+
+from backend.app.db.session import async_session_factory
+from backend.app.db.models import Track, Skill, Scenario
+from backend.app.services.scenario_service import ScenarioService
+from backend.app.schemas.scenarios import ScenarioConfigSchema
+
+
+async def seed_skills(db):
+    skills_path = os.path.join(os.path.dirname(__file__), "..", "backend", "scenarios", "skills.yaml")
+    if not os.path.exists(skills_path):
+        print(f"Skills file not found at {skills_path}")
+        return
+
+    with open(skills_path, "r", encoding="utf-8") as f:
+        data = yaml.safe_load(f)
+
+    for track_key, skills_map in data.items():
+        track = await ScenarioService.get_or_create_track(db, track_key)
+        for s_key, s_data in skills_map.items():
+            stmt = select(Skill).where(Skill.track_id == track.id, Skill.key == s_key)
+            existing = (await db.execute(stmt)).scalar_one_or_none()
+            if not existing:
+                skill = Skill(
+                    track_id=track.id,
+                    key=s_key,
+                    name=s_data["name"],
+                    description=s_data.get("description"),
+                    rubric=s_data["rubric"]
+                )
+                db.add(skill)
+            else:
+                existing.name = s_data["name"]
+                existing.description = s_data.get("description")
+                existing.rubric = s_data["rubric"]
+    await db.commit()
+    print("Skills seeded successfully.")
+
+
+async def seed_scenarios(db):
+    base_dir = os.path.join(os.path.dirname(__file__), "..", "backend", "scenarios")
+    pattern = os.path.join(base_dir, "**", "*.yaml")
+    yaml_files = glob.glob(pattern, recursive=True)
+
+    loaded_count = 0
+    for path in yaml_files:
+        if path.endswith("skills.yaml"):
+            continue
+
+        with open(path, "r", encoding="utf-8") as f:
+            content = f.read()
+
+        try:
+            config = ScenarioService.parse_and_validate_yaml(content)
+            await ScenarioService.save_scenario_from_config(
+                db=db,
+                config=config,
+                status_val="published",
+                change_note="Initial Seed"
+            )
+            loaded_count += 1
+            print(f"Loaded scenario: {config.slug} ({config.title})")
+        except Exception as e:
+            print(f"Failed to load scenario {path}: {e}")
+
+    print(f"Seeded {loaded_count} scenarios successfully.")
+
+
+async def main():
+    print("=== Starting Database Seeding ===")
+    async with async_session_factory() as db:
+        await seed_skills(db)
+        await seed_scenarios(db)
+    print("=== Seeding Finished ===")
+
+
+if __name__ == "__main__":
+    asyncio.run(main())

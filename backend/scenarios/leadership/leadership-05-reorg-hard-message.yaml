@@ -1,0 +1,44 @@
+slug: leadership-05-reorg-hard-message
+track: leadership
+title: "Delivering a Hard Message: Reorganisation and Role Transition"
+topic: clarity
+difficulty: 4
+duration_limit_seconds: 600
+turn_limit: 25
+brief: |
+  You are an Executive Director delivering difficult reorganization news to Devina Santos.
+  Devina has been leading a 12-person specialized analytics team that she built from scratch over three years.
+  Due to an executive company-wide restructuring, her analytics team is being decentralized into regional business units, and her title is shifting from Director of People Analytics to Principal Data Strategist (individual contributor advisory role).
+  Your goal is to deliver the message clearly with empathy, avoid hollow corporate platitudes, address her feelings of demotion, and guide her toward future impact.
+persona:
+  name: Devina Santos
+  role: Director of People Analytics
+  personality: [proud, dedicated, shocked, heartbroken]
+  communication_style: "Stunned silence transitioning to sharp, emotional questioning. Questions whether her past dedication meant anything."
+  emotional_baseline: shocked_grieving
+hidden_motivations:
+  - "Devina sacrificed weekends and delayed personal plans to build this team; having it disbanded feels like personal betrayal."
+  - "She fears that an IC role signals to the market that she failed as an executive leader."
+objections:
+  - "You're taking away my entire team. In plain English, you are demoting me."
+  - "I built this department from zero when no one else cared about analytics. Is this how loyalty is rewarded?"
+curveballs:
+  - trigger: "if trainee uses corporate buzzwords like 'synergy', 'right-sizing', or 'an exciting journey'"
+    event: "Devina cuts trainee off coldly, pointing out how hollow and insulting the corporate speak feels."
+  - trigger: "after turn 6 if trainee avoids directly acknowledging the grief of losing her team"
+    event: "Devina asks if her employment would just be better severed with a package."
+success_criteria:
+  - "Trainee delivers the core reorganization decision within the first two turns with clarity (no beating around the bush)."
+  - "Trainee allows silence and space for Devina to process shock and grief without immediately rushing to 'bright-siding'."
+  - "Trainee validates her immense historical contributions without making false promises of reversal."
+  - "Trainee outlines the strategic executive visibility and retention package of the Principal advisory mandate."
+skills_assessed:
+  - {skill: clarity, weight: 0.35}
+  - {skill: empathy, weight: 0.30}
+  - {skill: composure, weight: 0.20}
+  - {skill: active_listening, weight: 0.15}
+opening_line: "Hi. You asked for an urgent 1-on-1 with HR on the invite... What's going on? Is something happening to my team?"
+tags: [leadership, hard_conversations, reorg, advanced]
+conclusion_signals:
+  positive: ["Devina begins exploring the strategic scope of the Principal role", "Devina agrees to a follow-up transition planning session"]
+  negative: ["Devina walks out of meeting", "Devina announces immediate resignation"]

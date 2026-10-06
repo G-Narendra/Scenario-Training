@@ -1,7 +1,18 @@
 import pytest
 from sqlalchemy import delete
 
-from backend.app.db.models import AuditLog, AuthSession, Cohort, LoginAttempt, Passcode, User
+from backend.app.db.models import (
+    AuditLog,
+    AuthSession,
+    Cohort,
+    LoginAttempt,
+    Passcode,
+    Scenario,
+    ScenarioVersion,
+    Skill,
+    Track,
+    User,
+)
 from backend.app.db.session import async_session_factory
 
 
@@ -9,6 +20,10 @@ from backend.app.db.session import async_session_factory
 async def clean_test_database():
     """Ensure clean database state before each test run."""
     async with async_session_factory() as db:
+        await db.execute(delete(ScenarioVersion))
+        await db.execute(delete(Scenario))
+        await db.execute(delete(Skill))
+        await db.execute(delete(Track))
         await db.execute(delete(LoginAttempt))
         await db.execute(delete(AuthSession))
         await db.execute(delete(User))
@@ -17,3 +32,4 @@ async def clean_test_database():
         await db.execute(delete(AuditLog))
         await db.commit()
     yield
+

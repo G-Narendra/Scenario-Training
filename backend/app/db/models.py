@@ -120,3 +120,89 @@ class LoginAttempt(Base, TimestampMixin):
         DateTime(timezone=True), default=utc_now, nullable=False
     )
     success: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+
+
+class Track(Base, TimestampMixin):
+    __tablename__ = "tracks"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    key: Mapped[str] = mapped_column(
+        String(50), nullable=False, unique=True, index=True
+    )  # sales, leadership
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+
+    skills: Mapped[List["Skill"]] = relationship(
+        "Skill", back_populates="track", cascade="all, delete-orphan"
+    )
+    scenarios: Mapped[List["Scenario"]] = relationship(
+        "Scenario", back_populates="track", cascade="all, delete-orphan"
+    )
+
+
+class Skill(Base, TimestampMixin):
+    __tablename__ = "skills"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    track_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("tracks.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    key: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    name: Mapped[str] = mapped_column(String(100), nullable=False)
+    description: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    rubric: Mapped[Dict[str, Any]] = mapped_column(
+        JSON, default=dict, nullable=False
+    )  # 1 to 5 levels
+
+    track: Mapped["Track"] = relationship("Track", back_populates="skills")
+
+
+class Scenario(Base, TimestampMixin):
+    __tablename__ = "scenarios"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    track_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("tracks.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    slug: Mapped[str] = mapped_column(String(100), nullable=False, unique=True, index=True)
+    title: Mapped[str] = mapped_column(String(255), nullable=False)
+    status: Mapped[str] = mapped_column(
+        String(50), default="draft", nullable=False, index=True
+    )  # draft, published, archived
+    difficulty: Mapped[int] = mapped_column(Integer, default=3, nullable=False)  # 1 to 5
+    topic: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    duration_limit_seconds: Mapped[int] = mapped_column(Integer, default=600, nullable=False)
+    turn_limit: Mapped[int] = mapped_column(Integer, default=30, nullable=False)
+    brief: Mapped[str] = mapped_column(Text, nullable=False)
+    persona: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
+    hidden_motivations: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=False)
+    objections: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=False)
+    curveballs: Mapped[List[Dict[str, Any]]] = mapped_column(JSON, default=list, nullable=False)
+    success_criteria: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=False)
+    skills_assessed: Mapped[List[Dict[str, Any]]] = mapped_column(
+        JSON, default=list, nullable=False
+    )
+    opening_line: Mapped[str] = mapped_column(Text, nullable=False)
+    tags: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=False)
+    conclusion_signals: Mapped[Dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+
+    track: Mapped["Track"] = relationship("Track", back_populates="scenarios")
+    versions: Mapped[List["ScenarioVersion"]] = relationship(
+        "ScenarioVersion", back_populates="scenario", cascade="all, delete-orphan"
+    )
+
+
+class ScenarioVersion(Base, TimestampMixin):
+    __tablename__ = "scenario_versions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    scenario_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("scenarios.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    version: Mapped[int] = mapped_column(Integer, nullable=False)
+    snapshot: Mapped[Dict[str, Any]] = mapped_column(JSON, nullable=False)
+    changed_by: Mapped[Optional[str]] = mapped_column(String(36), nullable=True)
+    change_note: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+
+    scenario: Mapped["Scenario"] = relationship("Scenario", back_populates="versions")

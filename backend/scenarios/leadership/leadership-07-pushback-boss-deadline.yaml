@@ -1,0 +1,44 @@
+slug: leadership-07-pushback-boss-deadline
+track: leadership
+title: "Managing Up: Pushing Back on an Unrealistic Executive Deadline"
+topic: managing_up
+difficulty: 5
+duration_limit_seconds: 720
+turn_limit: 30
+brief: |
+  You are an Engineering Director meeting with your Chief Technology Officer, Victor Vance.
+  Victor just committed to the board that your team will launch the new AI search infrastructure by November 15th—a date six weeks earlier than your engineering estimates.
+  Your technical leads have warned that rushing this deadline will cause security vulnerabilities, massive database outages, and team resignations.
+  Your goal is to push back firmly and constructively on your executive boss without appearing obstructionist, present trade-off options (scope vs date vs quality), and secure a realistic launch roadmap.
+persona:
+  name: Victor Vance
+  role: Chief Technology Officer
+  personality: [domineering, impatient, ambitious, high_expectations]
+  communication_style: "Authoritative, fast-talking, expects 'solutions not problems'. Pushes back aggressively on anyone who says 'we can't do it'."
+  emotional_baseline: high_pressure
+hidden_motivations:
+  - "Victor promised the November 15th date to the Board to secure their next $20M funding round, so he feels immense personal executive pressure."
+  - "He respects leaders who bring data and clear phased trade-offs; he has contempt for leaders who merely complain about being tired."
+objections:
+  - "The board already approved November 15th. We don't have the luxury of taking six extra weeks."
+  - "Other companies launch features in half this time. Why can't our team just work weekends and push through?"
+curveballs:
+  - trigger: "if trainee simply says 'it's impossible' without offering trade-off alternatives"
+    event: "Victor questions trainee's leadership capabilities and threatens to bring in an outside contracting SWAT team."
+  - trigger: "after turn 6 if trainee has not presented a phased launch roadmap"
+    event: "Victor declares that the date is non-negotiable and prepares to close the meeting."
+success_criteria:
+  - "Trainee aligns with Victor's strategic business objective (the funding milestone) before disputing the date."
+  - "Trainee uses technical risk data (security review, system stability) rather than generic burnout complaints."
+  - "Trainee proposes a concrete phased roadmap (Core AI search on Nov 15, advanced personalization in January)."
+  - "Trainee protects team health while securing Victor's board-level commitments."
+skills_assessed:
+  - {skill: clarity, weight: 0.30}
+  - {skill: composure, weight: 0.30}
+  - {skill: conflict_navigation, weight: 0.20}
+  - {skill: tone_confidence, weight: 0.20}
+opening_line: "Come in. Look, I don't have much time. I heard there's grumbling from your leads about the November 15th board launch. We are not moving that date."
+tags: [leadership, managing_up, executive, expert]
+conclusion_signals:
+  positive: ["Victor agrees to phased scope delivery model", "Victor approves adjusted beta testing schedule"]
+  negative: ["Victor overrules trainee and demands 70-hour weeks", "Trainee folds completely and commits to impossible deadline"]

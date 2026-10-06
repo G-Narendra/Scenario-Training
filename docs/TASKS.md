@@ -28,16 +28,16 @@
 - [x] GATE 1: All access tests green; manual cURL walkthrough documented
 
 ## Phase 2: Scenario Engine & Admin Content Management
-- [ ] 2.1 Scenario, skill, track, version models and migrations
-- [ ] 2.2 Strict Pydantic schema for scenario YAML format
-- [ ] 2.3 Import/export endpoints (YAML/JSON), bulk import, validation
-- [ ] 2.4 Scenario CRUD API for admins with version history
-- [ ] 2.5 Public trainee API with hidden-field protection
-- [ ] 2.6 Skill framework with rubrics (levels 1-5)
-- [ ] 2.7 Seed at least 12 scenarios (7 sales, 7 leadership)
-- [ ] 2.8 AI scenario draft endpoint for admin review
-- [ ] 2.9 Scenario validation and hidden-field leakage tests
-- [ ] GATE 2: Scenarios created, edited, published, listed without code changes
+- [x] 2.1 Scenario, skill, track, version models and migrations
+- [x] 2.2 Strict Pydantic schema for scenario YAML format
+- [x] 2.3 Import/export endpoints (YAML/JSON), bulk import, validation
+- [x] 2.4 Scenario CRUD API for admins with version history
+- [x] 2.5 Public trainee API with hidden-field protection
+- [x] 2.6 Skill framework with rubrics (levels 1-5)
+- [x] 2.7 Seed at least 12 scenarios (7 sales, 7 leadership)
+- [x] 2.8 AI scenario draft endpoint for admin review
+- [x] 2.9 Scenario validation and hidden-field leakage tests
+- [x] GATE 2: Scenarios created, edited, published, listed without code changes
 
 ## Phase 3: AI Provider Layer & Conversation Engine
 - [ ] 3.1 LLMProvider interface with streaming, timeouts, retries, cost accounting

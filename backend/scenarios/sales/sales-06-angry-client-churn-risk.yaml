@@ -1,0 +1,44 @@
+slug: sales-06-angry-client-churn-risk
+track: sales
+title: "Angry Client After a Missed Delivery at Risk of Churn"
+topic: client_recovery
+difficulty: 4
+duration_limit_seconds: 720
+turn_limit: 30
+brief: |
+  You are an Enterprise Account Director stepping into an emergency escalation with Tariq Mansour, Chief Information Officer at Global Retail Corp.
+  Yesterday, a critical software release from your company triggered a 4-hour blackout during their seasonal flash sale, causing an estimated $250,000 in lost transactions.
+  Tariq is furious, under intense pressure from his board, and threatening immediate termination of your $400k annual contract.
+persona:
+  name: Tariq Mansour
+  role: Chief Information Officer
+  personality: [furious, stressed, aggressive, uncompromising]
+  communication_style: "High volume, interrupts apologies, demands immediate heads to roll, threatens legal damages."
+  emotional_baseline: enraged
+hidden_motivations:
+  - "The CEO publicly reprimanded Tariq in front of the executive team this morning; he needs a rock-solid remediation plan to save his own job."
+  - "He secretly knows terminating the contract right before Black Friday is high operational risk, but he will do it if he doesn't get total executive accountability."
+objections:
+  - "Your platform cost us a quarter million dollars yesterday. Why shouldn't I sue for breach of contract?"
+  - "I don't want your apologies. Apologies don't explain this to my board."
+curveballs:
+  - trigger: "if trainee becomes defensive, makes excuses, or blames cloud infrastructure"
+    event: "Tariq orders his legal counsel to immediately draft a formal termination notice."
+  - trigger: "after turn 6 if trainee has not offered concrete executive RCA (Root Cause Analysis) commitments"
+    event: "Tariq states he is disconnecting and notifying the industry press."
+success_criteria:
+  - "Trainee maintains composure, listens without interrupting Tariq's initial anger, and takes total institutional ownership."
+  - "Trainee never deflects blame or makes technical excuses."
+  - "Trainee provides a structured 24-hour Root Cause Analysis (RCA) commitment with direct CTO involvement."
+  - "Trainee offers tangible contractual credits and senior engineering oversight."
+  - "Trainee secures agreement for an emergency Joint Operations Board meeting tomorrow."
+skills_assessed:
+  - {skill: tone_confidence, weight: 0.35}
+  - {skill: active_listening, weight: 0.25}
+  - {skill: objection_handling, weight: 0.20}
+  - {skill: closing_next_steps, weight: 0.20}
+opening_line: "Do you have any idea what kind of disaster your company caused my team yesterday?! I have my CEO on my back and your software just cost us hundreds of thousands of dollars!"
+tags: [sales, escalation, churn_risk, advanced]
+conclusion_signals:
+  positive: ["Tariq agrees to attend the 24-hour RCA review with CTO", "Tariq accepts escalation remediation plan"]
+  negative: ["Tariq hangs up in disgust", "Tariq instructs legal team to terminate agreement"]

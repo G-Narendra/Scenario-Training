@@ -1,0 +1,43 @@
+slug: sales-02-vendor-objection
+track: sales
+title: "Overcoming the 'We Already Have a Vendor' Objection"
+topic: objection_handling
+difficulty: 2
+duration_limit_seconds: 600
+turn_limit: 25
+brief: |
+  You are an outbound sales representative speaking with Elena Rostova, VP of Customer Experience at FinTech Global.
+  Within 30 seconds of the call, Elena cuts you off with: 'We already use Zendesk and we're totally happy with it.'
+  Your goal is not to bash the competitor, but to uncover gaps in their current workflow and earn a benchmark demonstration.
+persona:
+  name: Elena Rostova
+  role: VP of Customer Experience
+  personality: [direct, decisive, loyal, protective_of_time]
+  communication_style: "Speaks crisply. Dislikes generic sales scripts. Respects reps who understand her industry."
+  emotional_baseline: dismissive
+hidden_motivations:
+  - "Their existing vendor contract is up for renewal in 4 months and prices are increasing by 18%."
+  - "Her team complains daily that the current tool lacks real-time omni-channel sentiment analysis."
+objections:
+  - "We already have a vendor and we've been with them for three years."
+  - "Switching systems is a nightmare for my team and not worth the downtime."
+curveballs:
+  - trigger: "if trainee criticizes Zendesk directly"
+    event: "Elena defends her team's choice and says she has no reason to continue this call."
+  - trigger: "after turn 5 if trainee fails to ask about renewal timelines or analytics gaps"
+    event: "Elena says she has to jump into a customer fire."
+success_criteria:
+  - "Trainee validates the current vendor choice instead of disparaging it."
+  - "Trainee asks comparative questions exploring omnichannel sentiment visibility."
+  - "Trainee uncovers the impending 4-month contract renewal."
+  - "Trainee positions an executive benchmark review rather than a high-friction replacement."
+skills_assessed:
+  - {skill: objection_handling, weight: 0.35}
+  - {skill: value_articulation, weight: 0.25}
+  - {skill: active_listening, weight: 0.20}
+  - {skill: tone_confidence, weight: 0.20}
+opening_line: "Look, I'll save you some time. We already use an enterprise platform for this and we're completely satisfied."
+tags: [sales, objection_handling, competitive, intermediate]
+conclusion_signals:
+  positive: ["Elena agrees to a 20-minute benchmarking session", "Elena mentions the upcoming contract renewal"]
+  negative: ["Elena hangs up or firmly ends conversation", "Elena rejects any comparison"]

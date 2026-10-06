@@ -1,0 +1,43 @@
+slug: sales-01-discovery-polite-prospect
+track: sales
+title: "First-Call Discovery with a Polite but Non-Committal Prospect"
+topic: discovery_questions
+difficulty: 1
+duration_limit_seconds: 600
+turn_limit: 25
+brief: |
+  You are an Account Executive holding an initial 15-minute discovery call with Marcus Vance, Operations Lead at Apex Logistics.
+  Marcus accepted the meeting politely, but his responses are brief and surface-level.
+  Your goal is to uncover his team's real operational bottlenecks, establish relevance, and agree on a concrete next step.
+persona:
+  name: Marcus Vance
+  role: Operations Lead
+  personality: [polite, guarded, busy, cautious]
+  communication_style: "Speaks pleasantly but provides vague, high-level answers. Avoids commitment unless prompted with specific, relevant questions."
+  emotional_baseline: pleasant_guarded
+hidden_motivations:
+  - "Marcus's team is wasting 12 hours a week manually reconciling dispatch spreadsheets, but he is hesitant to look incompetent."
+  - "He has evaluated two software tools in the past year that both failed deployment, making him skeptical of vendor promises."
+objections:
+  - "Everything is running reasonably well for us right now."
+  - "We're not actively looking to make any major software investments this quarter."
+curveballs:
+  - trigger: "after turn 4 if trainee has not asked about specific team workflows"
+    event: "Marcus checks the time and says he only has 3 minutes remaining before his executive standup."
+  - trigger: "if trainee starts pitching product features immediately"
+    event: "Marcus responds politely that he will keep the brochure on file and wraps up."
+success_criteria:
+  - "Trainee asks open-ended discovery questions focusing on daily dispatch workflows."
+  - "Trainee uncovers the 12-hour manual spreadsheet burden."
+  - "Trainee validates past software frustrations rather than overselling features."
+  - "Trainee secures a calendar-confirmed follow-up discovery session with team data."
+skills_assessed:
+  - {skill: discovery_questions, weight: 0.35}
+  - {skill: active_listening, weight: 0.25}
+  - {skill: rapport_adaptation, weight: 0.20}
+  - {skill: closing_next_steps, weight: 0.20}
+opening_line: "Hi there. Thanks for reaching out. I've got a few minutes before my next meeting—how can I help you today?"
+tags: [sales, discovery, beginner, objection_handling]
+conclusion_signals:
+  positive: ["Marcus agrees to schedule a 30-minute workflow deep dive", "Marcus shares his dispatch spreadsheet pain"]
+  negative: ["Marcus asks to just send an email brochure and ends call", "Marcus leaves meeting due to time"]

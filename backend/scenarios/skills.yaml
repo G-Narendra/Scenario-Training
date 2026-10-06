@@ -1,0 +1,161 @@
+sales:
+  discovery_questions:
+    name: "Discovery Questions"
+    description: "Ability to ask open-ended, probing questions that uncover underlying needs and constraints."
+    rubric:
+      1: "Asks only closed yes/no questions; jumps into pitching without diagnosing problems."
+      2: "Asks surface-level questions but misses obvious clues; sticks rigidly to a script."
+      3: "Asks competent open-ended questions; uncovers basic business challenges."
+      4: "Asks insightful second-order questions; uncovers hidden priorities and decision criteria."
+      5: "Masterfully diagnoses emotional, political, and financial drivers through targeted inquiry."
+
+  active_listening:
+    name: "Active Listening"
+    description: "Demonstrating deep comprehension, summarizing prospect concerns, and building on their words."
+    rubric:
+      1: "Interrupts frequently; ignores prospect statements; waiting for turn to speak."
+      2: "Acknowledges statements superficially without validating emotions or constraints."
+      3: "Paraphrases prospect concerns accurately before transitioning to solutions."
+      4: "Reflects nuance and emotion; uncovers unstated implications; confirms agreement."
+      5: "Creates profound rapport by mirroring tone, synthesizing complex concerns, and validating risk."
+
+  objection_handling:
+    name: "Objection Handling"
+    description: "Responding constructively to resistance, price pushback, or competitive threats."
+    rubric:
+      1: "Becomes defensive, dismissive, or caves instantly with unnecessary discounts."
+      2: "Offers canned, generic counter-arguments that fail to address the core objection."
+      3: "Validates the objection and provides logical counter-evidence or clarifications."
+      4: "Isolates the root concern; reframes objection into a value conversation."
+      5: "Turns objections into partnership opportunities; aligns incentives without sacrificing margin."
+
+  value_articulation:
+    name: "Value Articulation"
+    description: "Communicating business outcomes, ROI, and differentiation rather than feature lists."
+    rubric:
+      1: "Recites product features and tech jargon with no link to customer outcomes."
+      2: "Claims high-level benefits without proof or relevance to this specific buyer."
+      3: "Connects capabilities to tangible business metrics and operational outcomes."
+      4: "Tailors tailored ROI models and case studies directly addressing buyer's metrics."
+      5: "Articulates strategic enterprise value that elevates the conversation to board level."
+
+  negotiation:
+    name: "Negotiation"
+    description: "Protecting contract value, trading concessions, and managing procurement demands."
+    rubric:
+      1: "Gives away price concessions unilaterally without asking for anything in return."
+      2: "Haggles awkwardly on single numbers; fails to explore alternative terms."
+      3: "Trades concessions (e.g. multi-year commitment for price discount) effectively."
+      4: "Expands the bargaining envelope (payment terms, scope, SLA, timing) to preserve deal value."
+      5: "Negotiates win-win agreements with sophisticated procurement teams while defending price integrity."
+
+  closing_next_steps:
+    name: "Closing & Next Steps"
+    description: "Securing concrete commitments, timelines, and decision milestones."
+    rubric:
+      1: "Leaves the call with vague platitudes ('we'll be in touch') and no calendar commitment."
+      2: "Proposes weak next steps without securing mutual accountability."
+      3: "Secures a definite scheduled meeting with clear agenda and attendee expectations."
+      4: "Creates a mutual action plan with milestones and executive sign-off deadlines."
+      5: "Drives urgent momentum and clear procurement pathway through decisive closing discipline."
+
+  rapport_adaptation:
+    name: "Rapport & Adaptation"
+    description: "Matching communication style and pacing to the buyer's personality and generational preference."
+    rubric:
+      1: "Tone-deaf to buyer's energy; uses a one-size-fits-all persona."
+      2: "Notices buyer communication style but struggles to adjust pacing or formality."
+      3: "Adapts tone and pace to match buyer's preference (e.g., concise with analyticals)."
+      4: "Seamlessly calibrates language, depth, and formality to distinct buyer demographics."
+      5: "Builds instant, authentic trust across vastly divergent stakeholder styles."
+
+  tone_confidence:
+    name: "Tone & Confidence"
+    description: "Projecting calm authority, executive presence, and steady composure under pressure."
+    rubric:
+      1: "Sounds nervous, hesitant, overly apologetic, or insecure."
+      2: "Fluctuates under pressure; speaks too fast or fills pauses with filler words."
+      3: "Maintains professional, steady, and clear vocal delivery."
+      4: "Projects executive gravitas; comfortable with deliberate pauses and stillness."
+      5: "Radiates unshakeable composure, empathetic warmth, and trusted advisor status."
+
+leadership:
+  empathy:
+    name: "Empathy"
+    description: "Acknowledging emotions, perspective taking, and validating the other person's experience."
+    rubric:
+      1: "Ignores emotional distress; treats people as transactions or problems to dismiss."
+      2: "Acknowledges emotion mechanically ('I understand you're upset') without genuine care."
+      3: "Accurately names emotions and creates psychological safety for honest dialogue."
+      4: "Deeply validates the human experience behind performance or interpersonal friction."
+      5: "Transforms intense emotional tension into shared trust and vulnerability."
+
+  clarity:
+    name: "Clarity"
+    description: "Communicating expectations, realities, and standards without ambiguity or mixed messages."
+    rubric:
+      1: "Vague, confusing, talks in circles, avoids stating the actual issue."
+      2: "Delivers the message but muddies it with contradictory assurances."
+      3: "States the situation, expectations, and impacts clearly and directly."
+      4: "Articulates complex organizational decisions with crisp, memorable precision."
+      5: "Delivers hard truths with razor-sharp lucidity and unwavering compassion."
+
+  active_listening:
+    name: "Active Listening"
+    description: "Listening without judging or interrupting, hearing what is not being said."
+    rubric:
+      1: "Dominates the conversation; talks over direct reports; ignores explanations."
+      2: "Listens selectively for openings to enforce management authority."
+      3: "Listens patiently and summarizes the team member's perspective before deciding."
+      4: "Uncovers underlying root causes and systemic issues through patient listening."
+      5: "Hears unspoken fears and motivations; creates an environment of total candor."
+
+  feedback_specificity:
+    name: "Feedback Specificity"
+    description: "Anchoring feedback in observable behaviors, impacts, and alternatives (SBI model)."
+    rubric:
+      1: "Gives sweeping generalizations ('you have a bad attitude', 'you need to be better')."
+      2: "Provides examples but fails to explain the business impact or desired behavior."
+      3: "Uses Situation-Behavior-Impact model clearly with concrete recent examples."
+      4: "Provides actionable, behavioral feedback with clear alternatives and growth steps."
+      5: "Delivers masterclass feedback that inspires ownership rather than defensiveness."
+
+  conflict_navigation:
+    name: "Conflict Navigation"
+    description: "De-escalating friction, facilitating resolution between opposing viewpoints."
+    rubric:
+      1: "Takes sides hastily, dismisses the conflict, or sweeps it under the rug."
+      2: "Forces superficial compliance without addressing interpersonal hostility."
+      3: "Identifies common ground and refocuses parties on team goals."
+      4: "Navigates complex personal tensions; guides stakeholders to resolve their own divide."
+      5: "Turns deep organizational conflict into breakthrough collaborative innovation."
+
+  accountability_setting:
+    name: "Accountability Setting"
+    description: "Establishing explicit agreements, timelines, and consequences for performance."
+    rubric:
+      1: "Fails to establish expectations or lets commitments slip with no follow-up."
+      2: "Sets vague timelines ('let's review soon') without measurable milestones."
+      3: "Agrees on specific metrics, deliverables, review dates, and accountability checks."
+      4: "Creates empowering ownership where the employee sets and owns their commitments."
+      5: "Builds rigorous, self-sustaining high-performance accountability culture."
+
+  composure:
+    name: "Composure"
+    description: "Maintaining emotional self-regulation, steady tone, and calmness when confronted."
+    rubric:
+      1: "Loses temper, gets defensive, raises voice, or shuts down."
+      2: "Shows visible agitation, sarcasm, or discomfort when challenged."
+      3: "Stays calm, grounded, and professional despite employee pushback."
+      4: "De-escalates heated confrontations through tranquil, steady presence."
+      5: "Anchors the room; neutralizes hostility with profound emotional regulation."
+
+  coaching_questions:
+    name: "Coaching Questions"
+    description: "Guiding others to find their own solutions rather than telling them what to do."
+    rubric:
+      1: "Tells people exactly what to do; acts as an advice monster; asks no questions."
+      2: "Asks leading or rhetorical questions that conceal commands."
+      3: "Asks open coaching questions that encourage self-reflection."
+      4: "Helps team members unpack their own mental models and discover innovative answers."
+      5: "Empowers deep intrinsic motivation through masterful developmental inquiry."

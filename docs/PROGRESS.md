@@ -29,3 +29,27 @@
   - Ruff linter: 0 errors.
   - Mypy type checker: Success (0 issues in 25 source files).
 - **Result**: GATE 1 PASSED
+
+## 2026-10-06 - Phase 2: Scenario Engine and Admin Content Management
+- **Role**: Backend Engineer / Business Analyst / AI Engineer / QA Engineer
+- **Changes**:
+  - Implemented models in `backend/app/db/models.py`: `Track`, `Skill`, `Scenario`, `ScenarioVersion`.
+  - Added Alembic migration `0003_scenarios_skills.py` and upgraded database.
+  - Authored strict Pydantic v2 schemas in `backend/app/schemas/scenarios.py` with multi-field validation (difficulty 1-5, skill weight sum normalization, minimum length, persona structure, conclusion signals).
+  - Built `ScenarioService` in `backend/app/services/scenario_service.py` with YAML/JSON parsing, snapshot versioning, zero-leakage public projections (`PublicScenarioDetail`, `PublicScenarioListItem`), version history, version restore, and AI scenario drafting.
+  - Authored all 16 skill rubrics across Sales and Leadership tracks in `backend/scenarios/skills.yaml` with concrete 1-5 level criteria.
+  - Created 14 full YAML scenarios (7 Sales, 7 Leadership) across difficulties 1 to 5 with rich personas, hidden motivations, curveballs, and success criteria.
+  - Created and executed `scripts/seed.py` loading all 16 skills and 14 scenarios cleanly.
+  - Created public trainee API router in `backend/app/api/scenarios.py` (`/api/tracks`, `/api/scenarios`, `/api/scenarios/{id}`).
+  - Created admin scenario API router in `backend/app/api/admin_scenarios.py` (`/api/admin/scenarios`, `/import`, `/validate`, `/{id}/publish`, `/{id}/archive`, `/{id}/versions`, `/{id}/versions/{version}/restore`, `/{id}/export`, `/ai-draft`).
+  - Authored unit and integration test suites: `backend/tests/unit/test_scenario_validation.py` and `backend/tests/integration/test_scenarios_api.py`.
+- **Tests Run**:
+  - 34 automated integration and unit tests passing (100% green).
+  - Validated strict zero-leakage: Trainee queries never reveal hidden motivations, objections, curveball triggers, or conclusion signals.
+  - Validated admin scenario lifecycle: YAML validation dry-run, scenario import, automatic versioning (v1 -> v2), version history, version restoration, and export.
+  - Backend code coverage: 85%.
+  - Ruff linter: 0 errors (all checks passed).
+  - Mypy type checker: Success (0 issues in 29 source files).
+  - Frontend production build: `npm run build` completed with zero TypeScript errors.
+- **Result**: GATE 2 PASSED
+

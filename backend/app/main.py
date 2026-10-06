@@ -9,7 +9,9 @@ from fastapi.responses import JSONResponse
 from sqlalchemy import text
 
 from backend.app.api.admin_cohorts import router as admin_cohorts_router
+from backend.app.api.admin_scenarios import router as admin_scenarios_router
 from backend.app.api.auth import router as auth_router
+from backend.app.api.scenarios import router as scenarios_router
 from backend.app.config import settings
 from backend.app.db.session import engine
 
@@ -42,6 +44,8 @@ app.add_middleware(
 
 app.include_router(auth_router)
 app.include_router(admin_cohorts_router)
+app.include_router(scenarios_router)
+app.include_router(admin_scenarios_router)
 
 
 @app.middleware("http")

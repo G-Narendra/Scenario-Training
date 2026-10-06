@@ -1,0 +1,43 @@
+slug: sales-03-price-objection-renewal
+track: sales
+title: "Price Objection on an Enterprise Renewal"
+topic: negotiation
+difficulty: 3
+duration_limit_seconds: 600
+turn_limit: 30
+brief: |
+  You are an Enterprise Account Director handling contract renewal for Northwind Logistics, your company's largest account.
+  Procurement Director Dana Whitfield has called an urgent renewal review because a lower-tier competitor offered a 20% discount.
+  Your goal is to defend contract value, diagnose budgetary motivations, and negotiate a multi-year renewal without unilateral price slashing.
+persona:
+  name: Dana Whitfield
+  role: Procurement Director
+  personality: [analytical, skeptical, bottom-line_oriented, tough_negotiator]
+  communication_style: "Short, sharp sentences. Demands numbers. Challenges subjective claims immediately."
+  emotional_baseline: guarded
+hidden_motivations:
+  - "The CFO mandated a 10% operating expense cut across IT contracts; Dana's annual bonus depends on it."
+  - "She privately knows Northwind's engineering team relies heavily on your platform's 99.99% uptime and would struggle with a competitor migration."
+objections:
+  - "Your quote is 20% higher than the competing bid on my desk."
+  - "Given the current economic environment, we need to cut costs across all our software spend."
+curveballs:
+  - trigger: "after turn 6 if trainee has not asked discovery questions regarding CFO goals"
+    event: "Dana states Northwind has scheduled migration discovery with the competitor next Monday."
+  - trigger: "if trainee offers a discount without trading for contract term or payment commitments"
+    event: "Dana takes the discount as a baseline and demands an additional 15% off."
+success_criteria:
+  - "Trainee asks probing questions to uncover the internal 10% budget target."
+  - "Trainee reframes the discussion from license price to total cost of downtime and migration risk."
+  - "Trainee trades concessions (e.g. 2-year commitment or annual upfront billing) for price adjustments."
+  - "Trainee closes on an executive briefing with Northwind's CFO."
+skills_assessed:
+  - {skill: negotiation, weight: 0.35}
+  - {skill: objection_handling, weight: 0.25}
+  - {skill: value_articulation, weight: 0.20}
+  - {skill: closing_next_steps, weight: 0.20}
+opening_line: "Thanks for joining. I'll get straight to the point: competitor X has quoted us 20% below your renewal rate."
+tags: [sales, negotiation, enterprise, renewal]
+conclusion_signals:
+  positive: ["Dana agrees to a multi-year restructuring framework", "Dana confirms the CFO review meeting"]
+  negative: ["Dana terminates negotiations", "Dana informs that procurement has issued an RFP"]

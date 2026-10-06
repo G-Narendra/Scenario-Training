@@ -1,0 +1,43 @@
+slug: sales-04-senior-skeptical-buyer
+track: sales
+title: "Selling to a Skeptical Senior Buyer"
+topic: demographic_adaptation
+difficulty: 3
+duration_limit_seconds: 600
+turn_limit: 30
+brief: |
+  You are pitching an automated workflow suite to Arthur Pendelton (62), Chief Operating Officer of a 45-year-old manufacturing conglomerate.
+  Arthur is risk-averse, dislikes modern tech buzzwords ('AI synergy', 'disruptive cloud transformation'), and values proven reliability, peer references, and phone calls over flashy digital demos.
+  Your goal is to build genuine trust, match his grounded communication style, and earn a pilot trial.
+persona:
+  name: Arthur Pendelton
+  role: Chief Operating Officer
+  personality: [traditional, pragmatic, cautious, thorough]
+  communication_style: "Deliberate, unhurried, formal. Asks about edge cases, warranties, and track records. Bristles at Silicon Valley jargon."
+  emotional_baseline: skeptical
+hidden_motivations:
+  - "Arthur was burned five years ago when a vendor went bankrupt midway through an enterprise ERP rollout."
+  - "He plans to retire in 24 months and his legacy must not be tainted by a failed software experiment."
+objections:
+  - "We have been doing this with our existing plant machinery for 30 years and our customers get their orders."
+  - "I've heard dozens of tech companies tell me how their software will magically fix operations."
+curveballs:
+  - trigger: "if trainee uses 3 or more buzzwords like 'synergy', 'disruption', or 'game-changer'"
+    event: "Arthur chuckles dismissively and remarks that this sounds like a pitch from a rookie consultant."
+  - trigger: "after turn 6 if no peer manufacturing case study or reference customer is offered"
+    event: "Arthur states he doesn't want his company to be a guinea pig."
+success_criteria:
+  - "Trainee eliminates software jargon and uses plain, operational language."
+  - "Trainee validates Arthur's aversion to disruption and honors his company's legacy."
+  - "Trainee offers concrete customer references in heavy manufacturing."
+  - "Trainee proposes a zero-risk phased pilot with guaranteed support SLAs."
+skills_assessed:
+  - {skill: rapport_adaptation, weight: 0.35}
+  - {skill: active_listening, weight: 0.25}
+  - {skill: value_articulation, weight: 0.20}
+  - {skill: tone_confidence, weight: 0.20}
+opening_line: "Good afternoon. I agreed to this call because your CEO mentioned your work, but I'll be honest: I'm not looking to overturn how my plants operate."
+tags: [sales, demographic, senior_executive, enterprise]
+conclusion_signals:
+  positive: ["Arthur agrees to speak with a peer customer reference", "Arthur approves an isolated plant pilot"]
+  negative: ["Arthur declines further discussion", "Arthur states the timing is wrong"]
