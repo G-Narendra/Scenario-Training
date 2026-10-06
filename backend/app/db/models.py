@@ -206,3 +206,115 @@ class ScenarioVersion(Base, TimestampMixin):
     change_note: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
     scenario: Mapped["Scenario"] = relationship("Scenario", back_populates="versions")
+
+
+class SimulationSession(Base, TimestampMixin):
+    __tablename__ = "sessions"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    scenario_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("scenarios.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    scenario_version: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    mode: Mapped[str] = mapped_column(String(20), default="text", nullable=False)  # text, voice
+    status: Mapped[str] = mapped_column(
+        String(20), default="active", nullable=False, index=True
+    )  # active, completed, abandoned, timed_out
+    started_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+    ended_at: Mapped[Optional[datetime]] = mapped_column(DateTime(timezone=True), nullable=True)
+    end_reason: Mapped[Optional[str]] = mapped_column(
+        String(50), nullable=True
+    )  # natural, time_limit, turn_limit, user_ended
+    token_usage: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    audio_seconds: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    cost_estimate: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+    state_metadata: Mapped[Dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
+
+    user: Mapped["User"] = relationship("User", backref="sim_sessions")
+    scenario: Mapped["Scenario"] = relationship("Scenario")
+    messages: Mapped[List["Message"]] = relationship(
+        "Message",
+        back_populates="session",
+        cascade="all, delete-orphan",
+        order_by="Message.seq",
+    )
+    evaluation: Mapped[Optional["Evaluation"]] = relationship(
+        "Evaluation", back_populates="session", uselist=False, cascade="all, delete-orphan"
+    )
+
+
+class Message(Base, TimestampMixin):
+    __tablename__ = "messages"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    session_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("sessions.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    seq: Mapped[int] = mapped_column(Integer, nullable=False, index=True)
+    role: Mapped[str] = mapped_column(String(20), nullable=False)  # trainee, counterpart, system
+    content: Mapped[str] = mapped_column(Text, nullable=False)
+    audio_ref: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    latency_ms: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+
+    session: Mapped["SimulationSession"] = relationship(
+        "SimulationSession", back_populates="messages"
+    )
+
+
+class Evaluation(Base, TimestampMixin):
+    __tablename__ = "evaluations"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    session_id: Mapped[str] = mapped_column(
+        String(36),
+        ForeignKey("sessions.id", ondelete="CASCADE"),
+        nullable=False,
+        unique=True,
+        index=True,
+    )
+    overall_score: Mapped[int] = mapped_column(Integer, nullable=False)  # 0 to 100
+    skill_scores: Mapped[List[Dict[str, Any]]] = mapped_column(JSON, default=list, nullable=False)
+    strengths: Mapped[List[Dict[str, Any]]] = mapped_column(JSON, default=list, nullable=False)
+    weaknesses: Mapped[List[Dict[str, Any]]] = mapped_column(JSON, default=list, nullable=False)
+    key_moments: Mapped[List[Dict[str, Any]]] = mapped_column(JSON, default=list, nullable=False)
+    improvement_steps: Mapped[List[Dict[str, Any]]] = mapped_column(
+        JSON, default=list, nullable=False
+    )
+    summary: Mapped[str] = mapped_column(Text, nullable=False)
+    hidden_reveal: Mapped[str] = mapped_column(Text, default="", nullable=False)
+    success_criteria_results: Mapped[List[Dict[str, Any]]] = mapped_column(
+        JSON, default=list, nullable=False
+    )
+    evaluator_model: Mapped[str] = mapped_column(
+        String(100), default="mock-evaluator", nullable=False
+    )
+    prompt_version: Mapped[str] = mapped_column(String(50), default="v1.0", nullable=False)
+
+    session: Mapped["SimulationSession"] = relationship(
+        "SimulationSession", back_populates="evaluation"
+    )
+
+
+class UsageEvent(Base, TimestampMixin):
+    __tablename__ = "usage_events"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    user_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    cohort_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("cohorts.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    session_id: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("sessions.id", ondelete="CASCADE"), nullable=True, index=True
+    )
+    type: Mapped[str] = mapped_column(
+        String(50), nullable=False, index=True
+    )  # llm, stt, tts, realtime
+    units: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    cost_estimate: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)

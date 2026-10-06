@@ -228,3 +228,72 @@ async def test_admin_scenario_lifecycle_and_versioning(auth_tokens):
         )
         assert draft_res.status_code == 200
         assert "draft-sales" in draft_res.json()["slug"]
+
+        # 10. Publish scenario
+        publish_res = await client.post(
+            f"/api/admin/scenarios/{scen_id}/publish",
+            headers={"Authorization": f"Bearer {auth_tokens['admin']}"},
+        )
+        assert publish_res.status_code == 200
+        assert publish_res.json()["status"] == "published"
+
+        # 11. Admin get scenario & 404
+        get_res = await client.get(
+            f"/api/admin/scenarios/{scen_id}",
+            headers={"Authorization": f"Bearer {auth_tokens['admin']}"},
+        )
+        assert get_res.status_code == 200
+        assert get_res.json()["id"] == scen_id
+
+        nf_res = await client.get(
+            "/api/admin/scenarios/non-existent-uuid",
+            headers={"Authorization": f"Bearer {auth_tokens['admin']}"},
+        )
+        assert nf_res.status_code == 404
+
+        # 12. Admin list with filters
+        filtered_list = await client.get(
+            "/api/admin/scenarios?status=published",
+            headers={"Authorization": f"Bearer {auth_tokens['admin']}"},
+        )
+        assert filtered_list.status_code == 200
+
+        # 13. Admin 404 cases for publish, archive, export, restore
+        bad_id = "00000000-0000-0000-0000-000000000000"
+        assert (
+            await client.post(
+                f"/api/admin/scenarios/{bad_id}/publish",
+                headers={"Authorization": f"Bearer {auth_tokens['admin']}"},
+            )
+        ).status_code == 404
+        assert (
+            await client.post(
+                f"/api/admin/scenarios/{bad_id}/archive",
+                headers={"Authorization": f"Bearer {auth_tokens['admin']}"},
+            )
+        ).status_code == 404
+        assert (
+            await client.get(
+                f"/api/admin/scenarios/{bad_id}/export",
+                headers={"Authorization": f"Bearer {auth_tokens['admin']}"},
+            )
+        ).status_code == 404
+        assert (
+            await client.post(
+                f"/api/admin/scenarios/{bad_id}/versions/99/restore",
+                headers={"Authorization": f"Bearer {auth_tokens['admin']}"},
+            )
+        ).status_code == 404
+
+        # 14. Create scenario directly via POST JSON
+        draft_payload = draft_res.json()
+        draft_payload["slug"] = "directly-created-json-scenario"
+        create_res = await client.post(
+            "/api/admin/scenarios",
+            json=draft_payload,
+            headers={"Authorization": f"Bearer {auth_tokens['admin']}"},
+        )
+        assert create_res.status_code == 201
+        assert create_res.json()["slug"] == "directly-created-json-scenario"
+
+

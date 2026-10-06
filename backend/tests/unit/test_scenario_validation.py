@@ -133,3 +133,20 @@ def test_ai_draft_generator():
     assert draft.track == "sales"
     assert "draft-sales" in draft.slug
     assert sum(s.weight for s in draft.skills_assessed) == 1.0
+
+
+@pytest.mark.asyncio
+async def test_scenario_service_edge_cases():
+    from backend.app.db.session import async_session_factory
+
+    async with async_session_factory() as db:
+        # Non-existent scenario restore
+        with pytest.raises(HTTPException) as exc1:
+            await ScenarioService.admin_restore_version(db, "fake-id", 1, "admin-id")
+        assert exc1.value.status_code == 404
+
+        # Non-existent public scenario
+        with pytest.raises(HTTPException) as exc2:
+            await ScenarioService.get_public_scenario_detail(db, "non-existent-slug")
+        assert exc2.value.status_code == 404
+

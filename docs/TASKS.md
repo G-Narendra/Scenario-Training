@@ -40,17 +40,17 @@
 - [x] GATE 2: Scenarios created, edited, published, listed without code changes
 
 ## Phase 3: AI Provider Layer & Conversation Engine
-- [ ] 3.1 LLMProvider interface with streaming, timeouts, retries, cost accounting
-- [ ] 3.2 Anthropic, OpenAI, and deterministic Mock adapters
-- [ ] 3.3 Persona prompt builder with guardrails and emotional realism
-- [ ] 3.4 Conversation engine with turn tracking, limits, streaming
-- [ ] 3.5 Curveball manager evaluating triggers each turn
-- [ ] 3.6 Conclusion detector for natural dialogue termination
-- [ ] 3.7 Injection defense guardrails and Fourth-wall enforcement
-- [ ] 3.8 Context management and history summarization
-- [ ] 3.9 Conversation engine tests with Mock provider
-- [ ] 3.10 Opt-in live provider tests
-- [ ] GATE 3: Scripted conversation completes to natural conclusion with Mock provider
+- [x] 3.1 LLMProvider interface with streaming, timeouts, retries, cost accounting
+- [x] 3.2 Anthropic, OpenAI, and deterministic Mock adapters
+- [x] 3.3 Persona prompt builder with guardrails and emotional realism
+- [x] 3.4 Conversation engine with turn tracking, limits, streaming
+- [x] 3.5 Curveball manager evaluating triggers each turn
+- [x] 3.6 Conclusion detector for natural dialogue termination
+- [x] 3.7 Injection defense guardrails and Fourth-wall enforcement
+- [x] 3.8 Context management and history summarization
+- [x] 3.9 Conversation engine tests with Mock provider
+- [x] 3.10 Opt-in live provider tests
+- [x] GATE 3: Scripted conversation completes to natural conclusion with Mock provider
 
 ## Phase 4: Text Chat Interface
 - [ ] 4.1 Session endpoints: start, streaming SSE/WebSocket messages, end, transcript

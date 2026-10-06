@@ -5,12 +5,16 @@ from backend.app.db.models import (
     AuditLog,
     AuthSession,
     Cohort,
+    Evaluation,
     LoginAttempt,
+    Message,
     Passcode,
     Scenario,
     ScenarioVersion,
+    SimulationSession,
     Skill,
     Track,
+    UsageEvent,
     User,
 )
 from backend.app.db.session import async_session_factory
@@ -20,6 +24,10 @@ from backend.app.db.session import async_session_factory
 async def clean_test_database():
     """Ensure clean database state before each test run."""
     async with async_session_factory() as db:
+        await db.execute(delete(UsageEvent))
+        await db.execute(delete(Evaluation))
+        await db.execute(delete(Message))
+        await db.execute(delete(SimulationSession))
         await db.execute(delete(ScenarioVersion))
         await db.execute(delete(Scenario))
         await db.execute(delete(Skill))
@@ -32,4 +40,3 @@ async def clean_test_database():
         await db.execute(delete(AuditLog))
         await db.commit()
     yield
-
