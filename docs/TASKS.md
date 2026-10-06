@@ -15,17 +15,17 @@
 - [x] GATE 0: `make test` / run_tests passes; `/health` returns 200; frontend builds
 
 ## Phase 1: Access Control & Passcodes
-- [ ] 1.1 Implement cohorts, passcodes, users, auth_sessions models and migrations
-- [ ] 1.2 Cryptographic passcode generation and hashing
-- [ ] 1.3 Login by passcode + display name; JWT issuing with token hashes
-- [ ] 1.4 Hard 30-day cohort window enforcement
-- [ ] 1.5 Passcode rotation mechanism with grace periods and invalidation
-- [ ] 1.6 Passcode limits (max uses, session revocation, cohort revoke-all)
-- [ ] 1.7 Rate limiting and lockout on failed attempts
-- [ ] 1.8 Audit logging for auth events
-- [ ] 1.9 RBAC dependencies for trainee / group_admin / super_admin
-- [ ] 1.10 Comprehensive access control tests
-- [ ] GATE 1: All access tests green; manual cURL walkthrough documented
+- [x] 1.1 Implement cohorts, passcodes, users, auth_sessions models and migrations
+- [x] 1.2 Cryptographic passcode generation and hashing
+- [x] 1.3 Login by passcode + display name; JWT issuing with token hashes
+- [x] 1.4 Hard 30-day cohort window enforcement
+- [x] 1.5 Passcode rotation mechanism with grace periods and invalidation
+- [x] 1.6 Passcode limits (max uses, session revocation, cohort revoke-all)
+- [x] 1.7 Rate limiting and lockout on failed attempts
+- [x] 1.8 Audit logging for auth events
+- [x] 1.9 RBAC dependencies for trainee / group_admin / super_admin
+- [x] 1.10 Comprehensive access control tests
+- [x] GATE 1: All access tests green; manual cURL walkthrough documented
 
 ## Phase 2: Scenario Engine & Admin Content Management
 - [ ] 2.1 Scenario, skill, track, version models and migrations
