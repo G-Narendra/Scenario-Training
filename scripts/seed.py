@@ -11,10 +11,9 @@ from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 
 from backend.app.db.session import async_session_factory
-from backend.app.db.models import Track, Skill, Scenario, Cohort, Passcode
+from backend.app.db.models import Skill, Cohort, Passcode
 from backend.app.security.passcodes import hash_passcode
 from backend.app.services.scenario_service import ScenarioService
-from backend.app.schemas.scenarios import ScenarioConfigSchema
 
 
 async def seed_demo_cohort(db):

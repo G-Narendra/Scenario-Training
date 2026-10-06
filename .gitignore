@@ -50,6 +50,8 @@ frontend/.vite/
 # Database & runtime
 *.sqlite3
 *.db
+*.bak
+backups/
 backend/*.db
 backend/*.sqlite3
 

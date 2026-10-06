@@ -107,16 +107,16 @@
 - [x] GATE 8: Owner manages complete cohort lifecycle from UI without code changes
 
 ## Phase 9: Security, Performance & Hardening
-- [ ] 9.1 STRIDE threat model in `docs/SECURITY.md`
-- [ ] 9.2 Input sanitization, CSP, CORS, security headers
-- [ ] 9.3 25+ prompt injection attack test suite
-- [ ] 9.4 Rate limiting across all API and WebSocket surfaces
-- [ ] 9.5 Dependency vulnerability audits (pip-audit, npm audit)
-- [ ] 9.6 Data retention policy, user deletion & export endpoints
-- [ ] 9.7 Concurrent load testing (50 text, 10 voice sessions)
-- [ ] 9.8 Structured JSON logging and observability hooks
-- [ ] 9.9 Backup and restore scripts tested
-- [ ] GATE 9: Security scans clean, load test results documented
+- [x] 9.1 STRIDE threat model in `docs/SECURITY.md`
+- [x] 9.2 Input sanitization, CSP, CORS, security headers
+- [x] 9.3 25+ prompt injection attack test suite
+- [x] 9.4 Rate limiting across all API and WebSocket surfaces
+- [x] 9.5 Dependency vulnerability audits (pip-audit, npm audit)
+- [x] 9.6 Data retention policy, user deletion & export endpoints
+- [x] 9.7 Concurrent load testing (50 text, 10 voice sessions)
+- [x] 9.8 Structured JSON logging and observability hooks
+- [x] 9.9 Backup and restore scripts tested
+- [x] GATE 9: Security scans clean, load test results documented
 
 ## Phase 10: Documentation & Final Acceptance
 - [ ] 10.1 Comprehensive README.md with one-command setup
