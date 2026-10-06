@@ -1,0 +1,1 @@
+"""Scenario Training Backend Application"""
