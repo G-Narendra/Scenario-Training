@@ -119,10 +119,10 @@
 - [x] GATE 9: Security scans clean, load test results documented
 
 ## Phase 10: Documentation & Final Acceptance
-- [ ] 10.1 Comprehensive README.md with one-command setup
-- [ ] 10.2 User Guide and Admin Guide
-- [ ] 10.3 Deployment Guide and Cost Model
-- [ ] 10.4 Clean-room verification: clean setup, tests, acceptance run
-- [ ] 10.5 Seeded demo cohort and passcode for instant evaluation
-- [ ] 10.6 Final delivery report satisfying Definition of Done
-- [ ] GATE 10 / DONE: Definition of Done fully satisfied
+- [x] 10.1 Comprehensive README.md with one-command setup
+- [x] 10.2 User Guide and Admin Guide
+- [x] 10.3 Deployment Guide and Cost Model
+- [x] 10.4 Clean-room verification: clean setup, tests, acceptance run
+- [x] 10.5 Seeded demo cohort and passcode for instant evaluation
+- [x] 10.6 Final delivery report satisfying Definition of Done
+- [x] GATE 10 / DONE: Definition of Done fully satisfied

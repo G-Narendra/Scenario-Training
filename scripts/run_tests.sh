@@ -28,11 +28,12 @@ python -m mypy --explicit-package-bases backend/app
 echo "Running Pytest with coverage..."
 python -m pytest backend/tests/ -v --cov=backend/app --cov-report=term-missing --cov-fail-under=85
 
-# 5. Frontend Checks
-echo "Checking frontend..."
+# 5. Frontend Checks & Playwright E2E
+echo "Checking frontend and running Playwright E2E tests..."
 cd frontend
 npm run lint
 npm run build
+npm run test:e2e
 cd ..
 
 echo "=== All checks PASSED successfully! ==="

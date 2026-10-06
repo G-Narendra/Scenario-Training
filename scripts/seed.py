@@ -34,8 +34,16 @@ async def seed_demo_cohort(db):
 
         passcode = Passcode(
             cohort_id=cohort.id,
-            code_hash=hash_passcode("DEMO-PASS"),
+            code_hash=hash_passcode("DEMO-2026"),
             label="Default Demo Passcode",
+            valid_from=now,
+            valid_until=now + timedelta(days=30),
+            max_uses=1000,
+        )
+        passcode_alt = Passcode(
+            cohort_id=cohort.id,
+            code_hash=hash_passcode("DEMO-PASS"),
+            label="Legacy Demo Passcode",
             valid_from=now,
             valid_until=now + timedelta(days=30),
             max_uses=1000,
@@ -48,10 +56,23 @@ async def seed_demo_cohort(db):
             valid_until=now + timedelta(days=30),
             max_uses=1000,
         )
-        db.add_all([passcode, admin_passcode])
+        db.add_all([passcode, passcode_alt, admin_passcode])
         await db.commit()
-        print("Demo cohort, DEMO-PASS, and ADMIN-PASS seeded successfully.")
+        print("Demo cohort, DEMO-2026, DEMO-PASS, and ADMIN-PASS seeded successfully.")
     else:
+        # Check if DEMO-2026 exists
+        stmt_demo = select(Passcode).where(Passcode.cohort_id == cohort.id, Passcode.label == "Default Demo Passcode")
+        demo_code = (await db.execute(stmt_demo)).scalar_one_or_none()
+        if not demo_code:
+            db.add(Passcode(
+                cohort_id=cohort.id,
+                code_hash=hash_passcode("DEMO-2026"),
+                label="Default Demo Passcode",
+                valid_from=now,
+                valid_until=now + timedelta(days=30),
+                max_uses=1000,
+            ))
+            await db.commit()
         # Check if ADMIN-PASS exists
         stmt_admin = select(Passcode).where(Passcode.cohort_id == cohort.id, Passcode.label == "Administrator Passcode")
         admin_code = (await db.execute(stmt_admin)).scalar_one_or_none()

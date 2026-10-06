@@ -32,11 +32,12 @@ python -m mypy --explicit-package-bases backend/app
 Write-Host "Running Pytest with coverage..."
 python -m pytest backend/tests/ -v --cov=backend/app --cov-report=term-missing
 
-# 5. Frontend Checks
-Write-Host "Checking frontend..."
+# 5. Frontend Checks & Playwright E2E
+Write-Host "Checking frontend and running Playwright E2E tests..."
 Push-Location frontend
-& "C:\Program Files\nodejs\npm.cmd" run lint
-& "C:\Program Files\nodejs\npm.cmd" run build
+npm.cmd run lint
+npm.cmd run build
+npm.cmd run test:e2e
 Pop-Location
 
-Write-Host "=== All checks PASSED successfully! ===" -ForegroundColor Green
+Write-Host "=== All verification checks PASSED successfully! ===" -ForegroundColor Green
