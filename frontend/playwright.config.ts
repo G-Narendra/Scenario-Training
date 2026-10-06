@@ -23,7 +23,7 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'powershell -Command ".venv\\Scripts\\Activate.ps1; uvicorn backend.app.main:app --host 127.0.0.1 --port 8000"',
+    command: 'powershell -Command ".venv\\Scripts\\Activate.ps1; python scripts/seed.py; uvicorn backend.app.main:app --host 127.0.0.1 --port 8000"',
     cwd: '..',
     url: 'http://127.0.0.1:8000/health',
     reuseExistingServer: true,

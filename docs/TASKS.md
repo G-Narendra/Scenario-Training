@@ -63,16 +63,16 @@
 - [x] GATE 4: End-to-end text session runs in headless browser in CI
 
 ## Phase 5: Evaluation, Scoring & Feedback
-- [ ] 5.1 Evaluator prompt receiving transcript, criteria, rubrics, hidden motivations
-- [ ] 5.2 Strict Pydantic schema validation & repair loop (up to 3 retries)
-- [ ] 5.3 Deterministic score computation from weighted skills
-- [ ] 5.4 Key moments with verbatim quote checking, alternative phrasing, reasoning
-- [ ] 5.5 Grounded what worked / what didn't analysis
-- [ ] 5.6 3-4 actionable improvement steps
-- [ ] 5.7 Feedback report page with radar chart, transcript inspection, PDF export
-- [ ] 5.8 Golden transcript consistency tests (good > average > poor)
-- [ ] 5.9 Feedback engine tests
-- [ ] GATE 5: Session completion produces validated, specific feedback report
+- [x] 5.1 Evaluator prompt receiving transcript, criteria, rubrics, hidden motivations
+- [x] 5.2 Strict Pydantic schema validation & repair loop (up to 3 retries)
+- [x] 5.3 Deterministic score computation from weighted skills
+- [x] 5.4 Key moments with verbatim quote checking, alternative phrasing, reasoning
+- [x] 5.5 Grounded what worked / what didn't analysis
+- [x] 5.6 3-4 actionable improvement steps
+- [x] 5.7 Feedback report page with radar chart, transcript inspection, PDF export
+- [x] 5.8 Golden transcript consistency tests (good > average > poor)
+- [x] 5.9 Feedback engine tests
+- [x] GATE 5: Session completion produces validated, specific feedback report
 
 ## Phase 6: Voice Conversations
 - [ ] 6.1 VoiceProvider interface and WebSocket protocol

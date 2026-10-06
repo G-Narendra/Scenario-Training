@@ -5,6 +5,7 @@ import { LoginPage } from './pages/LoginPage';
 import { TrackPickerPage } from './pages/TrackPickerPage';
 import { ScenarioLibraryPage } from './pages/ScenarioLibraryPage';
 import { SimulationChatPage } from './pages/SimulationChatPage';
+import { FeedbackReportPage } from './pages/FeedbackReportPage';
 import { api } from './api/client';
 import { SimulationSession } from './types';
 
@@ -83,19 +84,12 @@ const AppContent: React.FC = () => {
           />
         )}
 
-        {currentView === 'evaluation' && (
-          <div className="mx-auto max-w-4xl py-16 px-4 text-center">
-            <h2 className="text-3xl font-bold text-white">Evaluation Engine</h2>
-            <p className="mt-3 text-slate-400">
-              Evaluation report view configured and ready for Phase 5 scoring engine.
-            </p>
-            <button
-              onClick={() => setCurrentView('tracks')}
-              className="mt-6 rounded-xl bg-cyan-500 px-6 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-400 transition"
-            >
-              Return to Scenarios
-            </button>
-          </div>
+        {currentView === 'evaluation' && activeSession && (
+          <FeedbackReportPage
+            sessionId={activeSession.id}
+            onBackToScenarios={() => setCurrentView('scenarios')}
+            onRetryScenario={(scenId) => handleLaunchSimulation(scenId, 'text')}
+          />
         )}
 
         {currentView === 'admin' && (

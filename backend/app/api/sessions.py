@@ -8,8 +8,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
 from backend.app.ai.engine.conversation_engine import ConversationEngine
+from backend.app.ai.providers import get_llm_provider
 from backend.app.db.models import Message, Scenario, SimulationSession, User
 from backend.app.db.session import get_db
+from backend.app.schemas.evaluation import FeedbackReportSchema
 from backend.app.schemas.sessions import (
     CreateSessionRequest,
     SendMessageRequest,
@@ -18,6 +20,7 @@ from backend.app.schemas.sessions import (
     SessionMessageResponse,
 )
 from backend.app.security.deps import get_current_user
+from backend.app.services.scoring_service import ScoringService
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
 
@@ -255,3 +258,56 @@ async def list_sessions(
         )
         for s in sessions
     ]
+
+
+@router.get("/{session_id}/evaluation", response_model=FeedbackReportSchema)
+async def get_session_evaluation(
+    session_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Retrieve or generate the feedback evaluation report for a session."""
+    stmt = (
+        select(SimulationSession)
+        .where(SimulationSession.id == session_id)
+        .options(selectinload(SimulationSession.evaluation))
+    )
+    session_obj = (await db.execute(stmt)).scalar_one_or_none()
+    if not session_obj:
+        raise HTTPException(status_code=404, detail="Simulation session not found")
+
+    if current_user.role == "trainee" and session_obj.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    provider = get_llm_provider()
+    report = await ScoringService.evaluate_session(db, session_id, provider)
+    return report
+
+
+@router.post("/{session_id}/evaluation", response_model=FeedbackReportSchema)
+async def regenerate_session_evaluation(
+    session_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Trigger re-evaluation of a session."""
+    stmt = (
+        select(SimulationSession)
+        .where(SimulationSession.id == session_id)
+        .options(selectinload(SimulationSession.evaluation))
+    )
+    session_obj = (await db.execute(stmt)).scalar_one_or_none()
+    if not session_obj:
+        raise HTTPException(status_code=404, detail="Simulation session not found")
+
+    if current_user.role == "trainee" and session_obj.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Forbidden")
+
+    # If previous evaluation exists, delete it so re-evaluation occurs
+    if session_obj.evaluation:
+        await db.delete(session_obj.evaluation)
+        await db.commit()
+
+    provider = get_llm_provider()
+    report = await ScoringService.evaluate_session(db, session_id, provider)
+    return report

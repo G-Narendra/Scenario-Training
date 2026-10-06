@@ -64,3 +64,57 @@ export interface SimulationSession {
   turn_count: number;
   messages: SessionMessage[];
 }
+
+export interface SkillScore {
+  skill: string;
+  score: number;
+  rubric_level_reached: string;
+  justification: string;
+}
+
+export interface WhatWorked {
+  moment_seq: number;
+  quote: string;
+  why_it_worked: string;
+}
+
+export interface WhatDidnt {
+  moment_seq: number;
+  quote: string;
+  why_it_missed: string;
+}
+
+export interface KeyMoment {
+  moment_seq: number;
+  quote: string;
+  what_happened: string;
+  why_it_matters: string;
+  alternative_phrasing: string;
+  reasoning: string;
+}
+
+export interface SuccessCriteriaResult {
+  criterion: string;
+  met: boolean;
+  evidence: string;
+}
+
+export interface ImprovementStep {
+  step: string;
+  why: string;
+  practice_drill: string;
+  linked_skill: string;
+}
+
+export interface FeedbackReport {
+  overall_summary: string;
+  skill_scores: SkillScore[];
+  what_worked: WhatWorked[];
+  what_didnt: WhatDidnt[];
+  key_moments: KeyMoment[];
+  hidden_reveal: string;
+  success_criteria_results: SuccessCriteriaResult[];
+  improvement_steps: ImprovementStep[];
+  overall_score: number;
+  is_fallback?: boolean;
+}

@@ -96,3 +96,35 @@
   - Mypy type checker: 0 issues across 39 source files.
   - Frontend type check: `tsc --noEmit` passed with 0 errors.
 - **Result**: GATE 4 PASSED
+
+## 2026-10-06 - Phase 5: Evaluation, Scoring & Feedback Engine
+- **Role**: AI Prompt Engineer / Solution Architect / Backend Engineer / Frontend Engineer / QA Engineer
+- **Changes**:
+  - Implemented strict Pydantic schema in `backend/app/schemas/evaluation.py` enforcing Section 10 fields:
+    - `SkillScoreItem` with rubric levels and transcript citations
+    - `WhatWorkedItem` and `WhatDidntItem` with verbatim transcript quotes
+    - `KeyMomentItem` with alternative phrasing and "This works better because..." tactical reasoning
+    - `ImprovementStepItem` with exactly 3 to 4 concrete practice drills
+    - `HiddenReveal` disclosing counterpart drivers and trainee discovery success
+  - Built `evaluator.py` prompt composer in `backend/app/ai/prompts/evaluator.py` providing complete scenario context, hidden motivations, 5-level skill rubrics, dialogue transcripts, and repair prompts.
+  - Implemented `ScoringService` in `backend/app/services/scoring_service.py`:
+    - Deterministic scoring math: $round(\sum w_i \times \frac{s_i - 1}{4} \times 100)$
+    - Strict verbatim quote validator checking quotes against actual trainee turns
+    - Graceful repair retry loop (up to 3 retries) with fallback generation
+    - Persistent evaluation storage in `evaluations` table
+  - Added session evaluation endpoints to `backend/app/api/sessions.py`:
+    - `GET /api/sessions/{session_id}/evaluation`
+    - `POST /api/sessions/{session_id}/evaluation` (regeneration)
+  - Enhanced `MockLLMProvider` in `backend/app/ai/providers/mock_provider.py` with structured evaluation generation quoting actual session transcript turns.
+  - Built rich `FeedbackReportPage.tsx` with score tier badge, rubric breakdown progress bars, what worked/didn't quotes, key moment alternative lines, 3-4 practice drills, and `window.print()` PDF support.
+  - Integrated `FeedbackReportPage` into `frontend/src/App.tsx`.
+- **Tests Run**:
+  - Golden transcript consistency tests (`backend/tests/unit/test_evaluation_golden.py`): verified strict score ordering ($good > mediocre > poor$) and deterministic scoring across Sales and Leadership tracks.
+  - Evaluation integration flow (`backend/tests/integration/test_evaluation_flow.py`): verified end-to-end evaluation generation, schema compliance, idempotency, and multi-tenant access protection.
+  - Scoring and scenario service coverage unit tests (`test_scoring_service_coverage.py`, `test_scenario_service_coverage.py`).
+  - Full backend suite: 65 tests passing with 85% total statement coverage.
+  - Playwright E2E browser test: verified end-to-end user journey from login to 3-click simulation launch, live chat streaming, session end, and feedback report rendering with score gauge and action plan.
+  - Ruff linter: 0 errors (all checks passed).
+  - Mypy type checker: 0 issues across 42 source files.
+  - Frontend type check: `tsc --noEmit` passed with 0 errors.
+- **Result**: GATE 5 PASSED

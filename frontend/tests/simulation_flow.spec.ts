@@ -62,5 +62,12 @@ test.describe('Flight Simulator E2E Simulation Flow', () => {
     // Verify conclusion state
     await expect(page.locator('text=Simulation Concluded')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('#view-evaluation-btn')).toBeVisible();
+
+    // 6. Navigate to Evaluation Report
+    await page.click('#view-evaluation-btn');
+    await expect(page.locator('#overall-score-display')).toBeVisible({ timeout: 15000 });
+    await expect(page.locator('text=Skill Competency Rubric Scores')).toBeVisible();
+    await expect(page.locator('text=Targeted Action Plan')).toBeVisible();
+    await expect(page.locator('#print-report-btn')).toBeVisible();
   });
 });

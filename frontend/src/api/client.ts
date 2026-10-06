@@ -1,4 +1,5 @@
 import {
+  FeedbackReport,
   ScenarioDetail,
   ScenarioListItem,
   SimulationSession,
@@ -117,6 +118,17 @@ export const api = {
 
   async listMySessions(): Promise<SimulationSession[]> {
     return request<SimulationSession[]>('/sessions?mine=true');
+  },
+
+  // Evaluation
+  async getSessionEvaluation(sessionId: string): Promise<FeedbackReport> {
+    return request<FeedbackReport>(`/sessions/${sessionId}/evaluation`);
+  },
+
+  async regenerateSessionEvaluation(sessionId: string): Promise<FeedbackReport> {
+    return request<FeedbackReport>(`/sessions/${sessionId}/evaluation`, {
+      method: 'POST',
+    });
   },
 
   // Streaming message exchange via SSE
