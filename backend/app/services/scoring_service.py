@@ -83,9 +83,7 @@ class ScoringService:
         if not trainee_messages:
             return errors
 
-        normalized_turns = [
-            cls._normalize_text(m.get("content", "")) for m in trainee_messages
-        ]
+        normalized_turns = [cls._normalize_text(m.get("content", "")) for m in trainee_messages]
 
         def check_quote(quote: str, section: str, idx: int):
             if not quote or len(quote.strip()) < 3:
@@ -95,7 +93,7 @@ class ScoringService:
             found = any(norm_quote in turn for turn in normalized_turns)
             if not found:
                 errors.append(
-                    f"{section}[{idx}].quote \"{quote[:40]}...\" was not found verbatim in any trainee turn."
+                    f'{section}[{idx}].quote "{quote[:40]}..." was not found verbatim in any trainee turn.'
                 )
 
         for i, item in enumerate(report_data.get("what_worked", [])):
@@ -126,7 +124,9 @@ class ScoringService:
                 SkillScoreItem(
                     skill=s["key"],
                     score=3,
-                    rubric_level_reached=s.get("rubric", {}).get("3", "Standard baseline performance achieved."),
+                    rubric_level_reached=s.get("rubric", {}).get(
+                        "3", "Standard baseline performance achieved."
+                    ),
                     justification="Baseline automated evaluation generated during graceful recovery.",
                 )
             )
@@ -199,7 +199,9 @@ class ScoringService:
                 met=True,
                 evidence="Evaluated from simulation transcript review.",
             )
-            for crit in scenario_data.get("success_criteria", ["Demonstrate constructive communication"])
+            for crit in scenario_data.get(
+                "success_criteria", ["Demonstrate constructive communication"]
+            )
         ]
 
         return FeedbackReportSchema(
@@ -208,7 +210,9 @@ class ScoringService:
             what_worked=what_worked,
             what_didnt=what_didnt,
             key_moments=key_moments,
-            hidden_reveal=scenario_data.get("hidden_motivations", ["Counterpart sought validation and clarity."])[0],
+            hidden_reveal=scenario_data.get(
+                "hidden_motivations", ["Counterpart sought validation and clarity."]
+            )[0],
             success_criteria_results=success_results,
             improvement_steps=improvement_steps,
             overall_score=50,
@@ -263,14 +267,9 @@ class ScoringService:
         messages: List[Message] = sorted(session_obj.messages, key=lambda m: m.seq)
 
         # 2. Extract Transcript & Trainee messages
-        transcript_data = [
-            {"seq": m.seq, "role": m.role, "content": m.content}
-            for m in messages
-        ]
+        transcript_data = [{"seq": m.seq, "role": m.role, "content": m.content} for m in messages]
         trainee_msgs = [
-            {"seq": m.seq, "content": m.content}
-            for m in messages
-            if m.role == "trainee"
+            {"seq": m.seq, "content": m.content} for m in messages if m.role == "trainee"
         ]
 
         # 3. Fetch Skill Rubrics
@@ -334,7 +333,7 @@ class ScoringService:
                 if attempt < max_retries:
                     validation_errors = [str(e)]
                     current_prompt = build_repair_prompt(
-                        original_output=raw_json if 'raw_json' in locals() else "",
+                        original_output=raw_json if "raw_json" in locals() else "",
                         validation_errors=validation_errors,
                         trainee_quotes_available=trainee_msgs,
                     )
@@ -365,7 +364,9 @@ class ScoringService:
             hidden_reveal=report.hidden_reveal,
             success_criteria_results=[sc.model_dump() for sc in report.success_criteria_results],
             summary=report.overall_summary,
-            evaluator_model="claude-3-5-sonnet" if getattr(llm_provider, "name", "") == "anthropic" else "mock-evaluator",
+            evaluator_model="claude-3-5-sonnet"
+            if getattr(llm_provider, "name", "") == "anthropic"
+            else "mock-evaluator",
             prompt_version="1.0.0",
         )
         db.add(eval_model)

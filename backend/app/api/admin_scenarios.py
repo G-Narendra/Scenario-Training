@@ -176,7 +176,9 @@ async def admin_archive_scenario(
     return {"message": "Scenario archived successfully", "id": id, "status": "archived"}
 
 
-@router.post("/{id}/duplicate", status_code=status.HTTP_201_CREATED, response_model=AdminScenarioResponse)
+@router.post(
+    "/{id}/duplicate", status_code=status.HTTP_201_CREATED, response_model=AdminScenarioResponse
+)
 async def admin_duplicate_scenario(
     id: str,
     current_admin: User = Depends(require_group_admin),

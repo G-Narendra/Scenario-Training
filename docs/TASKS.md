@@ -88,13 +88,13 @@
 - [x] GATE 6: Voice session completes with Mock provider, transcript, and evaluation
 
 ## Phase 7: Progress Tracking & Dashboards
-- [ ] 7.1 Progress API: trends, streaks, averages, skill breakdowns
-- [ ] 7.2 Trainee "My Progress" dashboard with skill charts and recommendations
-- [ ] 7.3 Group admin cohort dashboard with member completion tables
-- [ ] 7.4 CSV progress export
-- [ ] 7.5 Privacy and multi-tenant isolation tests
-- [ ] 7.6 Aggregation correctness and query performance tests
-- [ ] GATE 7: Dashboards show verified correct metrics against seeded test dataset
+- [x] 7.1 Progress API: trends, streaks, averages, skill breakdowns
+- [x] 7.2 Trainee "My Progress" dashboard with skill charts and recommendations
+- [x] 7.3 Group admin cohort dashboard with member completion tables
+- [x] 7.4 CSV progress export
+- [x] 7.5 Privacy and multi-tenant isolation tests
+- [x] 7.6 Aggregation correctness and query performance tests
+- [x] GATE 7: Dashboards show verified correct metrics against seeded test dataset
 
 ## Phase 8: Admin Console
 - [ ] 8.1 Cohort management: creation, 30-day window, passcode rotation, member view

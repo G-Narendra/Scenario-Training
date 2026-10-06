@@ -1,9 +1,11 @@
 import {
+  CohortProgress,
   FeedbackReport,
   ScenarioDetail,
   ScenarioListItem,
   SimulationSession,
   Track,
+  TraineeProgress,
   User,
 } from '../types';
 
@@ -129,6 +131,27 @@ export const api = {
     return request<FeedbackReport>(`/sessions/${sessionId}/evaluation`, {
       method: 'POST',
     });
+  },
+
+  // Progress & Analytics
+  async getMyProgress(): Promise<TraineeProgress> {
+    return request<TraineeProgress>('/progress/me');
+  },
+
+  async getCohortProgress(cohortId: string): Promise<CohortProgress> {
+    return request<CohortProgress>(`/admin/cohorts/${cohortId}/progress`);
+  },
+
+  async exportCohortCsv(cohortId: string): Promise<Blob> {
+    const response = await fetch(`${API_BASE}/admin/cohorts/${cohortId}/export.csv`, {
+      headers: {
+        ...getAuthHeader(),
+      },
+    });
+    if (!response.ok) {
+      throw new ApiError('Failed to export CSV', response.status);
+    }
+    return response.blob();
   },
 
   // Streaming message exchange via SSE

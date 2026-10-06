@@ -19,7 +19,9 @@ class OpenAIRealtimeVoiceProvider(VoiceProvider):
     async def initialize_session(self, config: VoiceConfig) -> None:
         self.config = config
         if not self.api_key:
-            logger.warning("OPENAI_API_KEY is not set. OpenAI Realtime requires active credentials.")
+            logger.warning(
+                "OPENAI_API_KEY is not set. OpenAI Realtime requires active credentials."
+            )
             return
         # Live connection setup hook for live testing
         self.is_connected = True

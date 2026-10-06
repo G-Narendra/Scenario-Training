@@ -36,7 +36,12 @@ async def setup_admin_scenarios_branch_data():
             duration_limit_seconds=300,
             turn_limit=10,
             brief="Admin scenario test.",
-            persona={"name": "Sam", "role": "Buyer", "personality": ["friendly"], "communication_style": "Friendly"},
+            persona={
+                "name": "Sam",
+                "role": "Buyer",
+                "personality": ["friendly"],
+                "communication_style": "Friendly",
+            },
             hidden_motivations=["Testing admin CRUD"],
             objections=["No objections"],
             success_criteria=["Complete simulation"],
@@ -74,7 +79,13 @@ async def setup_admin_scenarios_branch_data():
         )
 
         token, _, _ = create_access_token(super_admin.id, super_admin.role)
-        db.add(AuthSession(user_id=super_admin.id, token_hash=hash_token(token), expires_at=now + timedelta(hours=12)))
+        db.add(
+            AuthSession(
+                user_id=super_admin.id,
+                token_hash=hash_token(token),
+                expires_at=now + timedelta(hours=12),
+            )
+        )
         await db.commit()
 
         return {
@@ -145,7 +156,9 @@ async def test_admin_scenarios_lifecycle_branches(setup_admin_scenarios_branch_d
         assert "yaml" in r_yaml.json()
 
         # 8. Restore version
-        r_restore = await ac.post(f"/api/admin/scenarios/{scen_id}/versions/1/restore", headers=headers)
+        r_restore = await ac.post(
+            f"/api/admin/scenarios/{scen_id}/versions/1/restore", headers=headers
+        )
         assert r_restore.status_code == 200
         assert r_restore.json()["version"] >= 1
 

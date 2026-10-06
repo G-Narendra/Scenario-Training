@@ -69,21 +69,21 @@ def build_evaluator_prompt(
                 "skill": "skill_key_name",
                 "score": 3,
                 "rubric_level_reached": "Quote matching rubric descriptor",
-                "justification": "Detailed citation from transcript explaining score"
+                "justification": "Detailed citation from transcript explaining score",
             }
         ],
         "what_worked": [
             {
                 "moment_seq": 4,
                 "quote": "verbatim words spoken by trainee",
-                "why_it_worked": "Impact on counterpart and conversational momentum"
+                "why_it_worked": "Impact on counterpart and conversational momentum",
             }
         ],
         "what_didnt": [
             {
                 "moment_seq": 6,
                 "quote": "verbatim words spoken by trainee",
-                "why_it_missed": "Specific negative consequence or missed opportunity"
+                "why_it_missed": "Specific negative consequence or missed opportunity",
             }
         ],
         "key_moments": [
@@ -93,25 +93,21 @@ def build_evaluator_prompt(
                 "what_happened": "Objective analysis of the exchange",
                 "why_it_matters": "Strategic significance to the simulation outcome",
                 "alternative_phrasing": "Specific recommended statement the trainee should say",
-                "reasoning": "This works better because [psychological/tactical rationale]"
+                "reasoning": "This works better because [psychological/tactical rationale]",
             }
         ],
         "hidden_reveal": "Explanation of counterpart's inner driver and how the trainee handled it.",
         "success_criteria_results": [
-            {
-                "criterion": "Success criterion text",
-                "met": True,
-                "evidence": "Transcript citation"
-            }
+            {"criterion": "Success criterion text", "met": True, "evidence": "Transcript citation"}
         ],
         "improvement_steps": [
             {
                 "step": "Imperative action directive",
                 "why": "Tactical rationale",
                 "practice_drill": "Concrete simulation exercise or phrasing drill",
-                "linked_skill": "skill_key_name"
+                "linked_skill": "skill_key_name",
             }
-        ]
+        ],
     }
     context_lines.append(json.dumps(sample_format, indent=2))
     context_lines.append("\nProduce valid JSON strictly adhering to this structure.")
@@ -126,9 +122,9 @@ def build_repair_prompt(
 ) -> str:
     """Builds a repair prompt highlighting schema or verbatim quote validation errors."""
     error_list = "\n".join([f"- {err}" for err in validation_errors])
-    valid_quotes_sample = "\n".join([
-        f"- Turn {q.get('seq')}: \"{q.get('content')}\"" for q in trainee_quotes_available
-    ])
+    valid_quotes_sample = "\n".join(
+        [f"- Turn {q.get('seq')}: \"{q.get('content')}\"" for q in trainee_quotes_available]
+    )
 
     return f"""The previous JSON response contained validation errors. Please correct the JSON and return the fixed object.
 

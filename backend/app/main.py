@@ -13,6 +13,7 @@ from sqlalchemy import text
 from backend.app.api.admin_cohorts import router as admin_cohorts_router
 from backend.app.api.admin_scenarios import router as admin_scenarios_router
 from backend.app.api.auth import router as auth_router
+from backend.app.api.progress import router as progress_router
 from backend.app.api.scenarios import router as scenarios_router
 from backend.app.api.sessions import router as sessions_router
 from backend.app.config import settings
@@ -52,6 +53,7 @@ app.include_router(scenarios_router)
 app.include_router(admin_scenarios_router)
 app.include_router(sessions_router)
 app.include_router(voice_router)
+app.include_router(progress_router)
 
 
 @app.middleware("http")
@@ -119,7 +121,8 @@ async def version_info():
 
 
 # Mount built frontend SPA static files if present
-frontend_dist = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "dist")
+frontend_dist = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "dist"
+)
 if os.path.exists(frontend_dist):
     app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
-

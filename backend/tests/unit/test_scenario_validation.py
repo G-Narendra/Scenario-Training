@@ -149,4 +149,3 @@ async def test_scenario_service_edge_cases():
         with pytest.raises(HTTPException) as exc2:
             await ScenarioService.get_public_scenario_detail(db, "non-existent-slug")
         assert exc2.value.status_code == 404
-

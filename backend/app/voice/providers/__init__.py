@@ -17,4 +17,3 @@ def get_voice_provider() -> VoiceProvider:
     if settings.VOICE_PROVIDER == "openai_realtime" and settings.OPENAI_API_KEY:
         return OpenAIRealtimeVoiceProvider()
     return MockVoiceProvider()
-

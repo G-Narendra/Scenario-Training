@@ -104,7 +104,12 @@ class MockLLMProvider(LLMProvider):
             if m:
                 skills.append(m.group(1))
         if not skills:
-            skills = ["discovery_questions", "objection_handling", "value_articulation", "closing_next_steps"]
+            skills = [
+                "discovery_questions",
+                "objection_handling",
+                "value_articulation",
+                "closing_next_steps",
+            ]
 
         q1_seq, q1_text = trainee_turns[0]
         q2_seq, q2_text = trainee_turns[min(1, len(trainee_turns) - 1)]
@@ -117,7 +122,7 @@ class MockLLMProvider(LLMProvider):
                     "skill": s,
                     "score": 4 if i % 2 == 0 else 3,
                     "rubric_level_reached": f"Rubric Level {4 if i % 2 == 0 else 3} demonstrated with clear evidence.",
-                    "justification": f"Demonstrated solid application of {s.replace('_', ' ')} during turns {q1_seq} and {q2_seq}."
+                    "justification": f"Demonstrated solid application of {s.replace('_', ' ')} during turns {q1_seq} and {q2_seq}.",
                 }
                 for i, s in enumerate(skills)
             ],
@@ -125,14 +130,14 @@ class MockLLMProvider(LLMProvider):
                 {
                     "moment_seq": q1_seq,
                     "quote": q1_text,
-                    "why_it_worked": "Framed the discussion around mutual objectives and lowered counterpart guardedness."
+                    "why_it_worked": "Framed the discussion around mutual objectives and lowered counterpart guardedness.",
                 }
             ],
             "what_didnt": [
                 {
                     "moment_seq": q2_seq,
                     "quote": q2_text,
-                    "why_it_missed": "Could delve deeper into operational constraints before proposing specific timing."
+                    "why_it_missed": "Could delve deeper into operational constraints before proposing specific timing.",
                 }
             ],
             "key_moments": [
@@ -142,7 +147,7 @@ class MockLLMProvider(LLMProvider):
                     "what_happened": "Initial conversational inquiry.",
                     "why_it_matters": "Established collaborative dialogue without triggering defensive resistance.",
                     "alternative_phrasing": "What specific outcomes are essential for your department before we discuss pricing?",
-                    "reasoning": "This works better because open questions reveal hidden budgetary constraints early."
+                    "reasoning": "This works better because open questions reveal hidden budgetary constraints early.",
                 },
                 {
                     "moment_seq": q2_seq,
@@ -150,7 +155,7 @@ class MockLLMProvider(LLMProvider):
                     "what_happened": "Objection exploration turn.",
                     "why_it_matters": "Crucial moment to differentiate value rather than trading price concessions.",
                     "alternative_phrasing": "Help me understand the internal benchmarks your CFO is looking for.",
-                    "reasoning": "This works better because it addresses internal organizational pressures directly."
+                    "reasoning": "This works better because it addresses internal organizational pressures directly.",
                 },
                 {
                     "moment_seq": q3_seq,
@@ -158,42 +163,42 @@ class MockLLMProvider(LLMProvider):
                     "what_happened": "Closing transition turn.",
                     "why_it_matters": "Determines whether the interaction concludes with tangible momentum or stalls.",
                     "alternative_phrasing": "Let's schedule thirty minutes next Thursday to review the updated financial analysis together.",
-                    "reasoning": "This works better because setting concrete dates establishes reciprocal accountability."
-                }
+                    "reasoning": "This works better because setting concrete dates establishes reciprocal accountability.",
+                },
             ],
             "hidden_reveal": "The counterpart faced an aggressive executive cost-reduction target, but privately valued vendor stability.",
             "success_criteria_results": [
                 {
                     "criterion": "Uncover underlying counterpart objectives",
                     "met": True,
-                    "evidence": f"Trainee probed for priorities at turn {q1_seq}."
+                    "evidence": f"Trainee probed for priorities at turn {q1_seq}.",
                 },
                 {
                     "criterion": "Secure clear commitment and next steps",
                     "met": True,
-                    "evidence": f"Established agreed follow-up communication at turn {q3_seq}."
-                }
+                    "evidence": f"Established agreed follow-up communication at turn {q3_seq}.",
+                },
             ],
             "improvement_steps": [
                 {
                     "step": "Deploy open-ended discovery questions in the first two turns",
                     "why": "Uncovers unstated budget parameters before positions harden",
                     "practice_drill": "Practice the TED question model (Tell, Explain, Describe) on 3 opening scenarios.",
-                    "linked_skill": skills[0] if skills else "discovery_questions"
+                    "linked_skill": skills[0] if skills else "discovery_questions",
                 },
                 {
                     "step": "Acknowledge and label emotional subtext before offering solutions",
                     "why": "Lowers counterpart resistance and builds trust",
                     "practice_drill": "Practice mirror-and-label responses to cost pushback before presenting data.",
-                    "linked_skill": skills[1] if len(skills) > 1 else "objection_handling"
+                    "linked_skill": skills[1] if len(skills) > 1 else "objection_handling",
                 },
                 {
                     "step": "Secure concrete calendar next steps with clear mutual agendas",
                     "why": "Maintains momentum and prevents stalled negotiations",
                     "practice_drill": "Conclude every mock call with a specific date, time, and stakeholder list.",
-                    "linked_skill": skills[2] if len(skills) > 2 else "closing_next_steps"
-                }
-            ]
+                    "linked_skill": skills[2] if len(skills) > 2 else "closing_next_steps",
+                },
+            ],
         }
         return json.dumps(report)
 
@@ -211,7 +216,10 @@ class MockLLMProvider(LLMProvider):
 
         # Check if evaluator call
         for m in reversed(messages):
-            if m.role == "user" and ("TRANSCRIPT OF SIMULATION" in m.content or "REQUIRED JSON RESPONSE STRUCTURE" in m.content):
+            if m.role == "user" and (
+                "TRANSCRIPT OF SIMULATION" in m.content
+                or "REQUIRED JSON RESPONSE STRUCTURE" in m.content
+            ):
                 return self._generate_mock_evaluation(m.content)
 
         # Contextual dynamic mock reply

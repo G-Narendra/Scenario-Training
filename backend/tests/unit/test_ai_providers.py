@@ -194,4 +194,3 @@ async def test_conclusion_detector_llm_evaluation():
     )
     assert concluded_neg is True
     assert outcome_neg == "negative"
-

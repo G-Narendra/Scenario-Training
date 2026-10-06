@@ -41,14 +41,18 @@ async def voice_websocket_endpoint(websocket: WebSocket, session_id: str):
 
         if init_msg.get("type") != "session.start":
             await websocket.send_text(
-                json.dumps({"type": "error", "message": "Expected session.start as initial message"})
+                json.dumps(
+                    {"type": "error", "message": "Expected session.start as initial message"}
+                )
             )
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
 
         token = init_msg.get("token") or websocket.query_params.get("token")
         if not token:
-            await websocket.send_text(json.dumps({"type": "error", "message": "Missing authentication token"}))
+            await websocket.send_text(
+                json.dumps({"type": "error", "message": "Missing authentication token"})
+            )
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
 
@@ -58,7 +62,9 @@ async def voice_websocket_endpoint(websocket: WebSocket, session_id: str):
                 raise ValueError("Invalid token claims")
             current_user_id = str(claims["sub"])
         except Exception:
-            await websocket.send_text(json.dumps({"type": "error", "message": "Invalid or expired token"}))
+            await websocket.send_text(
+                json.dumps({"type": "error", "message": "Invalid or expired token"})
+            )
             await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
             return
 
@@ -67,11 +73,15 @@ async def voice_websocket_endpoint(websocket: WebSocket, session_id: str):
             stmt = (
                 select(SimulationSession)
                 .where(SimulationSession.id == session_id)
-                .options(selectinload(SimulationSession.scenario), selectinload(SimulationSession.user))
+                .options(
+                    selectinload(SimulationSession.scenario), selectinload(SimulationSession.user)
+                )
             )
             session_obj = (await db.execute(stmt)).scalar_one_or_none()
             if not session_obj:
-                await websocket.send_text(json.dumps({"type": "error", "message": "Session not found"}))
+                await websocket.send_text(
+                    json.dumps({"type": "error", "message": "Session not found"})
+                )
                 await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
                 return
 
@@ -82,7 +92,12 @@ async def voice_websocket_endpoint(websocket: WebSocket, session_id: str):
 
             if session_obj.status != "active":
                 await websocket.send_text(
-                    json.dumps({"type": "error", "message": f"Session is not active (status: {session_obj.status})"})
+                    json.dumps(
+                        {
+                            "type": "error",
+                            "message": f"Session is not active (status: {session_obj.status})",
+                        }
+                    )
                 )
                 await websocket.close(code=status.WS_1008_POLICY_VIOLATION)
                 return
@@ -97,11 +112,13 @@ async def voice_websocket_endpoint(websocket: WebSocket, session_id: str):
             await voice_provider.initialize_session(voice_config)
 
         await websocket.send_text(
-            json.dumps({
-                "type": "session.ready",
-                "scenario_title": session_obj.scenario.title,
-                "persona_name": voice_config.counterpart_name,
-            })
+            json.dumps(
+                {
+                    "type": "session.ready",
+                    "scenario_title": session_obj.scenario.title,
+                    "persona_name": voice_config.counterpart_name,
+                }
+            )
         )
 
         # 3. Main Message Loop
@@ -164,21 +181,25 @@ async def voice_websocket_endpoint(websocket: WebSocket, session_id: str):
                                 latency_ms = (time.perf_counter() - turn_start_time) * 1000.0
 
                         await websocket.send_text(
-                            json.dumps({
-                                "type": "assistant.audio",
-                                "data": audio_chunk.data_b64,
-                                "format": audio_chunk.format,
-                                "sample_rate": audio_chunk.sample_rate,
-                                "is_final": audio_chunk.is_final,
-                            })
+                            json.dumps(
+                                {
+                                    "type": "assistant.audio",
+                                    "data": audio_chunk.data_b64,
+                                    "format": audio_chunk.format,
+                                    "sample_rate": audio_chunk.sample_rate,
+                                    "is_final": audio_chunk.is_final,
+                                }
+                            )
                         )
 
                     # Signal completion of assistant audio
                     await websocket.send_text(
-                        json.dumps({
-                            "type": "turn.complete",
-                            "latency_ms": round(latency_ms, 2),
-                        })
+                        json.dumps(
+                            {
+                                "type": "turn.complete",
+                                "latency_ms": round(latency_ms, 2),
+                            }
+                        )
                     )
 
                 active_stream_task = asyncio.create_task(stream_audio_job())
@@ -206,7 +227,9 @@ async def voice_websocket_endpoint(websocket: WebSocket, session_id: str):
                             db.add(usage)
                         await db.commit()
 
-                await websocket.send_text(json.dumps({"type": "session.ended", "status": "completed"}))
+                await websocket.send_text(
+                    json.dumps({"type": "session.ended", "status": "completed"})
+                )
                 break
 
     except WebSocketDisconnect:

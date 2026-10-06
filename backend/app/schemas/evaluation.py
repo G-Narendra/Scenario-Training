@@ -27,8 +27,12 @@ class KeyMomentItem(BaseModel):
     quote: str = Field(..., description="Verbatim quote spoken by trainee")
     what_happened: str = Field(..., description="Objective description of interaction")
     why_it_matters: str = Field(..., description="Strategic impact on simulation outcome")
-    alternative_phrasing: str = Field(..., description="Concrete, actionable alternative line for the trainee")
-    reasoning: str = Field(..., description="Why alternative works better, in the form 'This works better because...'")
+    alternative_phrasing: str = Field(
+        ..., description="Concrete, actionable alternative line for the trainee"
+    )
+    reasoning: str = Field(
+        ..., description="Why alternative works better, in the form 'This works better because...'"
+    )
 
     @model_validator(mode="after")
     def validate_reasoning_format(self):
@@ -54,25 +58,34 @@ class ImprovementStepItem(BaseModel):
 
 class FeedbackReportSchema(BaseModel):
     overall_summary: str = Field(..., description="2-4 sentences specific to this conversation")
-    skill_scores: List[SkillScoreItem] = Field(..., min_length=1, description="Scores for assessed skills")
-    what_worked: List[WhatWorkedItem] = Field(..., min_length=1, description="Strengths observed with transcript quotes")
-    what_didnt: List[WhatDidntItem] = Field(..., min_length=1, description="Opportunities for growth with transcript quotes")
-    key_moments: List[KeyMomentItem] = Field(..., min_length=3, description="At least 3 pivotal moments analyzed in detail")
-    hidden_reveal: str = Field(..., description="What counterpart was really thinking or motivated by")
-    success_criteria_results: List[SuccessCriteriaResultItem] = Field(..., description="Evaluation against scenario goals")
+    skill_scores: List[SkillScoreItem] = Field(
+        ..., min_length=1, description="Scores for assessed skills"
+    )
+    what_worked: List[WhatWorkedItem] = Field(
+        ..., min_length=1, description="Strengths observed with transcript quotes"
+    )
+    what_didnt: List[WhatDidntItem] = Field(
+        ..., min_length=1, description="Opportunities for growth with transcript quotes"
+    )
+    key_moments: List[KeyMomentItem] = Field(
+        ..., min_length=3, description="At least 3 pivotal moments analyzed in detail"
+    )
+    hidden_reveal: str = Field(
+        ..., description="What counterpart was really thinking or motivated by"
+    )
+    success_criteria_results: List[SuccessCriteriaResultItem] = Field(
+        ..., description="Evaluation against scenario goals"
+    )
     improvement_steps: List[ImprovementStepItem] = Field(
-        ...,
-        min_length=3,
-        max_length=4,
-        description="Exactly 3 to 4 concrete improvement steps"
+        ..., min_length=3, max_length=4, description="Exactly 3 to 4 concrete improvement steps"
     )
     overall_score: Optional[int] = Field(
         None,
         ge=0,
         le=100,
-        description="Deterministic overall score 0-100 computed from weighted skill scores"
+        description="Deterministic overall score 0-100 computed from weighted skill scores",
     )
     is_fallback: bool = Field(
         False,
-        description="Flag set if report was generated via deterministic fallback after repair retries"
+        description="Flag set if report was generated via deterministic fallback after repair retries",
     )

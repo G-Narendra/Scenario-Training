@@ -1,6 +1,6 @@
 from typing import List
 
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -13,8 +13,10 @@ from backend.app.schemas.cohorts import (
     RotatePasscodeRequest,
     RotatePasscodeResponse,
 )
+from backend.app.schemas.progress import CohortProgressResponse
 from backend.app.security.deps import require_group_admin
 from backend.app.services.access_service import AccessService
+from backend.app.services.progress_service import ProgressService
 
 router = APIRouter(prefix="/api/admin/cohorts", tags=["Admin Cohorts"])
 
@@ -163,3 +165,47 @@ async def revoke_cohort_sessions(
         db=db, cohort_id=id, actor_id=current_admin.id, ip=ip
     )
     return {"message": f"Successfully revoked {count} active sessions for cohort."}
+
+
+@router.get("/{id}/progress", response_model=CohortProgressResponse)
+async def get_cohort_progress(
+    id: str,
+    current_admin: User = Depends(require_group_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Retrieve aggregate performance and completion analytics for a cohort."""
+    # Enforce multi-tenant privacy: group admins can only view their own assigned cohort
+    if current_admin.role != "super_admin" and current_admin.cohort_id != id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: You cannot access progress metrics for another cohort",
+        )
+
+    try:
+        return await ProgressService.get_cohort_progress(db=db, cohort_id=id)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
+@router.get("/{id}/export.csv")
+async def export_cohort_csv(
+    id: str,
+    current_admin: User = Depends(require_group_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Export all session results and evaluation metrics for a cohort as CSV."""
+    if current_admin.role != "super_admin" and current_admin.cohort_id != id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: You cannot export data for another cohort",
+        )
+
+    try:
+        csv_data = await ProgressService.export_cohort_csv(db=db, cohort_id=id)
+        return Response(
+            content=csv_data,
+            media_type="text/csv",
+            headers={"Content-Disposition": f'attachment; filename="cohort_{id}_progress.csv"'},
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))

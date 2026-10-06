@@ -4,7 +4,15 @@ from datetime import datetime, timedelta, timezone
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from backend.app.db.models import AuthSession, Cohort, Message, Scenario, SimulationSession, Track, User
+from backend.app.db.models import (
+    AuthSession,
+    Cohort,
+    Message,
+    Scenario,
+    SimulationSession,
+    Track,
+    User,
+)
 from backend.app.db.session import async_session_factory
 from backend.app.main import app
 from backend.app.security.passcodes import hash_token
@@ -72,7 +80,11 @@ async def setup_sessions_branch_data():
         ga_tok, _, _ = create_access_token(group_admin.id, group_admin.role)
 
         for u, tok in [(trainee, t1_tok), (other_trainee, t2_tok), (group_admin, ga_tok)]:
-            db.add(AuthSession(user_id=u.id, token_hash=hash_token(tok), expires_at=now + timedelta(hours=12)))
+            db.add(
+                AuthSession(
+                    user_id=u.id, token_hash=hash_token(tok), expires_at=now + timedelta(hours=12)
+                )
+            )
         await db.commit()
 
         return {
@@ -116,7 +128,9 @@ async def test_sessions_message_streaming_sse_and_auth_checks(setup_sessions_bra
         assert r.status_code == 200
         assert len(r.json()) >= 1
 
-        r_admin = await ac.get("/api/sessions", headers={"Authorization": f"Bearer {data['ga_token']}"})
+        r_admin = await ac.get(
+            "/api/sessions", headers={"Authorization": f"Bearer {data['ga_token']}"}
+        )
         assert r_admin.status_code == 200
         assert len(r_admin.json()) >= 1
 
@@ -160,7 +174,9 @@ async def test_sessions_message_streaming_sse_and_auth_checks(setup_sessions_bra
         assert r_eval_get.status_code == 200
 
         # 11. Create session with nonexistent scenario -> 404
-        r_create_404 = await ac.post("/api/sessions", headers=t1_headers, json={"scenario_id": fake_id, "mode": "text"})
+        r_create_404 = await ac.post(
+            "/api/sessions", headers=t1_headers, json={"scenario_id": fake_id, "mode": "text"}
+        )
         assert r_create_404.status_code == 404
 
         # 12. Create valid session via API

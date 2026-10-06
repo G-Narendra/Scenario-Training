@@ -69,5 +69,12 @@ test.describe('Flight Simulator E2E Simulation Flow', () => {
     await expect(page.locator('text=Skill Competency Rubric Scores')).toBeVisible();
     await expect(page.locator('text=Targeted Action Plan')).toBeVisible();
     await expect(page.locator('#print-report-btn')).toBeVisible();
+
+    // 7. Verify Progress Dashboard from Navbar
+    await page.click('button:has-text("Progress")');
+    await expect(page.locator('h1')).toContainText('Flight Log & Trajectory');
+    await expect(page.locator('text=Simulations Completed')).toBeVisible();
+    await expect(page.locator('text=Recent Simulation Log')).toBeVisible();
   });
 });
+

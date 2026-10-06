@@ -295,5 +295,3 @@ async def test_admin_scenario_lifecycle_and_versioning(auth_tokens):
         )
         assert create_res.status_code == 201
         assert create_res.json()["slug"] == "directly-created-json-scenario"
-
-

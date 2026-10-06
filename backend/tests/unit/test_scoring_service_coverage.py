@@ -21,9 +21,7 @@ def test_scoring_service_fallback_generation():
         {"key": "empathy", "name": "Empathy", "rubric": {"3": "Standard level 3"}},
         {"key": "clarity", "name": "Clarity", "rubric": {"3": "Standard level 3"}},
     ]
-    trainee_messages = [
-        {"seq": 2, "content": "Hello Bob, how are you today?"}
-    ]
+    trainee_messages = [{"seq": 2, "content": "Hello Bob, how are you today?"}]
 
     report = ScoringService.generate_fallback_report(scenario_data, skills, trainee_messages)
     assert report.is_fallback is True
@@ -88,13 +86,36 @@ async def test_evaluate_session_existing_cached_eval():
         id="e1",
         session_id="s123",
         overall_score=88,
-        skill_scores=[{"skill": "s1", "score": 4, "rubric_level_reached": "L4", "justification": "Good"}],
+        skill_scores=[
+            {"skill": "s1", "score": 4, "rubric_level_reached": "L4", "justification": "Good"}
+        ],
         strengths=[{"moment_seq": 1, "quote": "hi", "why_it_worked": "great"}],
         weaknesses=[{"moment_seq": 2, "quote": "no", "why_it_missed": "missed"}],
         key_moments=[
-            {"moment_seq": 1, "quote": "hi", "what_happened": "a", "why_it_matters": "b", "alternative_phrasing": "c", "reasoning": "This works better because d"},
-            {"moment_seq": 2, "quote": "no", "what_happened": "a", "why_it_matters": "b", "alternative_phrasing": "c", "reasoning": "This works better because d"},
-            {"moment_seq": 3, "quote": "yes", "what_happened": "a", "why_it_matters": "b", "alternative_phrasing": "c", "reasoning": "This works better because d"},
+            {
+                "moment_seq": 1,
+                "quote": "hi",
+                "what_happened": "a",
+                "why_it_matters": "b",
+                "alternative_phrasing": "c",
+                "reasoning": "This works better because d",
+            },
+            {
+                "moment_seq": 2,
+                "quote": "no",
+                "what_happened": "a",
+                "why_it_matters": "b",
+                "alternative_phrasing": "c",
+                "reasoning": "This works better because d",
+            },
+            {
+                "moment_seq": 3,
+                "quote": "yes",
+                "what_happened": "a",
+                "why_it_matters": "b",
+                "alternative_phrasing": "c",
+                "reasoning": "This works better because d",
+            },
         ],
         improvement_steps=[
             {"step": "s1", "why": "w1", "practice_drill": "p1", "linked_skill": "l1"},

@@ -43,6 +43,17 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
               Scenarios
             </button>
 
+            <button
+              onClick={() => onNavigate('progress')}
+              className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                currentView === 'progress'
+                  ? 'bg-slate-800 text-cyan-400'
+                  : 'text-slate-300 hover:bg-slate-900 hover:text-white'
+              }`}
+            >
+              Progress
+            </button>
+
             {user.role === 'group_admin' || user.role === 'super_admin' ? (
               <button
                 onClick={() => onNavigate('admin')}

@@ -8,12 +8,14 @@ import { SimulationChatPage } from './pages/SimulationChatPage';
 import { FeedbackReportPage } from './pages/FeedbackReportPage';
 import { api } from './api/client';
 import { SimulationSession } from './types';
+import { ProgressPage } from './pages/ProgressPage';
 
 const AppContent: React.FC = () => {
   const { isAuthenticated, loading } = useAuth();
-  const [currentView, setCurrentView] = useState<'tracks' | 'scenarios' | 'chat' | 'evaluation' | 'admin'>('tracks');
+  const [currentView, setCurrentView] = useState<'tracks' | 'scenarios' | 'chat' | 'evaluation' | 'progress' | 'admin'>('tracks');
   const [selectedTrack, setSelectedTrack] = useState<string>('sales');
   const [activeSession, setActiveSession] = useState<SimulationSession | null>(null);
+  const [evalSessionId, setEvalSessionId] = useState<string | null>(null);
   const [isStartingSimulation, setIsStartingSimulation] = useState(false);
 
   if (loading) {
@@ -55,6 +57,7 @@ const AppContent: React.FC = () => {
 
   const handleViewEvaluation = (sessionId: string) => {
     console.log('Navigating to evaluation for session:', sessionId);
+    setEvalSessionId(sessionId);
     setCurrentView('evaluation');
   };
 
@@ -84,11 +87,18 @@ const AppContent: React.FC = () => {
           />
         )}
 
-        {currentView === 'evaluation' && activeSession && (
+        {currentView === 'evaluation' && (evalSessionId || activeSession) && (
           <FeedbackReportPage
-            sessionId={activeSession.id}
+            sessionId={evalSessionId || activeSession!.id}
             onBackToScenarios={() => setCurrentView('scenarios')}
             onRetryScenario={(scenId) => handleLaunchSimulation(scenId, 'text')}
+          />
+        )}
+
+        {currentView === 'progress' && (
+          <ProgressPage
+            onSelectScenario={(scenId) => handleLaunchSimulation(scenId, 'text')}
+            onViewSessionEvaluation={handleViewEvaluation}
           />
         )}
 

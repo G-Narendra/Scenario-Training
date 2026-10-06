@@ -10,8 +10,7 @@ from backend.app.db.session import async_session_factory
 from backend.app.main import app
 from backend.app.security.passcodes import hash_token
 from backend.app.security.tokens import create_access_token
-from backend.app.voice.providers.base import AudioChunk, VoiceConfig
-from backend.app.voice.providers.mock_provider import MockVoiceProvider
+from backend.app.voice.providers.base import VoiceConfig
 from backend.app.voice.providers.openai_realtime import OpenAIRealtimeVoiceProvider
 
 
@@ -125,7 +124,13 @@ def test_voice_websocket_protocol_end_to_end(setup_voice_session_data):
 
         # 5. Conclude session
         ws.send_text(json.dumps({"type": "session.end"}))
-        end_msg = json.loads(ws.receive_text())
+        end_msg = None
+        for _ in range(10):
+            m = json.loads(ws.receive_text())
+            if m.get("type") == "session.ended":
+                end_msg = m
+                break
+        assert end_msg is not None
         assert end_msg["type"] == "session.ended"
         assert end_msg["status"] == "completed"
 

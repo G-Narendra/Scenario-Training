@@ -118,3 +118,83 @@ export interface FeedbackReport {
   overall_score: number;
   is_fallback?: boolean;
 }
+
+export interface SkillAverage {
+  skill_key: string;
+  skill_name: string;
+  average_score: number;
+  session_count: number;
+}
+
+export interface RecentSessionSummary {
+  session_id: string;
+  scenario_id: string;
+  scenario_title: string;
+  track_key: string;
+  mode: string;
+  status: string;
+  score?: number;
+  completed_at?: string;
+  duration_seconds: number;
+}
+
+export interface RecommendedScenario {
+  scenario_id: string;
+  title: string;
+  track_key: string;
+  difficulty: number;
+  topic: string;
+  reason: string;
+}
+
+export interface ScoreTrendPoint {
+  date: string;
+  score: number;
+  scenario_title: string;
+  session_id: string;
+}
+
+export interface TraineeProgress {
+  total_sessions_completed: number;
+  total_time_seconds: number;
+  current_streak_days: number;
+  overall_average_score: number;
+  skill_averages: SkillAverage[];
+  recent_sessions: RecentSessionSummary[];
+  recommended_scenarios: RecommendedScenario[];
+  score_trends: ScoreTrendPoint[];
+}
+
+export interface CohortMemberProgress {
+  user_id: string;
+  display_name: string;
+  role: string;
+  sessions_completed: number;
+  average_score?: number;
+  last_active_at?: string;
+  top_skill?: string;
+  needs_work_skill?: string;
+}
+
+export interface MostFailedScenario {
+  scenario_id: string;
+  title: string;
+  track_key: string;
+  difficulty: number;
+  average_score: number;
+  attempts_count: number;
+  completion_rate: number;
+}
+
+export interface CohortProgress {
+  cohort_id: string;
+  cohort_name: string;
+  total_members: number;
+  active_members: number;
+  total_sessions_completed: number;
+  cohort_average_score: number;
+  skill_score_distribution: SkillAverage[];
+  most_failed_scenarios: MostFailedScenario[];
+  members: CohortMemberProgress[];
+}
+
