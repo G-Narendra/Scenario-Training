@@ -25,9 +25,11 @@ class Settings(BaseSettings):
 
     # AI & Voice Providers
     DEFAULT_LLM_PROVIDER: str = Field(default="mock")
+    LLM_PROVIDER: str = Field(default="mock")
     ANTHROPIC_API_KEY: Optional[str] = Field(default=None)
     OPENAI_API_KEY: Optional[str] = Field(default=None)
     DEFAULT_VOICE_PROVIDER: str = Field(default="mock")
+    VOICE_PROVIDER: str = Field(default="mock")
     RUN_LIVE_TESTS: int = Field(default=0)
 
     # CORS

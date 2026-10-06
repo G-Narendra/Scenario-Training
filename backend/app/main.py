@@ -17,6 +17,7 @@ from backend.app.api.scenarios import router as scenarios_router
 from backend.app.api.sessions import router as sessions_router
 from backend.app.config import settings
 from backend.app.db.session import engine
+from backend.app.voice.ws_handler import router as voice_router
 
 
 @asynccontextmanager
@@ -50,6 +51,7 @@ app.include_router(admin_cohorts_router)
 app.include_router(scenarios_router)
 app.include_router(admin_scenarios_router)
 app.include_router(sessions_router)
+app.include_router(voice_router)
 
 
 @app.middleware("http")

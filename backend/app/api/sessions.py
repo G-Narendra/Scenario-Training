@@ -219,9 +219,36 @@ async def get_session_detail(
     )
 
 
+@router.get("/{session_id}/messages", response_model=List[SessionMessageResponse])
+async def get_session_messages(
+    session_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Retrieve message transcript for a simulation session."""
+    session_obj = await db.get(SimulationSession, session_id)
+    if not session_obj:
+        raise HTTPException(status_code=404, detail="Session not found")
+    if current_user.role == "trainee" and session_obj.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+
+    stmt = select(Message).where(Message.session_id == session_id).order_by(Message.seq)
+    msgs = (await db.execute(stmt)).scalars().all()
+    return [
+        SessionMessageResponse(
+            seq=m.seq,
+            role=m.role,
+            content=m.content,
+            latency_ms=m.latency_ms,
+            created_at=m.created_at,
+        )
+        for m in msgs
+    ]
+
+
 @router.get("", response_model=List[SessionListItemResponse])
 async def list_sessions(
-    mine: bool = Query(True),
+    mine: Optional[bool] = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
@@ -235,11 +262,13 @@ async def list_sessions(
         .order_by(desc(SimulationSession.started_at))
     )
 
-    if current_user.role == "trainee" or mine:
+    is_mine = mine if mine is not None else (current_user.role == "trainee")
+
+    if is_mine:
         query = query.where(SimulationSession.user_id == current_user.id)
     elif current_user.cohort_id:
         # Group admin viewing cohort
-        query = query.join(User).where(User.cohort_id == current_user.cohort_id)
+        query = query.join(SimulationSession.user).where(User.cohort_id == current_user.cohort_id)
 
     res = await db.execute(query)
     sessions = res.scalars().all()

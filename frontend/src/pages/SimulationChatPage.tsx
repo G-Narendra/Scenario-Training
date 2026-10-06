@@ -1,15 +1,22 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
 import { SessionMessage, SimulationSession } from '../types';
+import { VoiceClient } from '../voice/voiceClient';
 import {
   AlertTriangle,
   ArrowRight,
   Clock,
   Compass,
+  Hand,
   LogOut,
+  MessageSquare,
+  Mic,
+  MicOff,
+  Radio,
   Send,
   Sparkles,
   User,
+  Volume2,
 } from 'lucide-react';
 
 interface SimulationChatPageProps {
@@ -31,18 +38,28 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
+
+  // Voice Mode State
+  const [voiceClient, setVoiceClient] = useState<VoiceClient | null>(null);
+  const [isVoiceConnected, setIsVoiceConnected] = useState(false);
+  const [isRecordingMic, setIsRecordingMic] = useState(false);
+  const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
+  const [voicePartial, setVoicePartial] = useState('');
+  const [voiceLatencyMs, setVoiceLatencyMs] = useState<number | null>(null);
+  const [voiceError, setVoiceError] = useState<string | null>(null);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Auto-scroll to bottom of conversation
+  // Auto-scroll to bottom
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
   useEffect(() => {
     scrollToBottom();
-  }, [messages, streamingReply]);
+  }, [messages, streamingReply, voicePartial]);
 
-  // Session elapsed timer
+  // Elapsed timer
   useEffect(() => {
     if (session.status !== 'active') return;
 
@@ -52,6 +69,69 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
     return () => clearInterval(timer);
   }, [session.status]);
+
+  // Initialize Voice Client if in voice mode
+  useEffect(() => {
+    if (session.mode !== 'voice' || session.status !== 'active') return;
+
+    const token = localStorage.getItem('auth_token') || '';
+    const client = new VoiceClient({
+      onSessionReady: () => {
+        setIsVoiceConnected(true);
+      },
+      onTranscriptPartial: (text) => {
+        setVoicePartial(text);
+      },
+      onTranscriptFinal: (text) => {
+        setVoicePartial('');
+        setMessages((prev) => [
+          ...prev,
+          {
+            seq: prev.length + 1,
+            role: 'trainee',
+            content: text,
+            created_at: new Date().toISOString(),
+          },
+        ]);
+      },
+      onAssistantText: (text) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            seq: prev.length + 1,
+            role: 'counterpart',
+            content: text,
+            created_at: new Date().toISOString(),
+          },
+        ]);
+      },
+      onAssistantSpeaking: (speaking) => {
+        setIsAssistantSpeaking(speaking);
+      },
+      onTurnComplete: (latency) => {
+        setVoiceLatencyMs(latency);
+      },
+      onError: (err) => {
+        console.error('Voice client error:', err);
+        setVoiceError(err);
+      },
+      onSessionEnded: () => {
+        setSession((prev) => ({ ...prev, status: 'completed' }));
+      },
+    });
+
+    client
+      .connect(session.id, token)
+      .then(() => setVoiceClient(client))
+      .catch((err) => {
+        console.error('Voice connection failed', err);
+        setVoiceError('Failed to establish real-time voice channel.');
+      });
+
+    return () => {
+      client.disconnect();
+    };
+  }, [session.id, session.mode, session.status]);
 
   const formatTimer = (totalSec: number) => {
     const mins = Math.floor(totalSec / 60);
@@ -66,7 +146,6 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     const traineeText = inputText.trim();
     setInputText('');
 
-    // Append trainee message optimistically
     const nextSeq = messages.length + 1;
     const traineeMsg: SessionMessage = {
       seq: nextSeq,
@@ -98,38 +177,57 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         setMessages((prev) => [...prev, counterpartMsg]);
         setStreamingReply('');
 
-        // Refresh session to capture status update (e.g. natural conclusion)
         try {
-          const updatedSession = await api.getSessionDetail(session.id);
-          setSession(updatedSession);
-          if (updatedSession.status !== 'active') {
-            onSessionEnded(updatedSession);
+          const updated = await api.getSessionDetail(session.id);
+          setSession(updated);
+          if (updated.status !== 'active') {
+            onSessionEnded(updated);
           }
         } catch (err) {
-          console.error('Failed to refresh session status', err);
+          console.error('Error refreshing session', err);
         }
       },
       (err) => {
-        setIsStreaming(false);
         console.error('Streaming error', err);
+        setIsStreaming(false);
       }
     );
   };
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+  const toggleMicCapture = async () => {
+    if (!voiceClient) return;
+
+    if (!isRecordingMic) {
+      try {
+        await voiceClient.startAudioCapture();
+        setIsRecordingMic(true);
+      } catch (err) {
+        console.error('Mic capture failed', err);
+      }
+    } else {
+      voiceClient.commitTurn();
+      voiceClient.stopAudioCapture();
+      setIsRecordingMic(false);
+    }
+  };
+
+  const handleInterrupt = () => {
+    if (voiceClient) {
+      voiceClient.interrupt();
+      setIsAssistantSpeaking(false);
     }
   };
 
   const handleEndSessionExplicit = async () => {
     setIsEnding(true);
     try {
-      const ended = await api.endSession(session.id);
-      setSession(ended);
+      if (voiceClient) {
+        voiceClient.endSession();
+      }
+      const concluded = await api.endSession(session.id);
+      setSession(concluded);
       setShowEndConfirm(false);
-      onSessionEnded(ended);
+      onSessionEnded(concluded);
     } catch (err) {
       console.error('Failed to end session', err);
     } finally {
@@ -153,24 +251,28 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
             </h2>
             <div className="flex items-center space-x-2 text-xs text-slate-400">
               <span className="flex items-center space-x-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+                <span className={`h-1.5 w-1.5 rounded-full ${session.mode === 'voice' ? 'bg-indigo-400 animate-pulse' : 'bg-emerald-400'}`} />
                 <span className="capitalize">{session.mode} Mode</span>
               </span>
               <span>•</span>
               <span>Turn {session.turn_count || Math.floor(messages.length / 2)}</span>
+              {voiceLatencyMs !== null && (
+                <>
+                  <span>•</span>
+                  <span className="text-cyan-400">Latency: {voiceLatencyMs}ms</span>
+                </>
+              )}
             </div>
           </div>
         </div>
 
-        {/* Center / Right controls */}
+        {/* Controls */}
         <div className="flex items-center space-x-4">
-          {/* Timer */}
           <div className="flex items-center space-x-1.5 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-1 font-mono text-xs text-slate-300">
             <Clock className="h-3.5 w-3.5 text-cyan-400" />
             <span>{formatTimer(elapsedSeconds)}</span>
           </div>
 
-          {/* End Simulation Button */}
           {!isSessionClosed && (
             <button
               id="end-simulation-btn"
@@ -201,6 +303,95 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
             <span>View Evaluation Report</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
+        </div>
+      )}
+
+      {/* Voice Mode Live Audio Orb Banner */}
+      {session.mode === 'voice' && !isSessionClosed && (
+        <div className="border-b border-indigo-500/20 bg-indigo-950/20 p-6 flex flex-col items-center justify-center">
+          <div className="flex items-center space-x-4">
+            {/* Visualizer Orb */}
+            <div
+              className={`relative flex h-16 w-16 items-center justify-center rounded-full transition-all duration-300 ${
+                isAssistantSpeaking
+                  ? 'bg-gradient-to-tr from-indigo-500 to-cyan-400 scale-110 shadow-lg shadow-indigo-500/50 animate-pulse'
+                  : isRecordingMic
+                  ? 'bg-rose-600 scale-110 shadow-lg shadow-rose-500/50 animate-bounce'
+                  : 'bg-slate-800 border border-slate-700'
+              }`}
+            >
+              {isAssistantSpeaking ? (
+                <Volume2 className="h-8 w-8 text-white animate-pulse" />
+              ) : isRecordingMic ? (
+                <Radio className="h-8 w-8 text-white animate-spin" />
+              ) : (
+                <Mic className="h-7 w-7 text-slate-400" />
+              )}
+            </div>
+
+            <div>
+              <div className="text-sm font-bold text-white flex items-center space-x-2">
+                <span>
+                  {isAssistantSpeaking
+                    ? 'Counterpart Speaking...'
+                    : isRecordingMic
+                    ? 'Listening to you... (Click Stop when finished)'
+                    : isVoiceConnected
+                    ? 'Ready: Click Speak to start turn'
+                    : 'Connecting to Real-time Voice Audio...'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Real-time speech-to-speech with natural cadence and barge-in support.
+              </p>
+            </div>
+          </div>
+
+          {/* Voice Action Controls */}
+          <div className="mt-4 flex items-center space-x-3">
+            <button
+              id="voice-record-btn"
+              onClick={toggleMicCapture}
+              className={`flex items-center space-x-2 rounded-xl px-5 py-2 text-xs font-bold transition shadow-lg ${
+                isRecordingMic
+                  ? 'bg-rose-600 text-white shadow-rose-600/30 hover:bg-rose-500'
+                  : 'bg-gradient-to-r from-cyan-500 to-indigo-600 text-white shadow-cyan-500/20 hover:opacity-95'
+              }`}
+            >
+              {isRecordingMic ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
+              <span>{isRecordingMic ? 'Done Speaking (Send Turn)' : 'Speak Turn'}</span>
+            </button>
+
+            {isAssistantSpeaking && (
+              <button
+                id="voice-interrupt-btn"
+                onClick={handleInterrupt}
+                className="flex items-center space-x-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition"
+              >
+                <Hand className="h-4 w-4" />
+                <span>Barge-in (Interrupt)</span>
+              </button>
+            )}
+
+            <button
+              id="fallback-to-text-btn"
+              onClick={() => setSession((prev) => ({ ...prev, mode: 'text' }))}
+              className="flex items-center space-x-1.5 rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-xs font-medium text-slate-400 hover:text-slate-200 transition"
+            >
+              <MessageSquare className="h-3.5 w-3.5" />
+              <span>Switch to Text</span>
+            </button>
+          </div>
+
+          {/* Live partial captions */}
+          {voicePartial && (
+            <div className="mt-3 text-xs text-cyan-300/90 font-serif italic max-w-lg text-center">
+              "{voicePartial}"
+            </div>
+          )}
+          {voiceError && (
+            <div className="mt-2 text-xs text-rose-400">{voiceError}</div>
+          )}
         </div>
       )}
 
@@ -244,7 +435,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
           </div>
         ))}
 
-        {/* Live Streaming Bubble */}
+        {/* Live Streaming Bubble for Text mode */}
         {isStreaming && (
           <div className="flex items-start space-x-3">
             <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-slate-800 text-slate-300 border border-slate-700">
@@ -271,45 +462,52 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input Area */}
-      <div className="border-t border-slate-800 bg-slate-900/80 p-4 backdrop-blur-md sm:px-6">
-        <form onSubmit={handleSendMessage} className="mx-auto max-w-4xl">
-          <div className="relative rounded-2xl border border-slate-800 bg-slate-950 p-2 focus-within:border-cyan-500/50 focus-within:ring-1 focus-within:ring-cyan-500/20">
-            <textarea
-              id="chat-message-input"
-              rows={2}
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={handleKeyDown}
-              disabled={isStreaming || isSessionClosed}
-              placeholder={
-                isSessionClosed
-                  ? 'Simulation has concluded.'
-                  : 'Type your response to the counterpart... (Press Enter to send, Shift+Enter for newline)'
-              }
-              className="w-full resize-none bg-transparent p-2 text-sm text-white placeholder-slate-500 focus:outline-none disabled:opacity-50"
-            />
+      {/* Input Area (Text Mode or Text fallback) */}
+      {session.mode === 'text' && (
+        <div className="border-t border-slate-800 bg-slate-900/80 p-4 backdrop-blur-md sm:px-6">
+          <form onSubmit={handleSendMessage} className="mx-auto max-w-4xl">
+            <div className="relative rounded-2xl border border-slate-800 bg-slate-950 p-2 focus-within:border-cyan-500/50 focus-within:ring-1 focus-within:ring-cyan-500/20">
+              <textarea
+                id="chat-message-input"
+                rows={2}
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                disabled={isStreaming || isSessionClosed}
+                placeholder={
+                  isSessionClosed
+                    ? 'Simulation has concluded.'
+                    : 'Type your response to the counterpart... (Press Enter to send, Shift+Enter for newline)'
+                }
+                className="w-full resize-none bg-transparent p-2 text-sm text-white placeholder-slate-500 focus:outline-none disabled:opacity-50"
+              />
 
-            <div className="flex items-center justify-between border-t border-slate-900 pt-2 px-2">
-              <div className="text-[11px] text-slate-500 flex items-center space-x-2">
-                <span>Enter to Send</span>
-                <span>•</span>
-                <span>{inputText.length} chars</span>
+              <div className="flex items-center justify-between border-t border-slate-900 pt-2 px-2">
+                <div className="text-[11px] text-slate-500 flex items-center space-x-2">
+                  <span>Enter to Send</span>
+                  <span>•</span>
+                  <span>{inputText.length} chars</span>
+                </div>
+
+                <button
+                  id="send-message-btn"
+                  type="submit"
+                  disabled={!inputText.trim() || isStreaming || isSessionClosed}
+                  className="flex items-center space-x-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-md shadow-cyan-500/20 hover:opacity-95 transition disabled:opacity-30"
+                >
+                  <span>Send</span>
+                  <Send className="h-3.5 w-3.5" />
+                </button>
               </div>
-
-              <button
-                id="send-message-btn"
-                type="submit"
-                disabled={!inputText.trim() || isStreaming || isSessionClosed}
-                className="flex items-center space-x-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-1.5 text-xs font-semibold text-white shadow-md shadow-cyan-500/20 hover:opacity-95 transition disabled:opacity-30"
-              >
-                <span>Send</span>
-                <Send className="h-3.5 w-3.5" />
-              </button>
             </div>
-          </div>
-        </form>
-      </div>
+          </form>
+        </div>
+      )}
 
       {/* End Session Confirmation Modal */}
       {showEndConfirm && (

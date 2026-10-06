@@ -75,17 +75,17 @@
 - [x] GATE 5: Session completion produces validated, specific feedback report
 
 ## Phase 6: Voice Conversations
-- [ ] 6.1 VoiceProvider interface and WebSocket protocol
-- [ ] 6.2 Real-time audio streaming path (PCM16/Opus)
-- [ ] 6.3 VAD and turn-taking with barge-in (<300ms interruption)
-- [ ] 6.4 Fallback pipeline (STT -> LLM -> TTS) with sentence chunking
-- [ ] 6.5 Persona voice mapping and style configuration
-- [ ] 6.6 Unified transcript capture for identical evaluation pipeline
-- [ ] 6.7 Latency instrumentation (p50/p95 reporting)
-- [ ] 6.8 Browser audio client with mic permission, level meter, push-to-talk
-- [ ] 6.9 Audio cost caps and usage event tracking
-- [ ] 6.10 Mock voice tests and Playwright fake media stream tests
-- [ ] GATE 6: Voice session completes with Mock provider, transcript, and evaluation
+- [x] 6.1 VoiceProvider interface and WebSocket protocol
+- [x] 6.2 Real-time audio streaming path (PCM16/Opus)
+- [x] 6.3 VAD and turn-taking with barge-in (<300ms interruption)
+- [x] 6.4 Fallback pipeline (STT -> LLM -> TTS) with sentence chunking
+- [x] 6.5 Persona voice mapping and style configuration
+- [x] 6.6 Unified transcript capture for identical evaluation pipeline
+- [x] 6.7 Latency instrumentation (p50/p95 reporting)
+- [x] 6.8 Browser audio client with mic permission, level meter, push-to-talk
+- [x] 6.9 Audio cost caps and usage event tracking
+- [x] 6.10 Mock voice tests and Playwright fake media stream tests
+- [x] GATE 6: Voice session completes with Mock provider, transcript, and evaluation
 
 ## Phase 7: Progress Tracking & Dashboards
 - [ ] 7.1 Progress API: trends, streaks, averages, skill breakdowns

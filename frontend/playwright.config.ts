@@ -19,6 +19,10 @@ export default defineConfig({
       use: {
         ...devices['Desktop Chrome'],
         baseURL: 'http://127.0.0.1:8000',
+        permissions: ['microphone'],
+        launchOptions: {
+          args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'],
+        },
       },
     },
   ],
