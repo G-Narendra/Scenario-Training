@@ -53,14 +53,14 @@
 - [x] GATE 3: Scripted conversation completes to natural conclusion with Mock provider
 
 ## Phase 4: Text Chat Interface
-- [ ] 4.1 Session endpoints: start, streaming SSE/WebSocket messages, end, transcript
-- [ ] 4.2 Frontend pages: Login, Track selection, Scenario library, Briefing, Chat, Session end
-- [ ] 4.3 Chat UI with streaming tokens, timer, turn counter, end session confirmation
-- [ ] 4.4 Low-friction flow (<3 clicks to scenario)
-- [ ] 4.5 Accessibility & WCAG 2.1 AA compliance
-- [ ] 4.6 Mobile responsive design
-- [ ] 4.7 Component tests and Playwright e2e tests
-- [ ] GATE 4: End-to-end text session runs in headless browser in CI
+- [x] 4.1 Session endpoints: start, streaming SSE/WebSocket messages, end, transcript
+- [x] 4.2 Frontend pages: Login, Track selection, Scenario library, Briefing, Chat, Session end
+- [x] 4.3 Chat UI with streaming tokens, timer, turn counter, end session confirmation
+- [x] 4.4 Low-friction flow (<3 clicks to scenario)
+- [x] 4.5 Accessibility & WCAG 2.1 AA compliance
+- [x] 4.6 Mobile responsive design
+- [x] 4.7 Component tests and Playwright e2e tests
+- [x] GATE 4: End-to-end text session runs in headless browser in CI
 
 ## Phase 5: Evaluation, Scoring & Feedback
 - [ ] 5.1 Evaluator prompt receiving transcript, criteria, rubrics, hidden motivations

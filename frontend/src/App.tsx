@@ -1,23 +1,128 @@
-import { Compass } from 'lucide-react';
+import React, { useState } from 'react';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { Navbar } from './components/Navbar';
+import { LoginPage } from './pages/LoginPage';
+import { TrackPickerPage } from './pages/TrackPickerPage';
+import { ScenarioLibraryPage } from './pages/ScenarioLibraryPage';
+import { SimulationChatPage } from './pages/SimulationChatPage';
+import { api } from './api/client';
+import { SimulationSession } from './types';
 
-export default function App() {
-  return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center justify-center p-6">
-      <div className="max-w-md w-full bg-slate-900/80 border border-slate-800 rounded-2xl p-8 shadow-2xl backdrop-blur-xl text-center">
-        <div className="w-16 h-16 bg-indigo-600/20 text-indigo-400 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-indigo-500/30">
-          <Compass className="w-8 h-8" />
-        </div>
-        <h1 className="text-2xl font-bold tracking-tight text-white mb-2 font-heading">
-          Flight Simulator
-        </h1>
-        <p className="text-slate-400 text-sm mb-6">
-          Interactive AI-driven roleplay training for difficult conversations.
-        </p>
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 text-emerald-400 text-xs font-medium border border-emerald-500/20">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          System Online
+const AppContent: React.FC = () => {
+  const { isAuthenticated, loading } = useAuth();
+  const [currentView, setCurrentView] = useState<'tracks' | 'scenarios' | 'chat' | 'evaluation' | 'admin'>('tracks');
+  const [selectedTrack, setSelectedTrack] = useState<string>('sales');
+  const [activeSession, setActiveSession] = useState<SimulationSession | null>(null);
+  const [isStartingSimulation, setIsStartingSimulation] = useState(false);
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-cyan-400">
+        <div className="flex items-center space-x-3 font-mono text-sm">
+          <div className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
+          <span>INITIALIZING FLIGHT SIMULATOR...</span>
         </div>
       </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <LoginPage />;
+  }
+
+  const handleSelectTrack = (trackKey: string) => {
+    setSelectedTrack(trackKey);
+    setCurrentView('scenarios');
+  };
+
+  const handleLaunchSimulation = async (scenarioId: string, mode: 'text' | 'voice') => {
+    setIsStartingSimulation(true);
+    try {
+      const session = await api.createSession(scenarioId, mode);
+      setActiveSession(session);
+      setCurrentView('chat');
+    } catch (err) {
+      console.error('Failed to create simulation session', err);
+    } finally {
+      setIsStartingSimulation(false);
+    }
+  };
+
+  const handleSessionEnded = (session: SimulationSession) => {
+    setActiveSession(session);
+  };
+
+  const handleViewEvaluation = (sessionId: string) => {
+    console.log('Navigating to evaluation for session:', sessionId);
+    setCurrentView('evaluation');
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+      <Navbar currentView={currentView} onNavigate={(v) => setCurrentView(v as any)} />
+
+      <main className="flex-1">
+        {currentView === 'tracks' && (
+          <TrackPickerPage onSelectTrack={handleSelectTrack} />
+        )}
+
+        {currentView === 'scenarios' && (
+          <ScenarioLibraryPage
+            selectedTrack={selectedTrack}
+            onBackToTracks={() => setCurrentView('tracks')}
+            onLaunchSimulation={handleLaunchSimulation}
+            isStarting={isStartingSimulation}
+          />
+        )}
+
+        {currentView === 'chat' && activeSession && (
+          <SimulationChatPage
+            session={activeSession}
+            onSessionEnded={handleSessionEnded}
+            onViewEvaluation={handleViewEvaluation}
+          />
+        )}
+
+        {currentView === 'evaluation' && (
+          <div className="mx-auto max-w-4xl py-16 px-4 text-center">
+            <h2 className="text-3xl font-bold text-white">Evaluation Engine</h2>
+            <p className="mt-3 text-slate-400">
+              Evaluation report view configured and ready for Phase 5 scoring engine.
+            </p>
+            <button
+              onClick={() => setCurrentView('tracks')}
+              className="mt-6 rounded-xl bg-cyan-500 px-6 py-2.5 text-sm font-semibold text-slate-950 hover:bg-cyan-400 transition"
+            >
+              Return to Scenarios
+            </button>
+          </div>
+        )}
+
+        {currentView === 'admin' && (
+          <div className="mx-auto max-w-5xl py-16 px-4 text-center">
+            <h2 className="text-3xl font-bold text-white">Admin Management Console</h2>
+            <p className="mt-3 text-slate-400">
+              Cohort and scenario content management console configured.
+            </p>
+            <button
+              onClick={() => setCurrentView('tracks')}
+              className="mt-6 rounded-xl bg-slate-800 px-6 py-2.5 text-sm font-semibold text-slate-200 hover:bg-slate-700 transition"
+            >
+              Return to Flight Deck
+            </button>
+          </div>
+        )}
+      </main>
     </div>
   );
+};
+
+export function App() {
+  return (
+    <AuthProvider>
+      <AppContent />
+    </AuthProvider>
+  );
 }
+
+export default App;

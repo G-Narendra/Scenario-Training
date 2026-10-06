@@ -7,12 +7,45 @@ import yaml
 # Ensure project root is in sys.path
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
+from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 
 from backend.app.db.session import async_session_factory
-from backend.app.db.models import Track, Skill, Scenario
+from backend.app.db.models import Track, Skill, Scenario, Cohort, Passcode
+from backend.app.security.passcodes import hash_passcode
 from backend.app.services.scenario_service import ScenarioService
 from backend.app.schemas.scenarios import ScenarioConfigSchema
+
+
+async def seed_demo_cohort(db):
+    stmt = select(Cohort).where(Cohort.name == "Demo Cohort")
+    cohort = (await db.execute(stmt)).scalar_one_or_none()
+    now = datetime.now(timezone.utc)
+    if not cohort:
+        cohort = Cohort(
+            name="Demo Cohort",
+            description="Default demo training cohort for exploratory flight simulation.",
+            starts_at=now,
+            expires_at=now + timedelta(days=30),
+            track_access="both",
+            budget_cap_usd=500.0,
+        )
+        db.add(cohort)
+        await db.flush()
+
+        passcode = Passcode(
+            cohort_id=cohort.id,
+            code_hash=hash_passcode("DEMO-PASS"),
+            label="Default Demo Passcode",
+            valid_from=now,
+            valid_until=now + timedelta(days=30),
+            max_uses=1000,
+        )
+        db.add(passcode)
+        await db.commit()
+        print("Demo cohort and DEMO-PASS passcode seeded successfully.")
+    else:
+        print("Demo cohort already exists.")
 
 
 async def seed_skills(db):
@@ -78,6 +111,7 @@ async def seed_scenarios(db):
 async def main():
     print("=== Starting Database Seeding ===")
     async with async_session_factory() as db:
+        await seed_demo_cohort(db)
         await seed_skills(db)
         await seed_scenarios(db)
     print("=== Seeding Finished ===")

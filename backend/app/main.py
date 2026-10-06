@@ -1,3 +1,4 @@
+import os
 import time
 import uuid
 from contextlib import asynccontextmanager
@@ -6,6 +7,7 @@ from typing import AsyncGenerator
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 
 from backend.app.api.admin_cohorts import router as admin_cohorts_router
@@ -112,3 +114,10 @@ async def readiness_check():
 @app.get("/version", tags=["Ops"])
 async def version_info():
     return {"version": settings.APP_VERSION, "environment": settings.ENVIRONMENT}
+
+
+# Mount built frontend SPA static files if present
+frontend_dist = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "dist")
+if os.path.exists(frontend_dist):
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+
