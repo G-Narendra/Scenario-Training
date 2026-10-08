@@ -7,7 +7,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     ENVIRONMENT: str = Field(default="development")
     DEBUG: bool = Field(default=False)
-    APP_NAME: str = Field(default="Flight Simulator for Difficult Conversations")
+    APP_NAME: str = Field(default="ScenarioLab: Workplace Scenario Training")
     APP_VERSION: str = Field(default="1.0.0")
     HOST: str = Field(default="127.0.0.1")
     PORT: int = Field(default=8000)

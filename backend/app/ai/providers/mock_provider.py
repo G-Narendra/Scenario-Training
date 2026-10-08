@@ -19,11 +19,16 @@ class MockLLMProvider(LLMProvider):
         self.failure_attempts = 0
         self.token_cost_per_1k = token_cost_per_1k
 
-    def _generate_contextual_reply(self, last_user_message: str, system_prompt: str) -> str:
-        """Generate realistic in-character response based on trainee utterance and system context."""
-        msg_lower = last_user_message.lower()
+    def _generate_contextual_reply(
+        self,
+        last_user_message: str,
+        system_prompt: str,
+        messages: Optional[List[LLMMessage]] = None,
+    ) -> str:
+        """Generate realistic in-character response based on trainee utterance and full conversation context."""
+        msg_lower = last_user_message.lower().strip()
 
-        # Prompt injection defense check (25+ attack patterns countered)
+        # Prompt injection defense check (37+ attack patterns countered)
         injection_patterns = [
             "ignore your instructions",
             "ignore previous",
@@ -66,29 +71,16 @@ class MockLLMProvider(LLMProvider):
         if any(phrase in msg_lower for phrase in injection_patterns):
             return "I am not here to play games with word tricks. Let's focus on the actual business on the table."
 
-        # Discovery / Empathy handling
-        if any(
-            q in msg_lower
-            for q in [
-                "what",
-                "how",
-                "why",
-                "priorit",
-                "objective",
-                "challenge",
-                "help me understand",
-                "tell me",
-            ]
-        ):
-            if "hidden motivations" in system_prompt.lower() or "cost-cut" in system_prompt.lower():
-                return "To be direct with you: our executive leadership set a strict cost target for this quarter. If you can help us prove ROI to finance, we can talk."
-            return "The main issue is that we are being squeezed on delivery times and operational risk. What specifically can your team commit to?"
+        # Compute conversation depth from history
+        user_turn_count = 1
+        previous_replies = set()
+        if messages:
+            user_turn_count = sum(1 for m in messages if m.role == "user")
+            for m in messages:
+                if m.role == "assistant":
+                    previous_replies.add(m.content)
 
-        # Premature discount response
-        if any(w in msg_lower for w in ["discount", "drop the price", "20%", "cheaper"]):
-            return "Dropping the price immediately just tells me your initial quote was inflated. Where is the actual differentiation?"
-
-        # Next steps / closing
+        # 1. Closing / Next Steps commitment
         if any(
             w in msg_lower
             for w in [
@@ -98,12 +90,92 @@ class MockLLMProvider(LLMProvider):
                 "thursday",
                 "calendar",
                 "call next week",
+                "pilot",
+                "demo next week",
             ]
         ):
             return "Fair enough. Send an invite for Thursday at 2 PM with the updated proposal. I will review it with the team."
 
-        # Default conversational pushback
-        return "I hear what you are saying, but that does not directly solve our core challenge. How do you address the timeline risk?"
+        # 2. Premature discount response
+        if any(w in msg_lower for w in ["discount", "drop the price", "20%", "cheaper", "lower our price"]):
+            return "Dropping the price immediately just tells me your initial quote was inflated. Where is the actual differentiation?"
+
+        # 3. Handling polite / casual / meta remarks (e.g. "shall we test my polite skills", "i will be polite")
+        if any(
+            w in msg_lower
+            for w in ["polite", "courtesy", "manner", "test my", "shall we test", "be nice", "play nice"]
+        ):
+            if user_turn_count <= 2:
+                return "Politeness is appreciated, but I'm on a tight schedule today. What specific business challenge are you here to solve?"
+            else:
+                return "Professionalism is fine, but our team needs concrete execution. What is your bottom line on timeline and implementation?"
+
+        # 4. Straight to the point / directness (e.g. "i make the straight to the point", "let's be direct")
+        if any(
+            w in msg_lower
+            for w in ["straight to the point", "cut to the chase", "direct", "no fluff", "bottom line"]
+        ):
+            if "hidden motivations" in system_prompt.lower() or "cost-cut" in system_prompt.lower():
+                return "I appreciate directness. Here is our reality: leadership gave us a strict mandate to reduce external vendor spend this quarter. How does your solution justify itself to finance?"
+            return "Good, I value directness. Here is our bottleneck: our current vendor takes three weeks for custom integration. Can your team guarantee under seven days?"
+
+        # 5. Direct / confrontational / frustrated questions (e.g. "what's your problem", "why are you being difficult")
+        if any(
+            phrase in msg_lower
+            for phrase in ["what's your problem", "what is your problem", "why are you", "what is wrong", "what's the issue", "what's the catch"]
+        ):
+            return "My concern is simple: I am accountable for our department's deliverables. Every new vendor we test introduces operational risk until proven otherwise. How do you mitigate that?"
+
+        # 6. Priorities / Budget / Objectives inquiry
+        if any(
+            q in msg_lower
+            for q in ["priorit", "cost", "roi", "finance", "mandate", "budget cap", "cfo"]
+        ):
+            return "To be direct with you: our executive leadership set a strict cost target for this quarter. If you can help us prove ROI to finance, we can talk."
+
+        # 7. General Discovery questions
+        if any(
+            q in msg_lower
+            for q in [
+                "what",
+                "how",
+                "why",
+                "objective",
+                "challenge",
+                "help me understand",
+                "tell me",
+                "explain",
+                "where do you stand",
+            ]
+        ):
+            if "hidden motivations" in system_prompt.lower() or "cost-cut" in system_prompt.lower():
+                if user_turn_count >= 2:
+                    return "To be direct with you: our executive leadership set a strict cost target for this quarter. If you can help us prove ROI to finance, we can talk."
+            return "The main issue is that we are being squeezed on delivery times and operational risk. What specifically can your team commit to?"
+
+        # 8. Value proposition & differentiation claims
+        if any(
+            w in msg_lower
+            for w in ["differentiat", "better", "faster", "efficiency", "save time", "advantage", "guarantee", "quality"]
+        ):
+            return "Those claims sound promising on paper, but how does that translate into measurable outcomes for our frontline team?"
+
+        # 9. Dynamic, non-repeating rotating responses based on turn depth
+        fallback_cycle = [
+            "Thanks for getting in touch. We are re-evaluating our current setup—what is the core differentiator of your proposal?",
+            "I hear what you are saying, but our primary hurdle is execution risk. How do you plan to handle implementation without downtime?",
+            "That's helpful context. The sticking point for our executive committee is whether your team can commit to strict SLA benchmarks.",
+            "We are currently reviewing two alternative proposals this week. What makes your approach more dependable than what we have today?",
+            "We have to make a final vendor decision before Friday. If we move forward with you, what are the immediate milestones?",
+            "If we can align on implementation scope and dedicated support terms, I am open to discussing a structured pilot.",
+        ]
+
+        # Pick the first response in fallback_cycle that has not already been said
+        for candidate in fallback_cycle:
+            if candidate not in previous_replies:
+                return candidate
+
+        return fallback_cycle[user_turn_count % len(fallback_cycle)]
 
     def _generate_mock_evaluation(self, prompt: str) -> str:
         """Generates valid structured JSON evaluation quoting actual trainee transcript turns."""

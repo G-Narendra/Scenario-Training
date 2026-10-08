@@ -20,12 +20,13 @@ async def seed_demo_cohort(db):
     stmt = select(Cohort).where(Cohort.name == "Demo Cohort")
     cohort = (await db.execute(stmt)).scalar_one_or_none()
     now = datetime.now(timezone.utc)
+    demo_expiry = now + timedelta(days=30)
     if not cohort:
         cohort = Cohort(
             name="Demo Cohort",
-            description="Default demo training cohort for exploratory flight simulation.",
+            description="Default demo training cohort for exploratory scenario practice.",
             starts_at=now,
-            expires_at=now + timedelta(days=30),
+            expires_at=demo_expiry,
             track_access="both",
             budget_cap_usd=500.0,
         )
@@ -37,7 +38,7 @@ async def seed_demo_cohort(db):
             code_hash=hash_passcode("DEMO-2026"),
             label="Default Demo Passcode",
             valid_from=now,
-            valid_until=now + timedelta(days=30),
+            valid_until=demo_expiry,
             max_uses=1000,
         )
         passcode_alt = Passcode(
@@ -45,7 +46,7 @@ async def seed_demo_cohort(db):
             code_hash=hash_passcode("DEMO-PASS"),
             label="Legacy Demo Passcode",
             valid_from=now,
-            valid_until=now + timedelta(days=30),
+            valid_until=demo_expiry,
             max_uses=1000,
         )
         admin_passcode = Passcode(
@@ -53,42 +54,48 @@ async def seed_demo_cohort(db):
             code_hash=hash_passcode("ADMIN-PASS"),
             label="Administrator Passcode",
             valid_from=now,
-            valid_until=now + timedelta(days=30),
+            valid_until=demo_expiry,
             max_uses=1000,
         )
         db.add_all([passcode, passcode_alt, admin_passcode])
         await db.commit()
         print("Demo cohort, DEMO-2026, DEMO-PASS, and ADMIN-PASS seeded successfully.")
     else:
-        # Check if DEMO-2026 exists
-        stmt_demo = select(Passcode).where(Passcode.cohort_id == cohort.id, Passcode.label == "Default Demo Passcode")
-        demo_code = (await db.execute(stmt_demo)).scalar_one_or_none()
-        if not demo_code:
-            db.add(Passcode(
-                cohort_id=cohort.id,
-                code_hash=hash_passcode("DEMO-2026"),
-                label="Default Demo Passcode",
-                valid_from=now,
-                valid_until=now + timedelta(days=30),
-                max_uses=1000,
-            ))
-            await db.commit()
-        # Check if ADMIN-PASS exists
-        stmt_admin = select(Passcode).where(Passcode.cohort_id == cohort.id, Passcode.label == "Administrator Passcode")
-        admin_code = (await db.execute(stmt_admin)).scalar_one_or_none()
-        if not admin_code:
-            admin_code = Passcode(
-                cohort_id=cohort.id,
-                code_hash=hash_passcode("ADMIN-PASS"),
-                label="Administrator Passcode",
-                valid_from=now,
-                valid_until=now + timedelta(days=30),
-                max_uses=1000,
-            )
-            db.add(admin_code)
-            await db.commit()
-            print("Added ADMIN-PASS to existing demo cohort.")
-        print("Demo cohort verified.")
+        # The local demo database may have been seeded more than 30 days ago.
+        # Refresh the cohort and known demo codes so the documented login remains usable.
+        cohort.expires_at = demo_expiry
+        cohort.is_active = True
+        demo_codes = {
+            "Default Demo Passcode": "DEMO-2026",
+            "Legacy Demo Passcode": "DEMO-PASS",
+            "Administrator Passcode": "ADMIN-PASS",
+        }
+        existing_codes = (
+            await db.execute(select(Passcode).where(Passcode.cohort_id == cohort.id))
+        ).scalars().all()
+        codes_by_label = {code.label: code for code in existing_codes}
+
+        for label, plain_code in demo_codes.items():
+            code = codes_by_label.get(label)
+            if code is None:
+                db.add(
+                    Passcode(
+                        cohort_id=cohort.id,
+                        code_hash=hash_passcode(plain_code),
+                        label=label,
+                        valid_from=now,
+                        valid_until=demo_expiry,
+                        max_uses=1000,
+                    )
+                )
+            else:
+                code.valid_from = now
+                code.valid_until = demo_expiry
+                code.revoked_at = None
+                code.max_uses = 1000
+
+        await db.commit()
+        print("Demo cohort and DEMO-2026, DEMO-PASS, and ADMIN-PASS verified for 30 days.")
 
 
 async def seed_skills(db):

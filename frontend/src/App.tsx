@@ -21,10 +21,10 @@ const AppContent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 text-cyan-400">
-        <div className="flex items-center space-x-3 font-mono text-sm">
-          <div className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
-          <span>INITIALIZING FLIGHT SIMULATOR...</span>
+      <div className="flex min-h-screen items-center justify-center bg-[#090D16] text-indigo-400">
+        <div className="flex items-center space-x-3 text-sm font-semibold">
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent" />
+          <span>Loading ScenarioLab...</span>
         </div>
       </div>
     );
@@ -63,7 +63,7 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-cyan-500/30 selection:text-cyan-200">
+    <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col font-sans selection:bg-indigo-600 selection:text-white">
       <Navbar currentView={currentView} onNavigate={(v) => setCurrentView(v as any)} />
 
       <main className="flex-1">

@@ -23,40 +23,85 @@ export class VoiceClient {
   }
 
   async connect(sessionId: string, token: string): Promise<void> {
+    const isDevPort = window.location.port === '5173';
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const host = window.location.host;
-    const wsUrl = `${protocol}//${host}/api/sessions/${sessionId}/voice`;
+    const hostDirect = `${protocol === 'wss:' ? 'wss:' : 'ws:'}//${window.location.hostname || '127.0.0.1'}:8000`;
+    const hostProxy = `${protocol}//${window.location.host}`;
 
-    return new Promise((resolve, reject) => {
-      this.ws = new WebSocket(wsUrl);
+    // When running under Vite dev server (port 5173), try direct connection to backend first
+    const primaryUrl = isDevPort
+      ? `${hostDirect}/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`
+      : `${hostProxy}/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`;
+    const fallbackUrl = isDevPort
+      ? `${hostProxy}/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`
+      : `${hostDirect}/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`;
 
-      this.ws.onopen = () => {
-        this.isConnected = true;
-        // Handshake
-        this.ws?.send(JSON.stringify({ type: 'session.start', token }));
-        resolve();
-      };
+    const tryConnect = (url: string, timeoutMs = 6000): Promise<void> => {
+      return new Promise((resolve, reject) => {
+        let settled = false;
+        const timer = setTimeout(() => {
+          if (!settled) {
+            settled = true;
+            try {
+              ws.close();
+            } catch {}
+            reject(new Error('WebSocket connection timed out'));
+          }
+        }, timeoutMs);
 
-      this.ws.onerror = (e) => {
-        console.error('WebSocket error in VoiceClient', e);
-        this.callbacks.onError?.('Failed to establish real-time voice connection.');
-        reject(e);
-      };
+        const ws = new WebSocket(url);
 
-      this.ws.onclose = () => {
-        this.isConnected = false;
-        this.stopAudioCapture();
-      };
+        ws.onopen = () => {
+          if (settled) return;
+          settled = true;
+          clearTimeout(timer);
+          this.ws = ws;
+          this.isConnected = true;
+          // Send handshake frame with token
+          try {
+            ws.send(JSON.stringify({ type: 'session.start', token }));
+          } catch (err) {
+            console.error('Failed to send handshake frame', err);
+          }
+          resolve();
+        };
 
-      this.ws.onmessage = (event) => {
-        try {
-          const msg = JSON.parse(event.data);
-          this.handleServerMessage(msg);
-        } catch (err) {
-          console.error('Failed to parse WebSocket message', err);
-        }
-      };
-    });
+        ws.onerror = () => {
+          if (!settled) {
+            settled = true;
+            clearTimeout(timer);
+            reject(new Error('WebSocket connection failed'));
+          } else {
+            this.callbacks.onError?.('Voice connection interrupted.');
+          }
+        };
+
+        ws.onclose = () => {
+          this.isConnected = false;
+          this.stopAudioCapture();
+        };
+
+        ws.onmessage = (event) => {
+          try {
+            const msg = JSON.parse(event.data);
+            this.handleServerMessage(msg);
+          } catch (err) {
+            console.error('Failed to parse WebSocket message', err);
+          }
+        };
+      });
+    };
+
+    try {
+      await tryConnect(primaryUrl);
+    } catch {
+      try {
+        await tryConnect(fallbackUrl);
+      } catch (err) {
+        this.callbacks.onError?.('Real-time voice service unavailable. You can continue seamlessly in Text Mode.');
+        throw err;
+      }
+    }
   }
 
   private handleServerMessage(msg: any): void {
@@ -96,6 +141,10 @@ export class VoiceClient {
 
   async startAudioCapture(): Promise<void> {
     try {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('Microphone audio capture not supported in this browser environment.');
+      }
+
       this.mediaStream = await navigator.mediaDevices.getUserMedia({
         audio: {
           channelCount: 1,
@@ -108,6 +157,7 @@ export class VoiceClient {
       this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
         sampleRate: 16000,
       });
+      await this.audioContext.resume();
       const source = this.audioContext.createMediaStreamSource(this.mediaStream);
       this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
 
@@ -138,7 +188,7 @@ export class VoiceClient {
       this.isRecording = true;
     } catch (err: any) {
       console.warn('Microphone access denied or audio capture failed', err);
-      this.callbacks.onError?.('Microphone access required for voice mode.');
+      this.callbacks.onError?.('Microphone access required for voice mode. Please grant microphone permission.');
       throw err;
     }
   }

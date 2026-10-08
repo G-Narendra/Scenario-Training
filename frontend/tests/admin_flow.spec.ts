@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Flight Simulator Admin Console E2E Flow', () => {
+test.describe('Scenario Training Admin Console E2E Flow', () => {
   test('Admin login, cohort management, YAML studio validation, and telemetry tabs', async ({ page }) => {
     // 1. Visit application
     await page.goto('http://127.0.0.1:8000/');
 
     // 2. Admin Login using ADMIN-PASS
-    await expect(page.locator('h1')).toContainText('Flight Simulator');
+    await expect(page.locator('h1')).toContainText('Scenario Training');
     await page.fill('#passcode-input', 'ADMIN-PASS');
     await page.fill('#display-name-input', 'Admin User');
     await page.click('#login-submit-btn');

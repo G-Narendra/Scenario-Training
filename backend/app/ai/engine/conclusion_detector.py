@@ -82,7 +82,7 @@ class ConclusionDetector:
             return False, None, None
 
         system_prompt = (
-            "You are a conversation conclusion classifier for a roleplay flight simulator.\n"
+            "You are a conversation conclusion classifier for a workplace scenario training exercise.\n"
             "Analyze the conversation and determine whether it has reached a natural conclusion.\n"
             "A conversation concludes if:\n"
             "1. POSITIVE: Both parties agreed on a definitive next step, pilot, follow-up meeting, or resolution.\n"

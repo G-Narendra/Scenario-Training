@@ -116,37 +116,37 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
       <div className="flex flex-col justify-between gap-4 border-b border-slate-800 pb-6 sm:flex-row sm:items-center">
         <div>
           <div className="flex items-center space-x-2">
-            <span className="inline-flex items-center rounded-md bg-cyan-500/10 px-2.5 py-0.5 text-xs font-semibold text-cyan-400 border border-cyan-500/20">
-              TRAINING ANALYTICS
+            <span className="inline-flex items-center rounded-lg bg-indigo-500/15 border border-indigo-500/25 px-2.5 py-0.5 text-xs font-bold text-indigo-300">
+              PERFORMANCE ANALYTICS
             </span>
           </div>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Flight Log & Trajectory
+          <h1 className="mt-2 text-3xl font-black tracking-tight text-white font-heading sm:text-4xl">
+            Flight Log & Trajectory — Skill Performance Record
           </h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Real-time skill growth curves, behavioral competencies, and adaptive practice recommendations.
+          <p className="mt-1 text-sm text-slate-300">
+            Track competency improvement across scenarios, monitor skill gains, and review session history.
           </p>
         </div>
 
         {/* Tab Switcher */}
         {canViewCohort && (
-          <div className="flex rounded-lg bg-slate-900 p-1 border border-slate-800 self-start sm:self-auto">
+          <div className="flex rounded-xl bg-slate-900 p-1 border border-slate-800 self-start sm:self-auto">
             <button
               onClick={() => setActiveTab('me')}
-              className={`flex items-center space-x-2 rounded-md px-4 py-2 text-sm font-medium transition ${
+              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
                 activeTab === 'me'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
               <Target className="h-4 w-4" />
-              <span>Personal Flight Log</span>
+              <span>Personal Performance</span>
             </button>
             <button
               onClick={() => setActiveTab('cohort')}
-              className={`flex items-center space-x-2 rounded-md px-4 py-2 text-sm font-medium transition ${
+              className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
                 activeTab === 'cohort'
-                  ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                  ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
                   : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -159,9 +159,9 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
 
       {loading && (
         <div className="flex min-h-[350px] items-center justify-center">
-          <div className="flex items-center space-x-3 text-cyan-400 font-mono text-sm">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
-            <span>CALCULATING PERFORMANCE TELEMETRY...</span>
+          <div className="flex items-center space-x-3 text-indigo-400 font-semibold text-sm">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent" />
+            <span>Calculating competency analytics...</span>
           </div>
         </div>
       )}
@@ -274,7 +274,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                   </span>
                 )}
               </div>
-              <p className="mt-1 text-xs text-slate-400">Weighted rubric average</p>
+                  <p className="mt-1 text-xs text-slate-400">Average feedback score</p>
             </div>
           </div>
 
@@ -298,7 +298,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                     No evaluated flight data available yet.
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
-                    Complete your first difficult conversation to unlock rubric telemetry.
+                    Complete your first conversation to unlock your feedback history.
                   </p>
                 </div>
               ) : (
@@ -358,7 +358,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
               {traineeData.score_trends.length < 2 ? (
                 <div className="flex min-h-[220px] flex-col items-center justify-center text-center">
                   <p className="text-sm text-slate-400">
-                    Trajectory trend requires at least 2 completed simulations.
+                    Your progress trend appears after two completed conversations.
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
                     Keep practicing to plot your performance curve over time!

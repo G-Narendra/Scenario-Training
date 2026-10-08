@@ -1,12 +1,12 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Flight Simulator E2E Voice Simulation Flow', () => {
+test.describe('Scenario Training E2E Voice Simulation Flow', () => {
   test('Launches Voice Mode simulation, captures audio turns, handles counterpart audio, and concludes', async ({ page }) => {
     // 1. Visit the application
     await page.goto('http://127.0.0.1:8000/');
 
     // 2. Trainee Login
-    await expect(page.locator('h1')).toContainText('Flight Simulator');
+    await expect(page.locator('h1')).toContainText('Scenario Training');
     await page.fill('#passcode-input', 'DEMO-PASS');
     await page.fill('#display-name-input', 'Marcus Voice Trainee');
     await page.click('#login-submit-btn');
@@ -56,7 +56,7 @@ test.describe('Flight Simulator E2E Voice Simulation Flow', () => {
     await page.click('#confirm-end-session-btn');
 
     // 11. View Evaluation
-    await expect(page.locator('text=Simulation Concluded')).toBeVisible({ timeout: 10000 });
+    await expect(page.locator('text=Practice complete. Your conversation transcript is ready to review.')).toBeVisible({ timeout: 10000 });
     await expect(page.locator('#view-evaluation-btn')).toBeVisible();
     await page.click('#view-evaluation-btn');
 

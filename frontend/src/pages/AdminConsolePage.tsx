@@ -66,6 +66,19 @@ export const AdminConsolePage: React.FC = () => {
     loadTabData();
   }, [activeTab]);
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowCreateCohortModal(false);
+        setShowYamlModal(false);
+        setShowAiDraftModal(false);
+        setShowVersionHistoryModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const showFeedback = (text: string, type: 'success' | 'error' = 'success') => {
     setFeedbackMsg({ text, type });
     setTimeout(() => setFeedbackMsg(null), 4000);
@@ -326,9 +339,9 @@ export const AdminConsolePage: React.FC = () => {
           <button
             id="admin-tab-cohorts"
             onClick={() => setActiveTab('cohorts')}
-            className={`flex items-center space-x-2 rounded-lg px-3.5 py-2 text-sm font-medium transition ${
+            className={`flex items-center space-x-2 rounded-lg px-3.5 py-2 text-xs font-bold transition ${
               activeTab === 'cohorts'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -338,9 +351,9 @@ export const AdminConsolePage: React.FC = () => {
           <button
             id="admin-tab-scenarios"
             onClick={() => setActiveTab('scenarios')}
-            className={`flex items-center space-x-2 rounded-lg px-3.5 py-2 text-sm font-medium transition ${
+            className={`flex items-center space-x-2 rounded-lg px-3.5 py-2 text-xs font-bold transition ${
               activeTab === 'scenarios'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -350,9 +363,9 @@ export const AdminConsolePage: React.FC = () => {
           <button
             id="admin-tab-usage"
             onClick={() => setActiveTab('usage')}
-            className={`flex items-center space-x-2 rounded-lg px-3.5 py-2 text-sm font-medium transition ${
+            className={`flex items-center space-x-2 rounded-lg px-3.5 py-2 text-xs font-bold transition ${
               activeTab === 'usage'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -362,9 +375,9 @@ export const AdminConsolePage: React.FC = () => {
           <button
             id="admin-tab-audit"
             onClick={() => setActiveTab('audit')}
-            className={`flex items-center space-x-2 rounded-lg px-3.5 py-2 text-sm font-medium transition ${
+            className={`flex items-center space-x-2 rounded-lg px-3.5 py-2 text-xs font-bold transition ${
               activeTab === 'audit'
-                ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
+                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
                 : 'text-slate-400 hover:text-white'
             }`}
           >
@@ -376,9 +389,9 @@ export const AdminConsolePage: React.FC = () => {
 
       {loading && (
         <div className="flex min-h-[300px] items-center justify-center">
-          <div className="flex items-center space-x-3 text-cyan-400 font-mono text-sm">
-            <div className="h-4 w-4 animate-spin rounded-full border-2 border-cyan-400 border-t-transparent" />
-            <span>FETCHING CONTROL TELEMETRY...</span>
+          <div className="flex items-center space-x-3 text-indigo-400 font-semibold text-sm">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent" />
+            <span>Loading admin console telemetry...</span>
           </div>
         </div>
       )}

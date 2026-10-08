@@ -42,10 +42,15 @@ frontend/.vite/
 
 # Environment and secrets
 .env
-.env.local
-.env.*.local
+.env*
 *.pem
 *.key
+
+# Skills & Orchestration (Rule 2)
+skills/
+*.skill.yaml
+outputs/
+.loop-state.json
 
 # Database & runtime
 *.sqlite3
