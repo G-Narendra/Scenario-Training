@@ -1,4 +1,4 @@
-# Flight Simulator for Difficult Conversations
+# ScenarioLab — Workplace Scenario Training
 
 > An enterprise-grade, conversational scenario-training platform designed to help professionals master high-stakes interpersonal situations—negotiations, executive pushback, performance reviews, and conflict de-escalation—through realistic AI counterparts and multidimensional feedback.
 
@@ -166,6 +166,4 @@ Scenario-Training/
 - [`docs/COST_MODEL.md`](docs/COST_MODEL.md): Token/audio cost models, unit economics, and budget caps.
 - [`docs/USER_GUIDE.md`](docs/USER_GUIDE.md): Trainee 3-click guide and report navigation.
 - [`docs/ADMIN_GUIDE.md`](docs/ADMIN_GUIDE.md): Administrator cohort and studio management instructions.
-- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md): Docker Compose and TLS production setup.
-- [`docs/TASKS.md`](docs/TASKS.md): Comprehensive phase breakdown and execution checklist.
-- [`docs/PROGRESS.md`](docs/PROGRESS.md): Detailed engineering log across all delivery phases.
+- [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md): Cloud and container production setup.
