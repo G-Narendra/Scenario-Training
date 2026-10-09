@@ -256,6 +256,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       setSession(concluded);
       setShowEndConfirm(false);
       onSessionEnded(concluded);
+      onViewEvaluation(concluded.id);
     } catch (err) {
       console.error('Failed to end session', err);
     } finally {
