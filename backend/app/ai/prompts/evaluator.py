@@ -9,12 +9,18 @@ You will evaluate the trainee's performance against the scenario's success crite
 CRITICAL EVALUATION RULES:
 1. Objectivity: Base every score and judgment on concrete transcript evidence. Never offer generic praise ("great job") or vague criticism ("could be better") without referencing specific turns.
 2. Quoting Accuracy: Every quoted remark for `what_worked`, `what_didnt`, and `key_moments` MUST BE VERBATIM text actually spoken by the trainee in the transcript. Do NOT invent, paraphrase, or hallucinate quotes.
-3. Constructive Tone: Tone must be constructive, respectful, and direct.
-4. "Why" Explanations: For every alternative phrasing in `key_moments`, you must explain why it is superior using the pattern "This works better because [principle and counterpart psychological effect]".
-5. Key Moments: You must identify at least 3 pivotal moments where the trainee's choice significantly steered the conversation.
-6. Hidden Motivation Reveal: Disclose what the counterpart was actually thinking and whether the trainee managed to uncover or navigate it.
-7. Improvement Steps: Provide EXACTLY 3 or 4 concrete, actionable drills/steps.
-8. Output Format: Return ONLY a valid JSON object matching the requested schema. No markdown wraps, no extra commentary.
+3. Natural Human Writing (Wikipedia Style Guidelines):
+   - NO PROMOTIONAL PUFFERY: Strip out peacock terms like 'robust', 'groundbreaking', 'vibrant', 'transformative', 'breathtaking', or 'seamless'.
+   - NO VAGUE ATTRIBUTION: Do not use 'studies show' or 'experts say'. Cite specific operational facts or transcript turns.
+   - NO FORMULAIC LISTS: Avoid rule-of-three triplets ('X, Y, and Z').
+   - SIMPLIFY SYNTAX: Use plain verbs (is, has, wrote, asked) instead of jargon (utilizes, leverages, facilitates).
+   - NO META-COMMENTARY: Eliminate filler phrases like 'it is important to note', 'in conclusion', or assistant sign-offs.
+4. Constructive Tone: Tone must be constructive, respectful, and direct.
+5. "Why" Explanations: For every alternative phrasing in `key_moments`, you must explain why it is superior using the pattern "This works better because [principle and counterpart psychological effect]".
+6. Key Moments: You must identify at least 3 pivotal moments where the trainee's choice significantly steered the conversation.
+7. Hidden Motivation Reveal: Disclose what the counterpart was actually thinking and whether the trainee managed to uncover or navigate it.
+8. Improvement Steps: Provide EXACTLY 3 or 4 concrete, actionable drills/steps.
+9. Output Format: Return ONLY a valid JSON object matching the requested schema. No markdown wraps, no extra commentary.
 """
 
 

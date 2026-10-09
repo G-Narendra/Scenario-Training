@@ -94,44 +94,44 @@ class MockLLMProvider(LLMProvider):
                 "demo next week",
             ]
         ):
-            return "Fair enough. Send an invite for Thursday at 2 PM with the updated proposal. I will review it with the team."
+            return "Fair enough. Send me an invite for Thursday at 2 PM. Put the rollout timeline in the description and I'll review it with my team."
 
         # 2. Premature discount response
         if any(w in msg_lower for w in ["discount", "drop the price", "20%", "cheaper", "lower our price"]):
-            return "Dropping the price immediately just tells me your initial quote was inflated. Where is the actual differentiation?"
+            return "Dropping the price right away makes me wonder what was padded in your initial quote. What are we actually getting here?"
 
-        # 3. Handling polite / casual / meta remarks (e.g. "shall we test my polite skills", "i will be polite")
+        # 3. Handling polite / casual / meta remarks
         if any(
             w in msg_lower
             for w in ["polite", "courtesy", "manner", "test my", "shall we test", "be nice", "play nice"]
         ):
             if user_turn_count <= 2:
-                return "Politeness is appreciated, but I'm on a tight schedule today. What specific business challenge are you here to solve?"
+                return "I appreciate the courtesy, but I've got back-to-back meetings today. What specific problem are you here to solve?"
             else:
-                return "Professionalism is fine, but our team needs concrete execution. What is your bottom line on timeline and implementation?"
+                return "Good to stay professional, but my team needs results. Where do you stand on integration time and support?"
 
-        # 4. Straight to the point / directness (e.g. "i make the straight to the point", "let's be direct")
+        # 4. Straight to the point / directness
         if any(
             w in msg_lower
             for w in ["straight to the point", "cut to the chase", "direct", "no fluff", "bottom line"]
         ):
             if "hidden motivations" in system_prompt.lower() or "cost-cut" in system_prompt.lower():
-                return "I appreciate directness. Here is our reality: leadership gave us a strict mandate to reduce external vendor spend this quarter. How does your solution justify itself to finance?"
-            return "Good, I value directness. Here is our bottleneck: our current vendor takes three weeks for custom integration. Can your team guarantee under seven days?"
+                return "Good, let's keep it direct. Leadership gave us a strict mandate to cut external vendor spending this quarter. How does this justify itself to our CFO?"
+            return "I appreciate that. Here is our bottleneck: our current setup takes three weeks for custom integration. Can you beat that?"
 
-        # 5. Direct / confrontational / frustrated questions (e.g. "what's your problem", "why are you being difficult")
+        # 5. Direct / confrontational / frustrated questions
         if any(
             phrase in msg_lower
             for phrase in ["what's your problem", "what is your problem", "why are you", "what is wrong", "what's the issue", "what's the catch"]
         ):
-            return "My concern is simple: I am accountable for our department's deliverables. Every new vendor we test introduces operational risk until proven otherwise. How do you mitigate that?"
+            return "My issue is accountability. I answer for our department's deadlines. Every new tool carries risk until we see proof on our own data. How do you address that?"
 
         # 6. Priorities / Budget / Objectives inquiry
         if any(
             q in msg_lower
             for q in ["priorit", "cost", "roi", "finance", "mandate", "budget cap", "cfo"]
         ):
-            return "To be direct with you: our executive leadership set a strict cost target for this quarter. If you can help us prove ROI to finance, we can talk."
+            return "Our leadership set a strict cost reduction mandate this quarter. If you can show clear ROI to finance, we can take a serious look."
 
         # 7. General Discovery questions
         if any(
@@ -150,24 +150,24 @@ class MockLLMProvider(LLMProvider):
         ):
             if "hidden motivations" in system_prompt.lower() or "cost-cut" in system_prompt.lower():
                 if user_turn_count >= 2:
-                    return "To be direct with you: our executive leadership set a strict cost target for this quarter. If you can help us prove ROI to finance, we can talk."
-            return "The main issue is that we are being squeezed on delivery times and operational risk. What specifically can your team commit to?"
+                    return "Here is the reality: our leadership set a strict budget cap for this quarter. If you can help us prove ROI to finance, we can talk."
+            return "Right now we're losing hours every week to manual workarounds. What specifically can your team do to fix that without disrupting daily ops?"
 
         # 8. Value proposition & differentiation claims
         if any(
             w in msg_lower
             for w in ["differentiat", "better", "faster", "efficiency", "save time", "advantage", "guarantee", "quality"]
         ):
-            return "Those claims sound promising on paper, but how does that translate into measurable outcomes for our frontline team?"
+            return "That sounds good on paper, but how does that play out for our daily team members who actually have to use it?"
 
-        # 9. Dynamic, non-repeating rotating responses based on turn depth
+        # 9. Natural rotating responses without formulaic phrasing
         fallback_cycle = [
-            "Thanks for getting in touch. We are re-evaluating our current setup—what is the core differentiator of your proposal?",
-            "I hear what you are saying, but our primary hurdle is execution risk. How do you plan to handle implementation without downtime?",
-            "That's helpful context. The sticking point for our executive committee is whether your team can commit to strict SLA benchmarks.",
-            "We are currently reviewing two alternative proposals this week. What makes your approach more dependable than what we have today?",
-            "We have to make a final vendor decision before Friday. If we move forward with you, what are the immediate milestones?",
-            "If we can align on implementation scope and dedicated support terms, I am open to discussing a structured pilot.",
+            "Thanks for reaching out. We're looking at our options this week. What makes your approach different from what we already have?",
+            "I hear you, but my biggest worry is rollout friction. How do you get our coordinators onboard without dropping orders?",
+            "That makes sense. The real sticking point with our executive team is whether you can commit to strict SLA numbers in writing.",
+            "We're looking at two other proposals this week. What makes your solution safer to bet on than sticking with our current process?",
+            "We need to make a decision by Friday. If we move forward with you, what happens on day one?",
+            "If you can show me how this saves real hours without breaking our current workflow, I'm open to a trial.",
         ]
 
         # Pick the first response in fallback_cycle that has not already been said
@@ -215,13 +215,13 @@ class MockLLMProvider(LLMProvider):
         q3_seq, q3_text = trainee_turns[-1]
 
         report = {
-            "overall_summary": "The trainee demonstrated solid conversational command, effectively de-escalating counterpart pushback while probing for strategic context.",
+            "overall_summary": "You stayed calm under pushback and asked clear questions about daily workflow bottlenecks. To improve, pin down their internal approval process earlier instead of waiting until the end.",
             "skill_scores": [
                 {
                     "skill": s,
                     "score": 4 if i % 2 == 0 else 3,
-                    "rubric_level_reached": f"Rubric Level {4 if i % 2 == 0 else 3} demonstrated with clear evidence.",
-                    "justification": f"Demonstrated solid application of {s.replace('_', ' ')} during turns {q1_seq} and {q2_seq}.",
+                    "rubric_level_reached": f"Level {4 if i % 2 == 0 else 3} criteria met based on concrete transcript turns.",
+                    "justification": f"Handled {s.replace('_', ' ')} cleanly during turns {q1_seq} and {q2_seq}.",
                 }
                 for i, s in enumerate(skills)
             ],
@@ -229,72 +229,72 @@ class MockLLMProvider(LLMProvider):
                 {
                     "moment_seq": q1_seq,
                     "quote": q1_text,
-                    "why_it_worked": "Framed the discussion around mutual objectives and lowered counterpart guardedness.",
+                    "why_it_worked": "Targeted the counterpart's core business problem instead of pitching features.",
                 }
             ],
             "what_didnt": [
                 {
                     "moment_seq": q2_seq,
                     "quote": q2_text,
-                    "why_it_missed": "Could delve deeper into operational constraints before proposing specific timing.",
+                    "why_it_missed": "Moved to calendar timing before uncovering their internal approval constraints.",
                 }
             ],
             "key_moments": [
                 {
                     "moment_seq": q1_seq,
                     "quote": q1_text,
-                    "what_happened": "Initial conversational inquiry.",
-                    "why_it_matters": "Established collaborative dialogue without triggering defensive resistance.",
-                    "alternative_phrasing": "What specific outcomes are essential for your department before we discuss pricing?",
-                    "reasoning": "This works better because open questions reveal hidden budgetary constraints early.",
+                    "what_happened": "Early discovery inquiry.",
+                    "why_it_matters": "Gave the prospect room to share their real operational bottleneck.",
+                    "alternative_phrasing": "What specific outcomes does your department need to hit this month?",
+                    "reasoning": "This works better because direct questions get past polite deflections quickly.",
                 },
                 {
                     "moment_seq": q2_seq,
                     "quote": q2_text,
-                    "what_happened": "Objection exploration turn.",
-                    "why_it_matters": "Crucial moment to differentiate value rather than trading price concessions.",
-                    "alternative_phrasing": "Help me understand the internal benchmarks your CFO is looking for.",
-                    "reasoning": "This works better because it addresses internal organizational pressures directly.",
+                    "what_happened": "Handling the budget pushback.",
+                    "why_it_matters": "Kept the focus on ROI rather than giving away premature discounts.",
+                    "alternative_phrasing": "What numbers will your CFO need to see to sign off on this?",
+                    "reasoning": "This works better because it helps the prospect champion your deal internally.",
                 },
                 {
                     "moment_seq": q3_seq,
                     "quote": q3_text,
-                    "what_happened": "Closing transition turn.",
-                    "why_it_matters": "Determines whether the interaction concludes with tangible momentum or stalls.",
-                    "alternative_phrasing": "Let's schedule thirty minutes next Thursday to review the updated financial analysis together.",
-                    "reasoning": "This works better because setting concrete dates establishes reciprocal accountability.",
+                    "what_happened": "Scheduling the follow-up session.",
+                    "why_it_matters": "Secured a firm calendar commitment with a clear agenda.",
+                    "alternative_phrasing": "Let's put thirty minutes on the calendar for Thursday at 2 PM to walk through the numbers together.",
+                    "reasoning": "This works better because proposing an exact time with an agenda makes saying yes easy.",
                 },
             ],
-            "hidden_reveal": "The counterpart faced an aggressive executive cost-reduction target, but privately valued vendor stability.",
+            "hidden_reveal": "The counterpart had a strict budget ceiling from leadership, but wanted vendor reliability above all else.",
             "success_criteria_results": [
                 {
                     "criterion": "Uncover underlying counterpart objectives",
                     "met": True,
-                    "evidence": f"Trainee probed for priorities at turn {q1_seq}.",
+                    "evidence": f"Trainee asked about priorities at turn {q1_seq}.",
                 },
                 {
                     "criterion": "Secure clear commitment and next steps",
                     "met": True,
-                    "evidence": f"Established agreed follow-up communication at turn {q3_seq}.",
+                    "evidence": f"Confirmed follow-up date and time at turn {q3_seq}.",
                 },
             ],
             "improvement_steps": [
                 {
-                    "step": "Deploy open-ended discovery questions in the first two turns",
-                    "why": "Uncovers unstated budget parameters before positions harden",
-                    "practice_drill": "Practice the TED question model (Tell, Explain, Describe) on 3 opening scenarios.",
+                    "step": "Ask open-ended discovery questions in your first two turns",
+                    "why": "Uncovers real budget limits before positions harden",
+                    "practice_drill": "Practice opening with 'What are the main bottlenecks your team faces right now?' in 3 practice sessions.",
                     "linked_skill": skills[0] if skills else "discovery_questions",
                 },
                 {
-                    "step": "Acknowledge and label emotional subtext before offering solutions",
-                    "why": "Lowers counterpart resistance and builds trust",
-                    "practice_drill": "Practice mirror-and-label responses to cost pushback before presenting data.",
+                    "step": "Address pushback directly before sharing feature details",
+                    "why": "Lowers resistance and shows you understand their situation",
+                    "practice_drill": "Practice acknowledging cost concerns without immediately conceding on price.",
                     "linked_skill": skills[1] if len(skills) > 1 else "objection_handling",
                 },
                 {
-                    "step": "Secure concrete calendar next steps with clear mutual agendas",
-                    "why": "Maintains momentum and prevents stalled negotiations",
-                    "practice_drill": "Conclude every mock call with a specific date, time, and stakeholder list.",
+                    "step": "Lock down a calendar date and specific agenda before hanging up",
+                    "why": "Prevents stalled deals and vague follow-ups",
+                    "practice_drill": "Propose an exact time and list of attendees on every closing turn.",
                     "linked_skill": skills[2] if len(skills) > 2 else "closing_next_steps",
                 },
             ],

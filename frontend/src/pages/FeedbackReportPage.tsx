@@ -57,8 +57,8 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4 text-indigo-400">
         <div className="h-10 w-10 animate-spin rounded-full border-3 border-indigo-400 border-t-transparent" />
-        <p className="font-mono text-sm tracking-wider uppercase text-slate-300">
-          Synthesizing Performance Evaluation & Rubric Scoring...
+        <p className="font-mono text-xs tracking-wider uppercase text-slate-300">
+          Evaluating session performance against rubric...
         </p>
       </div>
     );

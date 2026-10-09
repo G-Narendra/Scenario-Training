@@ -279,7 +279,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       : { label: 'Evaluating Value & ROI', color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/30' };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-[#090D16] text-slate-100 overflow-hidden">
+    <div className="flex h-[calc(100vh-4rem)] bg-[#0B0F19] text-slate-100 overflow-hidden">
       {/* ================================================================= */}
       {/* LEFT SIDEBAR: Character Persona & Scenario Briefing Cockpit       */}
       {/* ================================================================= */}
@@ -789,9 +789,9 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
           >
             <div
               onClick={() => setShowEndConfirm(false)}
-              className="fixed inset-0 bg-[#090D16]/80 backdrop-blur-md"
+              className="fixed inset-0 bg-[#0B0F19]/80 backdrop-blur-sm"
             />
-            <div className="relative w-full max-w-md rounded-3xl border border-slate-800 bg-slate-900 p-6 shadow-2xl z-10">
+            <div className="relative w-full max-w-md rounded-2xl border border-slate-800 bg-[#111827] p-6 shadow-2xl z-10">
               <div className="flex items-center space-x-3 text-amber-400">
                 <AlertTriangle className="h-6 w-6" />
                 <h3 id="conclude-dialog-title" className="text-lg font-bold text-white font-heading">Conclude Simulation?</h3>

@@ -36,11 +36,11 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
       {/* Backdrop */}
       <div
         onClick={onClose}
-        className="fixed inset-0 bg-[#090D16]/80 backdrop-blur-md transition-opacity"
+        className="fixed inset-0 bg-[#0B0F19]/80 backdrop-blur-sm transition-opacity"
       />
 
       {/* Modal Dialog */}
-      <div className="relative w-full max-w-2xl overflow-hidden rounded-3xl border border-slate-800 bg-slate-900 shadow-2xl z-10 max-h-[90vh] flex flex-col">
+      <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-slate-800 bg-[#111827] shadow-2xl z-10 max-h-[90vh] flex flex-col">
         {/* Header */}
         <div className="flex items-start justify-between border-b border-slate-800 p-6 bg-slate-950/40">
           <div>
@@ -171,7 +171,7 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
         <div className="border-t border-slate-800 p-6 bg-slate-950/70 flex items-center justify-between">
           <div className="flex items-center space-x-2 text-xs text-slate-400">
             <ShieldAlert className="h-4 w-4 text-amber-400" />
-            <span>AI counterpart adapts dynamically with authentic resistance.</span>
+            <span>Your counterpart pushes back realistically based on your questions and tone.</span>
           </div>
 
           <button

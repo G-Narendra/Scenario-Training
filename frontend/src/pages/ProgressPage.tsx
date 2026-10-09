@@ -198,12 +198,12 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                 <span className="text-3xl font-extrabold text-white">
                   {traineeData.total_sessions_completed}
                 </span>
-                <span className="text-xs text-slate-400">flights</span>
+                <span className="text-xs text-slate-400">sessions</span>
               </div>
               <p className="mt-1 text-xs text-slate-400">
                 {traineeData.total_sessions_completed > 0
                   ? 'Active scenario engagement'
-                  : 'Ready for initial takeoff'}
+                  : 'Ready for your first session'}
               </p>
             </div>
 
@@ -222,7 +222,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                   {formatDuration(traineeData.total_time_seconds)}
                 </span>
               </div>
-              <p className="mt-1 text-xs text-slate-400">In-cockpit interactive dialogue</p>
+              <p className="mt-1 text-xs text-slate-400">Interactive roleplay dialogue</p>
             </div>
 
             {/* Card 3: Training Streak */}
@@ -449,7 +449,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                 <h2 className="text-xl font-bold text-white">Recommended Practice Drills</h2>
               </div>
               <p className="text-sm text-slate-400">
-                Tailored scenario drills targeted to strengthen your lowest scoring competencies.
+                Targeted drills to practice your lowest scoring competencies.
               </p>
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
@@ -494,7 +494,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
 
             {traineeData.recent_sessions.length === 0 ? (
               <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-8 text-center text-slate-400">
-                <p>No recent flight sessions recorded.</p>
+                <p>No recent simulation sessions recorded.</p>
               </div>
             ) : (
               <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/50">

@@ -98,7 +98,7 @@ export class VoiceClient {
       try {
         await tryConnect(fallbackUrl);
       } catch (err) {
-        this.callbacks.onError?.('Real-time voice service unavailable. You can continue seamlessly in Text Mode.');
+        this.callbacks.onError?.('Real-time voice service unavailable. You can continue in Text Mode.');
         throw err;
       }
     }

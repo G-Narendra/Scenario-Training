@@ -48,30 +48,29 @@ export const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#090D16] px-4 py-12 sm:px-6 lg:px-8">
-      {/* Background Ambient Glows */}
-      <div className="pointer-events-none absolute -top-40 left-1/2 h-[550px] w-[750px] -translate-x-1/2 rounded-full bg-indigo-600/15 blur-[140px]" />
-      <div className="pointer-events-none absolute -bottom-40 left-1/2 h-[550px] w-[750px] -translate-x-1/2 rounded-full bg-violet-600/15 blur-[140px]" />
+    <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-[#0B0F19] px-4 py-12 sm:px-6 lg:px-8">
+      {/* Subtle executive surface gradient */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_50%_at_50%_-20%,rgba(30,41,59,0.4),rgba(11,15,25,1))]" />
 
       <div className="w-full max-w-md relative z-10">
         {/* Header Branding */}
         <div className="text-center">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 shadow-xl shadow-indigo-500/25">
-            <Sparkles className="h-8 w-8 text-white" />
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-indigo-600 shadow-lg shadow-indigo-600/20">
+            <Sparkles className="h-7 w-7 text-white" />
           </div>
           <h1 className="mt-6 text-3xl font-black tracking-tight text-white font-heading sm:text-4xl">
-            ScenarioLab <span className="text-xl font-bold text-indigo-400 block sm:inline">• Scenario Training</span>
+            ScenarioLab <span className="text-xl font-bold text-slate-400 block sm:inline">• Scenario Training</span>
           </h1>
-          <p className="mt-2 text-sm text-indigo-200 font-medium">
-            Practice Difficult Workplace Conversations in Safe AI Simulations
+          <p className="mt-2 text-sm text-slate-300 font-medium">
+            Practice workplace conversations in realistic AI roleplays
           </p>
           <p className="mt-1 text-xs text-slate-400">
-            Practice high-stakes sales discovery, leadership feedback, and negotiation in safe AI roleplays
+            Sales discovery, performance feedback, and negotiation with real-time feedback
           </p>
         </div>
 
         {/* Card */}
-        <div className="mt-8 rounded-3xl border border-slate-800/80 bg-slate-900/70 p-8 shadow-2xl backdrop-blur-xl">
+        <div className="mt-8 rounded-2xl border border-slate-800 bg-[#111827] p-8 shadow-2xl">
           {error && (
             <div className="mb-6 flex items-start space-x-3 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs text-rose-300">
               <AlertCircle className="mt-0.5 h-4 w-4 flex-shrink-0 text-rose-400" />
@@ -130,7 +129,7 @@ export const LoginPage: React.FC = () => {
               id="login-submit-btn"
               type="submit"
               disabled={isSubmitting}
-              className="mt-2 flex w-full items-center justify-center space-x-2 rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 py-3.5 px-4 text-sm font-bold text-white shadow-lg shadow-indigo-600/25 transition hover:opacity-95 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50"
+              className="mt-2 flex w-full items-center justify-center space-x-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 py-3.5 px-4 text-sm font-bold text-white shadow-md shadow-indigo-600/20 transition focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50"
             >
               <span>{isSubmitting ? 'Entering ScenarioLab...' : 'Enter ScenarioLab'}</span>
               <ArrowRight className="h-4 w-4" />
