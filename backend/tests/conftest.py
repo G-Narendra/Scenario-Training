@@ -1,6 +1,7 @@
 import pytest
 from sqlalchemy import delete
 
+from backend.app.db.base import Base
 from backend.app.db.models import (
     AuditLog,
     AuthSession,
@@ -17,7 +18,6 @@ from backend.app.db.models import (
     UsageEvent,
     User,
 )
-from backend.app.db.base import Base
 from backend.app.db.session import async_session_factory, engine
 
 

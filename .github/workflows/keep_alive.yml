@@ -1,6 +1,8 @@
 name: Keep Alive Deployments Heartbeat
 
 on:
+  push:
+    branches: [ master ]
   schedule:
     # Runs every 14 minutes to prevent free-tier instances (Render, Railway, Koyeb, etc.) from sleeping
     - cron: '*/14 * * * *'
