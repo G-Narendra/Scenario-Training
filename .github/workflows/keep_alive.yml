@@ -1,0 +1,38 @@
+name: Keep Alive Deployments Heartbeat
+
+on:
+  schedule:
+    # Runs every 14 minutes to prevent free-tier instances (Render, Railway, Koyeb, etc.) from sleeping
+    - cron: '*/14 * * * *'
+    # Also runs a guaranteed daily heartbeat at midnight UTC
+    - cron: '0 0 * * *'
+  workflow_dispatch: # Allows manual trigger anytime from GitHub Actions tab
+
+jobs:
+  heartbeat-ping:
+    name: Heartbeat Ping Services
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Backend API Health
+        run: |
+          BACKEND_URL="${{ secrets.BACKEND_URL || 'https://scenariolab-api.onrender.com' }}"
+          echo "Pinging backend health: $BACKEND_URL/health"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 30 "$BACKEND_URL/health" || echo "000")
+          echo "Backend Health HTTP Status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" = "200" ]; then
+            echo "Backend is alive and healthy."
+          else
+            echo "Wake-up ping delivered to backend (status: $HTTP_STATUS)."
+          fi
+
+      - name: Ping Frontend Service
+        run: |
+          FRONTEND_URL="${{ secrets.FRONTEND_URL || 'https://scenariolab.vercel.app' }}"
+          echo "Pinging frontend: $FRONTEND_URL"
+          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 30 "$FRONTEND_URL" || echo "000")
+          echo "Frontend HTTP Status: $HTTP_STATUS"
+          if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "301" ] || [ "$HTTP_STATUS" = "308" ]; then
+            echo "Frontend is alive and responsive."
+          else
+            echo "Wake-up ping delivered to frontend (status: $HTTP_STATUS)."
+          fi

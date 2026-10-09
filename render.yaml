@@ -1,0 +1,28 @@
+services:
+  # ScenarioLab Production Web Service (FastAPI + Unified Frontend)
+  - type: web
+    name: scenariolab-api
+    runtime: python
+    buildCommand: "pip install --upgrade pip && pip install -r backend/requirements.txt && python scripts/seed.py"
+    startCommand: "uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT"
+    healthCheckPath: /health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.8
+      - key: ENVIRONMENT
+        value: production
+      - key: SECRET_KEY
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: '["*"]'
+      - key: DATABASE_URL
+        fromDatabase:
+          name: scenariolab-db
+          property: connectionString
+
+databases:
+  - name: scenariolab-db
+    databaseName: scenariolab
+    user: scenariolab_user
+    plan: free
