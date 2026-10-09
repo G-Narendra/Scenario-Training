@@ -24,7 +24,12 @@ from backend.app.voice.ws_handler import router as voice_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
-    # Startup actions
+    # Ensure all tables exist on startup
+    import backend.app.db.models  # noqa: F401
+    from backend.app.db.base import Base
+
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     yield
     # Shutdown actions
     await engine.dispose()

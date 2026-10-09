@@ -10,10 +10,19 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 from datetime import datetime, timedelta, timezone
 from sqlalchemy import select
 
-from backend.app.db.session import async_session_factory
+import backend.app.db.models  # noqa: F401 - ensure models registered
+from backend.app.db.base import Base
+from backend.app.db.session import async_session_factory, engine
 from backend.app.db.models import Skill, Cohort, Passcode
 from backend.app.security.passcodes import hash_passcode
 from backend.app.services.scenario_service import ScenarioService
+
+
+async def init_db():
+    print("Initializing database tables...")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    print("Database tables initialized successfully.")
 
 
 async def seed_demo_cohort(db):
@@ -160,6 +169,7 @@ async def seed_scenarios(db):
 
 async def main():
     print("=== Starting Database Seeding ===")
+    await init_db()
     async with async_session_factory() as db:
         await seed_demo_cohort(db)
         await seed_skills(db)
