@@ -29,7 +29,7 @@ jobs:
 
       - name: Ping Frontend Service
         run: |
-          FRONTEND_URL="${{ secrets.FRONTEND_URL || 'https://scenariolab.vercel.app' }}"
+          FRONTEND_URL="${{ secrets.FRONTEND_URL || 'https://scenariolab-alpha.vercel.app' }}"
           echo "Pinging frontend: $FRONTEND_URL"
           HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 30 "$FRONTEND_URL" || echo "000")
           echo "Frontend HTTP Status: $HTTP_STATUS"
