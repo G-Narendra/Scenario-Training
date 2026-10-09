@@ -121,7 +121,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
             </span>
           </div>
           <h1 className="mt-2 text-3xl font-black tracking-tight text-white font-heading sm:text-4xl">
-            Flight Log & Trajectory — Skill Performance Record
+            Executive Training Progress — Skill Performance Record
           </h1>
           <p className="mt-1 text-sm text-slate-300">
             Track competency improvement across scenarios, monitor skill gains, and review session history.
@@ -211,7 +211,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
             <div className="relative overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/60 p-5 shadow-lg backdrop-blur-sm">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                  Total Flight Time
+                  Total Simulation Time
                 </span>
                 <div className="rounded-xl bg-indigo-500/10 p-2 text-indigo-400 border border-indigo-500/20">
                   <Clock className="h-5 w-5" />
@@ -295,7 +295,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
               {traineeData.skill_averages.length === 0 ? (
                 <div className="flex min-h-[220px] flex-col items-center justify-center text-center">
                   <p className="text-sm text-slate-400">
-                    No evaluated flight data available yet.
+                    No evaluated training data available yet.
                   </p>
                   <p className="text-xs text-slate-500 mt-1">
                     Complete your first conversation to unlock your feedback history.

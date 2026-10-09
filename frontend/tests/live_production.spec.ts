@@ -86,7 +86,7 @@ test.describe('ScenarioLab Production Live End-to-End Verification', () => {
 
     // 10. Navigate to Progress Dashboard
     console.log('11. Navigating to Progress Dashboard...');
-    await page.click('a:has-text("Progress")');
+    await page.click('#nav-progress-btn');
     await expect(page.locator('h1')).toContainText('Executive Training Progress');
     await expect(page.locator('text=Completed Sessions')).toBeVisible();
 
