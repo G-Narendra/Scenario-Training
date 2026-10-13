@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/Navbar';
 import { LoginPage } from './pages/LoginPage';
 import { TrackPickerPage } from './pages/TrackPickerPage';
@@ -21,9 +22,9 @@ const AppContent: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#090D16] text-indigo-400">
+      <div className="flex min-h-screen items-center justify-center bg-slate-50 text-indigo-600 dark:bg-[#090D16] dark:text-indigo-400">
         <div className="flex items-center space-x-3 text-sm font-semibold">
-          <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent" />
+          <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-500 border-t-transparent" />
           <span>Loading ScenarioLab...</span>
         </div>
       </div>
@@ -63,7 +64,7 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#090D16] text-slate-100 flex flex-col font-sans selection:bg-indigo-600 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#090D16] dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-600 selection:text-white transition-colors duration-200">
       <Navbar currentView={currentView} onNavigate={(v) => setCurrentView(v as any)} />
 
       <main className="flex-1">
@@ -113,9 +114,11 @@ const AppContent: React.FC = () => {
 
 export function App() {
   return (
-    <AuthProvider>
-      <AppContent />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AppContent />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

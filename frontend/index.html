@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" class="dark">
+<html lang="en" class="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
@@ -8,9 +8,21 @@
     <meta name="description" content="ScenarioLab: AI-driven conversational scenario training and executive roleplay simulator for sales discovery, leadership coaching, and high-stakes negotiation." />
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+      (function() {
+        try {
+          var stored = localStorage.getItem('scenariolab_theme');
+          var theme = stored === 'dark' ? 'dark' : 'light';
+          document.documentElement.classList.remove('dark', 'light');
+          document.documentElement.classList.add(theme);
+          document.documentElement.setAttribute('data-theme', theme);
+        } catch (e) {
+          document.documentElement.classList.add('light');
+        }
+      })();
+    </script>
   </head>
-  <body class="bg-[#090D16] text-slate-100 min-h-screen antialiased selection:bg-indigo-600 selection:text-white">
+  <body class="bg-slate-50 text-slate-900 dark:bg-[#090D16] dark:text-slate-100 min-h-screen antialiased selection:bg-indigo-600 selection:text-white transition-colors duration-200">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
