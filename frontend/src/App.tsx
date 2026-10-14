@@ -12,9 +12,11 @@ import { SimulationSession } from './types';
 import { ProgressPage } from './pages/ProgressPage';
 import { AdminConsolePage } from './pages/AdminConsolePage';
 
+export type ViewMode = 'tracks' | 'scenarios' | 'chat' | 'evaluation' | 'progress' | 'admin';
+
 const AppContent: React.FC = () => {
   const { isAuthenticated, loading } = useAuth();
-  const [currentView, setCurrentView] = useState<'tracks' | 'scenarios' | 'chat' | 'evaluation' | 'progress' | 'admin'>('tracks');
+  const [currentView, setCurrentView] = useState<ViewMode>('tracks');
   const [selectedTrack, setSelectedTrack] = useState<string>('sales');
   const [activeSession, setActiveSession] = useState<SimulationSession | null>(null);
   const [evalSessionId, setEvalSessionId] = useState<string | null>(null);
@@ -65,7 +67,7 @@ const AppContent: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#090D16] dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-600 selection:text-white transition-colors duration-200">
-      <Navbar currentView={currentView} onNavigate={(v) => setCurrentView(v as any)} />
+      <Navbar currentView={currentView} onNavigate={(v) => setCurrentView(v as ViewMode)} />
 
       <main className="flex-1">
         {currentView === 'tracks' && (

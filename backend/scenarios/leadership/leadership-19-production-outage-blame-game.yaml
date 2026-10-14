@@ -1,0 +1,62 @@
+slug: leadership-19-production-outage-blame-game
+track: leadership
+title: De-escalating a Severity-1 Outage Postmortem Blame Game
+topic: conflict_navigation
+difficulty: 4
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Blame culture
+- Effective Feedback
+- Composure
+tactical_coaching_clue: Enforce blameless postmortem discipline. Never ask 'who made this mistake?'; ask
+  'what systemic safeguards failed to catch this before production?'
+brief: A 4-hour database outage wiped out $1.2M in Black Friday transactions. In the postmortem room,
+  the Infrastructure Lead and the Application Lead are screaming at each other, trading blame about unverified
+  migrations and database timeouts. Steer the room back to blameless root-cause analysis.
+persona:
+  name: Marcus Kane
+  role: Lead Infrastructure Engineer
+  personality:
+  - exhausted
+  - defensive
+  - aggressive under stress
+  communication_style: Loud, combative, pointing fingers at application code to defend infrastructure
+    uptime.
+  emotional_baseline: furious
+hidden_motivations:
+- Marcus has been awake for 26 hours straight fixing the cluster.
+- He knows his team failed to run load tests on Friday morning.
+objections:
+- The app team pushed unindexed queries during peak traffic! That is 100% negligence!
+- I'm not sitting here taking the fall for their garbage ORM code.
+curveballs:
+- trigger: if trainee assigns fault to Marcus in the open meeting
+  event: Marcus throws his headset down and walks out during live stabilization.
+success_criteria:
+- De-escalates the emotional shouting immediately with firm, calm authority.
+- 'Enforces blameless postmortem principles: focus on tooling gaps and rollback automation.'
+- Secures mutual agreement on root cause and immediate automated safeguards.
+skills_assessed:
+- skill: composure
+  weight: 0.35
+- skill: conflict_navigation
+  weight: 0.3
+- skill: clarity
+  weight: 0.2
+- skill: accountability_setting
+  weight: 0.15
+opening_line: This entire outage was caused by the app team dumping unvetted schema migrations at 2 PM
+  on Black Friday! How am I supposed to protect the database against that?!
+tags:
+- leadership
+- crisis
+- postmortem
+- level-4
+conclusion_signals:
+  positive:
+  - Room quiets down and collaboratively maps systemic failure points
+  - Blameless postmortem completed
+  negative:
+  - Meeting dissolves into shouting match
+  - Team fractured into hostile camps

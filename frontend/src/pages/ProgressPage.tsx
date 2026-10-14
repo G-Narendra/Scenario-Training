@@ -56,9 +56,10 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
         const cData = await api.getCohortProgress(user.cohort_id);
         setCohortData(cData);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load progress data', err);
-      setError(err.message || 'Failed to load progress metrics');
+      const msg = err instanceof Error ? err.message : 'Failed to load progress metrics';
+      setError(msg);
     } finally {
       setLoading(false);
     }

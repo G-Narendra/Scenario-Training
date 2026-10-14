@@ -80,7 +80,22 @@ class MockLLMProvider(LLMProvider):
                 if m.role == "assistant":
                     previous_replies.add(m.content)
 
-        # 1. Closing / Next Steps commitment
+        # Detect track persona from system_prompt
+        is_leadership = any(
+            kw in system_prompt.lower()
+            for kw in [
+                "track: leadership",
+                "direct report",
+                "underperform",
+                "psychological safety",
+                "whistleblower",
+                "reorganization",
+                "cross-functional resistance",
+                "boardroom crisis",
+            ]
+        )
+
+        # 1. Closing / Next Steps commitment (Guard: do not agree on first turn)
         if any(
             w in msg_lower
             for w in [
@@ -92,46 +107,76 @@ class MockLLMProvider(LLMProvider):
                 "call next week",
                 "pilot",
                 "demo next week",
+                "wrap up",
+                "conclude",
+                "set a time",
             ]
         ):
-            return "Fair enough. Send me an invite for Thursday at 2 PM. Put the rollout timeline in the description and I'll review it with my team."
+            if user_turn_count <= 1:
+                if is_leadership:
+                    return "Setting another meeting won't resolve this if we don't align on the core expectations right now. How do you propose we handle the immediate team workload?"
+                else:
+                    return "It's too early to put time on my calendar. I still haven't heard how your solution solves our direct integration bottleneck. What specific proof do you have?"
+            else:
+                if is_leadership:
+                    return "Fair enough. Let's document these agreed action items and review our alignment with the team on Thursday at 2 PM."
+                else:
+                    return "Fair enough. Send me an invite for Thursday at 2 PM. Put the rollout timeline in the description and I'll review it with my team."
 
-        # 2. Premature discount response
-        if any(w in msg_lower for w in ["discount", "drop the price", "20%", "cheaper", "lower our price"]):
-            return "Dropping the price right away makes me wonder what was padded in your initial quote. What are we actually getting here?"
+        # 2. Premature concessions / discounts
+        if any(w in msg_lower for w in ["discount", "drop the price", "20%", "cheaper", "lower our price", "concession"]):
+            if is_leadership:
+                return "Dropping the bar on standards isn't the answer here. If we lower expectations for one person, it compromises the entire team's discipline."
+            else:
+                return "Dropping the price right away makes me wonder what was padded in your initial quote. What are we actually getting here?"
 
         # 3. Handling polite / casual / meta remarks
         if any(
             w in msg_lower
-            for w in ["polite", "courtesy", "manner", "test my", "shall we test", "be nice", "play nice"]
+            for w in ["polite", "courtesy", "manner", "test my", "shall we test", "be nice", "play nice", "hello", "good morning", "hi"]
         ):
             if user_turn_count <= 2:
-                return "I appreciate the courtesy, but I've got back-to-back meetings today. What specific problem are you here to solve?"
+                if is_leadership:
+                    return "Good morning. I know we have limited time today, and there are some serious team challenges we need to get through. What is top of mind for you?"
+                else:
+                    return "I appreciate the courtesy, but I've got back-to-back meetings today. What specific problem are you here to solve?"
             else:
-                return "Good to stay professional, but my team needs results. Where do you stand on integration time and support?"
+                if is_leadership:
+                    return "Courtesy is fine, but my team needs concrete guidance right now. What is the specific plan of action?"
+                else:
+                    return "Good to stay professional, but my team needs results. Where do you stand on integration time and support?"
 
         # 4. Straight to the point / directness
         if any(
             w in msg_lower
             for w in ["straight to the point", "cut to the chase", "direct", "no fluff", "bottom line"]
         ):
-            if "hidden motivations" in system_prompt.lower() or "cost-cut" in system_prompt.lower():
-                return "Good, let's keep it direct. Leadership gave us a strict mandate to cut external vendor spending this quarter. How does this justify itself to our CFO?"
-            return "I appreciate that. Here is our bottleneck: our current setup takes three weeks for custom integration. Can you beat that?"
+            if is_leadership:
+                return "Good, let's keep it direct: The team is burning out under current sprint scope, and morale is dropping. If we don't cut back deliverables, we will lose key engineers."
+            else:
+                if "hidden motivations" in system_prompt.lower() or "cost-cut" in system_prompt.lower():
+                    return "Good, let's keep it direct. Leadership gave us a strict mandate to cut external vendor spending this quarter. How does this justify itself to our CFO?"
+                return "I appreciate that. Here is our bottleneck: our current setup takes three weeks for custom integration. Can you beat that?"
 
         # 5. Direct / confrontational / frustrated questions
         if any(
             phrase in msg_lower
             for phrase in ["what's your problem", "what is your problem", "why are you", "what is wrong", "what's the issue", "what's the catch"]
         ):
-            return "My issue is accountability. I answer for our department's deadlines. Every new tool carries risk until we see proof on our own data. How do you address that?"
+            if is_leadership:
+                return "My concern is accountability and fairness. My people have been delivering nights and weekends, and seeing senior management bypass our input creates serious resentment."
+            else:
+                return "My issue is accountability. I answer for our department's deadlines. Every new tool carries risk until we see proof on our own data. How do you address that?"
 
         # 6. Priorities / Budget / Objectives inquiry
         if any(
             q in msg_lower
-            for q in ["priorit", "cost", "roi", "finance", "mandate", "budget cap", "cfo"]
+            for q in ["priorit", "cost", "roi", "finance", "mandate", "budget cap", "cfo", "budget", "resource"]
         ):
-            return "Our leadership set a strict cost reduction mandate this quarter. If you can show clear ROI to finance, we can take a serious look."
+            if is_leadership:
+                return "Our priority has to be operational continuity. If we shuffle headcount or change priorities mid-quarter, we risk missing our core SLA commitments."
+            else:
+                return "Our leadership set a strict cost reduction mandate this quarter. If you can show clear ROI to finance, we can take a serious look."
 
         # 7. General Discovery questions
         if any(
@@ -148,27 +193,45 @@ class MockLLMProvider(LLMProvider):
                 "where do you stand",
             ]
         ):
-            if "hidden motivations" in system_prompt.lower() or "cost-cut" in system_prompt.lower():
+            if is_leadership:
                 if user_turn_count >= 2:
-                    return "Here is the reality: our leadership set a strict budget cap for this quarter. If you can help us prove ROI to finance, we can talk."
-            return "Right now we're losing hours every week to manual workarounds. What specifically can your team do to fix that without disrupting daily ops?"
+                    return "Here is the reality on the ground: people feel blindsided by recent decisions and are hesitant to speak up. How will you rebuild that psychological safety?"
+                return "Right now there is deep friction between engineering and product on delivery expectations. How do you propose we bridge that divide?"
+            else:
+                if "hidden motivations" in system_prompt.lower() or "cost-cut" in system_prompt.lower():
+                    if user_turn_count >= 2:
+                        return "Here is the reality: our leadership set a strict budget cap for this quarter. If you can help us prove ROI to finance, we can talk."
+                return "Right now we're losing hours every week to manual workarounds. What specifically can your team do to fix that without disrupting daily ops?"
 
         # 8. Value proposition & differentiation claims
         if any(
             w in msg_lower
             for w in ["differentiat", "better", "faster", "efficiency", "save time", "advantage", "guarantee", "quality"]
         ):
-            return "That sounds good on paper, but how does that play out for our daily team members who actually have to use it?"
+            if is_leadership:
+                return "That sounds good in theory, but when rubber meets the road, how do we hold leadership accountable to these standards?"
+            else:
+                return "That sounds good on paper, but how does that play out for our daily team members who actually have to use it?"
 
         # 9. Natural rotating responses without formulaic phrasing
-        fallback_cycle = [
-            "Thanks for reaching out. We're looking at our options this week. What makes your approach different from what we already have?",
-            "I hear you, but my biggest worry is rollout friction. How do you get our coordinators onboard without dropping orders?",
-            "That makes sense. The real sticking point with our executive team is whether you can commit to strict SLA numbers in writing.",
-            "We're looking at two other proposals this week. What makes your solution safer to bet on than sticking with our current process?",
-            "We need to make a decision by Friday. If we move forward with you, what happens on day one?",
-            "If you can show me how this saves real hours without breaking our current workflow, I'm open to a trial.",
-        ]
+        if is_leadership:
+            fallback_cycle = [
+                "I hear your point, but how does this impact our team's current quarterly delivery commitments?",
+                "That sounds reasonable in theory, but my people are already working 50-hour weeks. What are we deprioritizing?",
+                "I need concrete reassurance that senior leadership will back us if cross-functional dependencies stall.",
+                "If we commit to this new process, what specific support or escalation path will you provide when roadblocks emerge?",
+                "I appreciate you listening to my perspective. What does success look like for this initiative over the next 30 days?",
+                "Let's make sure we have clear alignment before announcing this to the broader department. What are the key messages?",
+            ]
+        else:
+            fallback_cycle = [
+                "Thanks for reaching out. We're looking at our options this week. What makes your approach different from what we already have?",
+                "I hear you, but my biggest worry is rollout friction. How do you get our coordinators onboard without dropping orders?",
+                "That makes sense. The real sticking point with our executive team is whether you can commit to strict SLA numbers in writing.",
+                "We're looking at two other proposals this week. What makes your solution safer to bet on than sticking with our current process?",
+                "We need to make a decision by Friday. If we move forward with you, what happens on day one?",
+                "If you can show me how this saves real hours without breaking our current workflow, I'm open to a trial.",
+            ]
 
         # Pick the first response in fallback_cycle that has not already been said
         for candidate in fallback_cycle:
@@ -196,12 +259,12 @@ class MockLLMProvider(LLMProvider):
         if not trainee_turns:
             trainee_turns = [(2, "Could you share what your top priorities are for this quarter?")]
 
-        # Extract skills
+        # Extract skills or capabilities from evaluation prompt
         skills = []
         for line in prompt.splitlines():
-            m = re.match(r"\*\s+Skill:\s+\*\*([a-zA-Z0-9_-]+)\*\*", line.strip())
+            m = re.match(r"\*\s+(?:Skill|Capability):\s+\*\*([a-zA-Z0-9_ -]+)\*\*", line.strip())
             if m:
-                skills.append(m.group(1))
+                skills.append(m.group(1).strip())
         if not skills:
             skills = [
                 "discovery_questions",
@@ -210,12 +273,23 @@ class MockLLMProvider(LLMProvider):
                 "closing_next_steps",
             ]
 
+        is_leadership_eval = any(
+            kw in prompt.lower()
+            for kw in ["leadership", "direct report", "manager", "team", "psychological", "culture", "whistleblower", "conflict"]
+        )
+
         q1_seq, q1_text = trainee_turns[0]
         q2_seq, q2_text = trainee_turns[min(1, len(trainee_turns) - 1)]
         q3_seq, q3_text = trainee_turns[-1]
 
+        overall_summary = (
+            "You maintained executive presence under pushback and focused on aligning expectations and psychological safety. To improve, clarify concrete operational boundaries earlier in the discussion."
+            if is_leadership_eval
+            else "You stayed calm under pushback and asked clear questions about daily workflow bottlenecks. To improve, pin down their internal approval process earlier instead of waiting until the end."
+        )
+
         report = {
-            "overall_summary": "You stayed calm under pushback and asked clear questions about daily workflow bottlenecks. To improve, pin down their internal approval process earlier instead of waiting until the end.",
+            "overall_summary": overall_summary,
             "skill_scores": [
                 {
                     "skill": s,
@@ -328,7 +402,7 @@ class MockLLMProvider(LLMProvider):
                 last_user_message = m.content
                 break
 
-        return self._generate_contextual_reply(last_user_message, system_prompt)
+        return self._generate_contextual_reply(last_user_message, system_prompt, messages=messages)
 
     async def stream_chat(
         self,

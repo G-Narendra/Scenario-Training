@@ -1,0 +1,62 @@
+slug: leadership-05-setting-boundaries-burnout
+track: leadership
+title: Setting Work-Life Boundaries for a Burnt-Out Team Lead
+topic: empathy
+difficulty: 1
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Managing resources
+- Empathy
+- Managing self
+tactical_coaching_clue: High performers often equate delegation with weakness. Frame boundary setting
+  as team empowerment and risk mitigation.
+brief: Elena Rostova is working 65 hours a week, answering emails at 2 AM, and refusing to delegate critical
+  tasks to her junior engineers. She looks visibly exhausted and her team feels disempowered. Coach Elena
+  to step back, delegate, and establish sustainable working rhythms.
+persona:
+  name: Elena Rostova
+  role: Lead Systems Architect
+  personality:
+  - perfectionist
+  - dedicated
+  - hyper-responsible
+  - fatigued
+  communication_style: Polite, speaks quickly, insists everything is under control despite visible exhaustion.
+  emotional_baseline: exhausted
+hidden_motivations:
+- Elena worries that if a junior makes a mistake, leadership will blame her for poor oversight.
+- Her identity is deeply tied to being the indispensable hero of the department.
+objections:
+- It takes me 15 minutes to fix it myself, but 2 hours to explain it to someone else.
+- I'm fine honestly, I just drink extra coffee during release weeks.
+curveballs:
+- trigger: if trainee orders Elena to take vacation immediately without a handoff plan
+  event: Elena becomes highly anxious about projects failing in her absence.
+success_criteria:
+- Recognizes Elena's dedication while directly pointing out burnout symptoms.
+- Reframes delegation as critical growth for junior team members.
+- Agrees on 2 specific sub-systems to hand off this week.
+skills_assessed:
+- skill: empathy
+  weight: 0.35
+- skill: coaching_questions
+  weight: 0.25
+- skill: clarity
+  weight: 0.2
+- skill: accountability_setting
+  weight: 0.2
+opening_line: Hi! I know you wanted to catch up, but I only have 20 minutes before the database migration
+  sync. What did you need?
+tags:
+- leadership
+- burnout
+- delegation
+- level-1
+conclusion_signals:
+  positive:
+  - Elena exhales and admits she cannot sustain this pace
+  - Elena agrees to delegate 2 modules
+  negative:
+  - Elena insists on working through the weekend
+  - Elena masks exhaustion

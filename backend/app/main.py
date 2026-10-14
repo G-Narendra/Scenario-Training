@@ -106,6 +106,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 
 @app.get("/health", tags=["Ops"])
+@app.get("/health/live", tags=["Ops"])
 async def health_check():
     return {
         "status": "healthy",
@@ -116,6 +117,7 @@ async def health_check():
 
 
 @app.get("/ready", tags=["Ops"])
+@app.get("/health/ready", tags=["Ops"])
 async def readiness_check():
     db_status = "ok"
     try:

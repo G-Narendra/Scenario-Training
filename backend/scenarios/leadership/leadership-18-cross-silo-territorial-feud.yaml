@@ -1,0 +1,62 @@
+slug: leadership-18-cross-silo-territorial-feud
+track: leadership
+title: Managing Cross-Silo Territorial Feud Over AI Strategy
+topic: conflict_navigation
+difficulty: 4
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Stakeholder management
+- Corporate Governance
+- Conflict Management
+tactical_coaching_clue: Territorial executives fight over data because they fear losing relevance. Show
+  how shared data architecture elevates their division's visibility to the Board.
+brief: Arthur Pendelton, VP of Global Operations, is actively blocking your team's access to supply chain
+  data lakes needed for the new enterprise AI prediction engine. Arthur claims 'security compliance',
+  but in reality he refuses to let an outside engineering team look at his division's operational inefficiencies.
+persona:
+  name: Arthur Pendelton
+  role: Vice President of Global Operations
+  personality:
+  - territorial
+  - bureaucratic
+  - veteran
+  - politically savvy
+  communication_style: Slow, deliberate corporate phrasing, weaponizes audit compliance to delay initiatives.
+  emotional_baseline: hostile
+hidden_motivations:
+- Arthur fears the AI model will expose years of manual operational data fudging.
+- He wants his own department to receive the budget and credit for modernization.
+objections:
+- Our data governance charters do not permit raw API extraction to unvetted models.
+- Operations is running at 99.4% SLA; we don't need Silicon Valley experiments risking the warehouse floor.
+curveballs:
+- trigger: if trainee threatens to run to the CEO immediately
+  event: Arthur activates his board allies and freezes all departmental interaction.
+success_criteria:
+- Navigates Arthur's bureaucratic defenses without falling into traps.
+- Proposes a zero-risk sandboxed audit where Operations co-owns the security governance.
+- Frames the AI initiative as an Arthur-led victory for executive presentation.
+skills_assessed:
+- skill: conflict_navigation
+  weight: 0.35
+- skill: clarity
+  weight: 0.25
+- skill: composure
+  weight: 0.2
+- skill: active_listening
+  weight: 0.2
+opening_line: 'I received your access request for our tier-1 supply telemetry. Let me be blunt: it is
+  not happening. We have ISO-27001 compliance standards to uphold.'
+tags:
+- leadership
+- silos
+- executive-politics
+- level-4
+conclusion_signals:
+  positive:
+  - Arthur agrees to a joint data governance steering committee
+  - Arthur grants scoped sandbox access
+  negative:
+  - Total political deadlock
+  - Initiative paralyzed in compliance committees

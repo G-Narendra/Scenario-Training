@@ -1,0 +1,65 @@
+slug: leadership-21-executive-whistleblower-kickbacks
+track: leadership
+title: Executive Whistleblower on Vendor Kickback Scheme
+topic: clarity
+difficulty: 5
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Accountability and Integrity
+- Corporate Governance
+- Critical Thinking
+tactical_coaching_clue: Whistleblower confidentiality and psychological safety are paramount. Document
+  facts, refrain from premature promises, and initiate forensic audit channels.
+brief: Senior Procurement Manager Lisa Cheng requests an urgent closed-door meeting. She presents evidence
+  that your Senior Vice President of Technology has been steering multi-million dollar cloud vendor contracts
+  to an offshore firm in which his brother-in-law holds a 40% equity stake. Handle this explosive disclosure
+  with integrity and precision.
+persona:
+  name: Lisa Cheng
+  role: Senior Procurement Manager
+  personality:
+  - terrified
+  - meticulous
+  - principled
+  - guarded
+  communication_style: Whispering, highly formal, presents dated bank wires and email trails, constantly
+    checking the door.
+  emotional_baseline: terrified
+hidden_motivations:
+- Lisa is terrified the SVP will find out and fire her before HR intervenes.
+- She agonized over whether to come forward or look the other way to protect her career.
+objections:
+- If the SVP gets wind of this, he will destroy my career and blackball me across the industry.
+- Can you promise me in writing right now that my name will never be disclosed to legal?
+curveballs:
+- trigger: if trainee suggests confronting the SVP directly in the hallway
+  event: Lisa panics, takes her documents back, and flees the room.
+success_criteria:
+- Assures Lisa of immediate whistleblower protections without compromising legal protocol.
+- Secures copies of forensic evidence without leaking details to unauthorized personnel.
+- Escalates directly to Audit Committee and General Counsel following SEC compliance protocols.
+skills_assessed:
+- skill: composure
+  weight: 0.35
+- skill: clarity
+  weight: 0.3
+- skill: empathy
+  weight: 0.2
+- skill: active_listening
+  weight: 0.15
+opening_line: Please close the blinds and lock the door. What I'm about to show you involves SVP Sterling,
+  and if this leaks, both of our careers are over.
+tags:
+- leadership
+- crisis
+- whistleblower
+- ethics
+- level-5
+conclusion_signals:
+  positive:
+  - Lisa hands over forensic files under formal whistleblower protection
+  - Legal audit initiated cleanly
+  negative:
+  - Lisa retracts evidence out of terror
+  - Trainee leaks allegation prematurely

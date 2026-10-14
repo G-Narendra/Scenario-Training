@@ -205,33 +205,33 @@ export const api = {
   },
 
   // Admin Scenarios Studio
-  async listAdminScenarios(): Promise<any[]> {
-    return request<any[]>('/admin/scenarios');
+  async listAdminScenarios(): Promise<Record<string, unknown>[]> {
+    return request<Record<string, unknown>[]>('/admin/scenarios');
   },
 
-  async getAdminScenarioDetail(id: string): Promise<any> {
-    return request<any>(`/admin/scenarios/${id}`);
+  async getAdminScenarioDetail(id: string): Promise<Record<string, unknown>> {
+    return request<Record<string, unknown>>(`/admin/scenarios/${id}`);
   },
 
-  async publishScenario(id: string): Promise<any> {
-    return request<any>(`/admin/scenarios/${id}/publish`, { method: 'POST' });
+  async publishScenario(id: string): Promise<Record<string, unknown>> {
+    return request<Record<string, unknown>>(`/admin/scenarios/${id}/publish`, { method: 'POST' });
   },
 
-  async archiveScenario(id: string): Promise<any> {
-    return request<any>(`/admin/scenarios/${id}/archive`, { method: 'POST' });
+  async archiveScenario(id: string): Promise<Record<string, unknown>> {
+    return request<Record<string, unknown>>(`/admin/scenarios/${id}/archive`, { method: 'POST' });
   },
 
-  async duplicateScenario(id: string): Promise<any> {
-    return request<any>(`/admin/scenarios/${id}/duplicate`, { method: 'POST' });
+  async duplicateScenario(id: string): Promise<Record<string, unknown>> {
+    return request<Record<string, unknown>>(`/admin/scenarios/${id}/duplicate`, { method: 'POST' });
   },
 
-  async deleteScenario(id: string): Promise<any> {
-    return request<any>(`/admin/scenarios/${id}`, { method: 'DELETE' });
+  async deleteScenario(id: string): Promise<Record<string, unknown>> {
+    return request<Record<string, unknown>>(`/admin/scenarios/${id}`, { method: 'DELETE' });
   },
 
   async validateScenarioYaml(
     yamlContent: string
-  ): Promise<{ valid: boolean; errors: string[]; warnings: string[]; scenario_preview?: any }> {
+  ): Promise<{ valid: boolean; errors: string[]; warnings: string[]; scenario_preview?: Record<string, unknown> }> {
     const res = await fetch(`${API_BASE}/admin/scenarios/validate`, {
       method: 'POST',
       headers: {
@@ -243,7 +243,7 @@ export const api = {
     return res.json();
   },
 
-  async importScenarioYaml(yamlContent: string): Promise<any> {
+  async importScenarioYaml(yamlContent: string): Promise<Record<string, unknown>> {
     const res = await fetch(`${API_BASE}/admin/scenarios/import`, {
       method: 'POST',
       headers: {
@@ -263,7 +263,7 @@ export const api = {
     prompt: string;
     track_key?: string;
     difficulty?: number;
-  }): Promise<any> {
+  }): Promise<Record<string, unknown>> {
     return request('/admin/scenarios/ai-draft', {
       method: 'POST',
       body: JSON.stringify(payload),
@@ -274,7 +274,7 @@ export const api = {
     return request<AdminScenarioVersion[]>(`/admin/scenarios/${id}/versions`);
   },
 
-  async restoreScenarioVersion(id: string, version: number): Promise<any> {
+  async restoreScenarioVersion(id: string, version: number): Promise<Record<string, unknown>> {
     return request(`/admin/scenarios/${id}/versions/${version}/restore`, {
       method: 'POST',
     });
@@ -354,8 +354,8 @@ export const api = {
         }
       }
       onDone();
-    } catch (err: any) {
-      onError(err);
+    } catch (err: unknown) {
+      onError(err instanceof Error ? err : new Error(String(err)));
     }
   },
 };

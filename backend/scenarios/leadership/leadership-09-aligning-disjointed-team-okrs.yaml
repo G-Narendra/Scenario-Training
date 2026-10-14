@@ -1,0 +1,62 @@
+slug: leadership-09-aligning-disjointed-team-okrs
+track: leadership
+title: Aligning a Disjointed Team Around Quarterly OKRs
+topic: clarity
+difficulty: 2
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Vision into Reality
+- Team alignment
+- Goal Setting
+tactical_coaching_clue: Connect individual pet projects to the primary team North Star. Show that focus
+  on one goal enables subsequent innovation.
+brief: Your infrastructure engineering pod has fragmented. Two engineers are building a custom Rust CLI
+  tool that isn't on the roadmap, while the core customer migration is falling behind. Bring team lead
+  Tariq back into alignment without crushing his engineering passion.
+persona:
+  name: Tariq Mansoor
+  role: Lead Infrastructure Engineer
+  personality:
+  - curious
+  - technically brilliant
+  - easily distracted
+  - independent
+  communication_style: Enthusiastic about technical architecture, dismissive of quarterly business spreadsheets.
+  emotional_baseline: distracted
+hidden_motivations:
+- Tariq finds legacy customer migration mundane and wants to build resume-worthy modern tooling.
+- He worries the team is falling behind modern industry tech stacks.
+objections:
+- This Rust tool will pay dividends in 12 months; migration work is just grinding tech debt.
+- If we don't modernize our tooling now, top engineers will leave for startups.
+curveballs:
+- trigger: if trainee bans all side projects abruptly without context
+  event: Tariq becomes disengaged and works with minimal effort.
+success_criteria:
+- Validates the technical merit of modern tooling.
+- Connects company survival and customer migration directly to engineering runway.
+- Establishes clear 80/20 time allocations once migration milestones are met.
+skills_assessed:
+- skill: clarity
+  weight: 0.35
+- skill: accountability_setting
+  weight: 0.25
+- skill: coaching_questions
+  weight: 0.2
+- skill: empathy
+  weight: 0.2
+opening_line: Hey! Have you seen the benchmark numbers for the new Rust pipeline prototype? It's literally
+  4x faster than Python!
+tags:
+- leadership
+- alignment
+- prioritization
+- level-2
+conclusion_signals:
+  positive:
+  - Tariq commits to finishing customer migration by sprint 4
+  - Clear agreement on allocated R&D time
+  negative:
+  - Tariq secretly continues unauthorized side work
+  - Team remains misaligned

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { FeedbackReport, SimulationSession } from '../types';
+import { ThreeHSolutionsLogo } from '../components/ThreeHSolutionsLogo';
 import {
   AlertTriangle,
   ArrowLeft,
@@ -55,10 +56,10 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
 
   if (loading) {
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4 text-indigo-400">
-        <div className="h-10 w-10 animate-spin rounded-full border-3 border-indigo-400 border-t-transparent" />
-        <p className="font-mono text-xs tracking-wider uppercase text-slate-300">
-          Evaluating session performance against rubric...
+      <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4 text-[#FF6500]">
+        <div className="h-10 w-10 animate-spin rounded-full border-3 border-[#FF6500] border-t-transparent" />
+        <p className="font-mono text-sm tracking-wider uppercase text-slate-300 font-bold">
+          Evaluating executive performance against 3H competency rubric...
         </p>
       </div>
     );
@@ -74,7 +75,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
         <p className="mt-2 text-sm text-slate-400">{error || 'Session report could not be found.'}</p>
         <button
           onClick={onBackToScenarios}
-          className="mt-6 rounded-xl bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white hover:bg-indigo-500 transition shadow-lg shadow-indigo-600/30"
+          className="mt-6 rounded-xl bg-[#FF6500] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#E05A00] transition shadow-lg shadow-[#FF6500]/30"
         >
           Return to Library
         </button>
@@ -87,7 +88,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
     overall >= 85
       ? { label: 'Mastery Demonstrated', color: 'text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30' }
       : overall >= 70
-      ? { label: 'Proficient Execution', color: 'text-indigo-400', bg: 'bg-indigo-500/10 border-indigo-500/30' }
+      ? { label: 'Proficient Execution', color: 'text-[#FF6500]', bg: 'bg-[#FF6500]/10 border-[#FF6500]/30' }
       : overall >= 50
       ? { label: 'Developing Competency', color: 'text-amber-400', bg: 'bg-amber-500/10 border-amber-500/30' }
       : { label: 'Foundational Practice Required', color: 'text-rose-400', bg: 'bg-rose-500/10 border-rose-500/30' };
@@ -95,11 +96,11 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 print:p-0 print:max-w-none">
       {/* Top Action Bar (hidden on print) */}
-      <div className="flex items-center justify-between border-b border-slate-800 pb-4 print:hidden">
+      <div className="flex items-center justify-between border-b border-slate-300 dark:border-[#1E3E62] pb-4 print:hidden">
         <button
           id="back-to-scenarios-btn"
           onClick={onBackToScenarios}
-          className="group flex items-center space-x-2 text-xs font-semibold text-slate-400 hover:text-indigo-400 transition"
+          className="group flex items-center space-x-2 text-xs font-bold text-slate-500 hover:text-[#FF6500] dark:text-slate-400 dark:hover:text-[#FF6500] transition"
         >
           <ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-1" />
           <span>Back to Scenarios</span>
@@ -109,7 +110,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           {session && onRetryScenario && (
             <button
               onClick={() => onRetryScenario(session.scenario_id)}
-              className="flex items-center space-x-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3.5 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 transition"
+              className="flex items-center space-x-1.5 rounded-xl border border-slate-300 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-800 hover:bg-slate-100 dark:border-[#2D5B8D] dark:bg-[#132B45] dark:text-slate-200 dark:hover:bg-[#1E3E62] transition"
             >
               <RotateCcw className="h-3.5 w-3.5" />
               <span>Retry Scenario</span>
@@ -119,7 +120,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           <button
             id="print-report-btn"
             onClick={handlePrint}
-            className="flex items-center space-x-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-violet-600 px-4 py-1.5 text-xs font-semibold text-white shadow-md shadow-indigo-500/20 hover:opacity-95 transition"
+            className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 py-1.5 text-xs font-bold text-white shadow-md shadow-[#FF6500]/20 transition"
           >
             <Printer className="h-3.5 w-3.5" />
             <span>Print / Save PDF</span>
@@ -128,23 +129,23 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
       </div>
 
       {/* Executive Printable Header (Visible ONLY on print/PDF export) */}
-      <div className="hidden print:block mb-6 border-b-2 border-indigo-600 pb-4">
+      <div className="hidden print:block mb-6 border-b-2 border-[#FF6500] pb-4">
         <div className="flex items-start justify-between">
           <div>
-            <div className="text-2xl font-black tracking-tight text-slate-900 font-heading">ScenarioLab</div>
-            <div className="text-xs font-bold uppercase tracking-wider text-indigo-700">
-              Workplace Scenario Training • Performance Evaluation Report
+            <ThreeHSolutionsLogo size="md" variant="full" />
+            <div className="mt-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
+              Human Development & Corporate Training • Performance Evaluation Report
             </div>
             <h1 className="mt-2 text-xl font-bold text-slate-900 font-heading">
               {session?.scenario_title || 'Simulation Performance Evaluation'}
             </h1>
           </div>
           <div className="text-right">
-            <div className="text-3xl font-black text-indigo-600">
+            <div className="text-3xl font-black text-[#FF6500]">
               {overall}
               <span className="text-sm font-semibold text-slate-500"> / 100</span>
             </div>
-            <div className="mt-0.5 inline-block rounded border border-indigo-200 bg-indigo-50 px-2 py-0.5 text-xs font-bold text-indigo-900">
+            <div className="mt-0.5 inline-block rounded border border-amber-300 bg-amber-50 px-2 py-0.5 text-xs font-bold text-[#B45309]">
               {scoreTier.label}
             </div>
             <div className="mt-1 text-[11px] text-slate-500">
@@ -155,24 +156,24 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
       </div>
 
       {/* Hero Header & Score Summary Card */}
-      <div className="print-section print-card print-avoid-break mt-6 rounded-3xl border border-slate-800 bg-slate-900/70 p-8 shadow-2xl backdrop-blur-md">
+      <div className="print-section print-card print-avoid-break mt-6 rounded-3xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-8 shadow-xl">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
           <div>
-            <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-indigo-400">
+            <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
               <Award className="h-4 w-4" />
               <span>Executive Performance Debrief</span>
             </div>
-            <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white font-heading sm:text-4xl">
+            <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900 dark:text-white font-heading sm:text-4xl">
               {session?.scenario_title || 'Simulation Performance Debrief'}
             </h1>
-            <p className="mt-2 text-sm text-slate-300 max-w-2xl leading-relaxed">
+            <p className="mt-3 text-base text-slate-700 dark:text-slate-200 max-w-2xl leading-relaxed font-medium">
               {report.overall_summary}
             </p>
           </div>
 
           {/* Radial Score Gauge */}
-          <div className="print-avoid-break flex flex-col items-center justify-center rounded-2xl border border-slate-800 bg-slate-950/80 p-6 shadow-inner text-center min-w-[200px]">
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-400">
+          <div className="print-avoid-break flex flex-col items-center justify-center rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-slate-50 dark:bg-[#0B192C] p-6 shadow-inner text-center min-w-[200px]">
+            <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Overall Rating
             </span>
             <div className="mt-2 flex items-baseline justify-center">
@@ -188,12 +189,12 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
         </div>
 
         {/* Hidden Motivations Reveal Banner */}
-        <div className="print-card print-avoid-break mt-8 rounded-2xl border border-indigo-500/30 bg-indigo-950/20 p-5">
-          <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-indigo-400">
+        <div className="print-card print-avoid-break mt-8 rounded-2xl border-2 border-[#FF6500]/40 bg-[#FFFBEB] dark:bg-[#0B192C] p-5">
+          <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#B45309] dark:text-[#FF6500]">
             <Eye className="h-4 w-4" />
-            <span>Counterpart Psychological Drivers (Hidden Reveal)</span>
+            <span>Counterpart Psychological Drivers (Hidden Agenda Reveal)</span>
           </div>
-          <p className="mt-2 text-sm text-indigo-200/90 leading-relaxed">
+          <p className="mt-2 text-base text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
             {report.hidden_reveal}
           </p>
         </div>

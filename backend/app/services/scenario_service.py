@@ -94,6 +94,8 @@ class ScenarioService:
             scenario.skills_assessed = [s.model_dump() for s in config.skills_assessed]
             scenario.opening_line = config.opening_line
             scenario.tags = config.tags
+            scenario.tactical_coaching_clue = config.tactical_coaching_clue
+            scenario.target_capabilities = config.target_capabilities
             scenario.conclusion_signals = (
                 config.conclusion_signals.model_dump() if config.conclusion_signals else {}
             )
@@ -117,6 +119,8 @@ class ScenarioService:
                 skills_assessed=[s.model_dump() for s in config.skills_assessed],
                 opening_line=config.opening_line,
                 tags=config.tags,
+                tactical_coaching_clue=config.tactical_coaching_clue,
+                target_capabilities=config.target_capabilities,
                 conclusion_signals=(
                     config.conclusion_signals.model_dump() if config.conclusion_signals else {}
                 ),
@@ -178,6 +182,8 @@ class ScenarioService:
                     duration_limit_seconds=scen.duration_limit_seconds,
                     skills_assessed=skills_preview,
                     tags=scen.tags,
+                    tactical_coaching_clue=scen.tactical_coaching_clue,
+                    target_capabilities=scen.target_capabilities or [],
                 )
             )
         return items
@@ -226,6 +232,8 @@ class ScenarioService:
             opening_line=scen.opening_line,
             skills_assessed=skills_preview,
             tags=scen.tags,
+            tactical_coaching_clue=scen.tactical_coaching_clue,
+            target_capabilities=scen.target_capabilities or [],
         )
 
     @staticmethod

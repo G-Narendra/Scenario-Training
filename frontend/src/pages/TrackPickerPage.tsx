@@ -24,70 +24,35 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
 
       {/* Track Selection Cards */}
       <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2">
-        {/* Sales Track */}
-        <div
-          id="track-card-sales"
-          onClick={() => onSelectTrack('sales')}
-          className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111827] p-8 shadow-md dark:shadow-xl transition-all duration-200 hover:-translate-y-1 hover:border-indigo-500/50 hover:shadow-lg"
-        >
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-indigo-500/10 text-indigo-600 dark:bg-indigo-600/20 dark:text-indigo-400 group-hover:bg-indigo-600 group-hover:text-white transition-colors">
-            <TrendingUp className="h-6 w-6" />
-          </div>
-
-          <h2 className="mt-6 text-2xl font-black text-slate-900 dark:text-white font-heading group-hover:text-indigo-600 dark:group-hover:text-indigo-300 transition-colors">
-            Sales Track
-          </h2>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-            Navigate customer objections, budget freezes, procurement reviews, and closing negotiations.
-          </p>
-
-          <div className="mt-6 flex flex-wrap gap-2">
-            {['Discovery Questions', 'Objection Handling', 'Value Articulation', 'Price Defense', 'Closing Next Steps'].map(
-              (tag) => (
-                <span
-                  key={tag}
-                  className="rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300"
-                >
-                  {tag}
-                </span>
-              )
-            )}
-          </div>
-
-          <div className="mt-8 flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              7 Curated Scenarios • Difficulty 1–5
-            </span>
-            <div className="flex items-center space-x-1.5 text-sm font-bold text-indigo-600 dark:text-indigo-400 group-hover:translate-x-1 transition-transform">
-              <span>Enter Track</span>
-              <ArrowRight className="h-4 w-4" />
-            </div>
-          </div>
-        </div>
-
         {/* Leadership Track */}
         <div
           id="track-card-leadership"
           onClick={() => onSelectTrack('leadership')}
-          className="group relative cursor-pointer overflow-hidden rounded-2xl border border-slate-200 bg-white dark:border-slate-800 dark:bg-[#111827] p-8 shadow-md dark:shadow-xl transition-all duration-200 hover:-translate-y-1 hover:border-violet-500/50 hover:shadow-lg"
+          className="group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-slate-300 bg-white dark:border-[#2D5B8D] dark:bg-[#132B45] p-8 shadow-md dark:shadow-xl transition-all duration-200 hover:-translate-y-1 hover:border-[#FF6500] hover:shadow-xl"
         >
-          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-violet-500/10 text-violet-600 dark:bg-violet-600/20 dark:text-violet-400 group-hover:bg-violet-600 group-hover:text-white transition-colors">
-            <Users className="h-6 w-6" />
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FF6500]/15 text-[#FF6500] dark:bg-[#FF6500]/20 dark:text-[#FF6500] group-hover:bg-[#FF6500] group-hover:text-white transition-colors">
+            <Users className="h-7 w-7" />
           </div>
 
-          <h2 className="mt-6 text-2xl font-black text-slate-900 dark:text-white font-heading group-hover:text-violet-600 dark:group-hover:text-violet-300 transition-colors">
-            Leadership & Communication Track
-          </h2>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
-            Practice key management conversations: constructive feedback, coaching defensive team members, peer conflict, and executive updates.
+          <div className="mt-6 flex items-center space-x-2">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white font-heading group-hover:text-[#FF6500] transition-colors">
+              Leadership & Executive Track
+            </h2>
+            <span className="rounded-full bg-[#FF6500]/15 px-2.5 py-0.5 text-xs font-bold text-[#FF6500] border border-[#FF6500]/30">
+              25 Scenarios
+            </span>
+          </div>
+
+          <p className="mt-2 text-base text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
+            Master the 160 Core Leadership Capabilities: handling underperformers, psychological safety in reorgs, board crises, toxic stars, and ethical whistleblowers.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            {['Feedback Specificity', 'Active Listening', 'Conflict Resolution', 'Managing Up', 'Empathy & Rapport'].map(
+            {['Psychological Safety', 'Conflict Resolution', 'Crisis Decision Making', 'Ethical Governance', 'Strategic Realignment'].map(
               (tag) => (
                 <span
                   key={tag}
-                  className="rounded-lg border border-slate-200 bg-slate-50 dark:border-slate-800 dark:bg-slate-900 px-2.5 py-1 text-xs font-medium text-slate-700 dark:text-slate-300"
+                  className="rounded-lg border border-slate-300 bg-slate-50 dark:border-[#1E3E62] dark:bg-[#0B192C] px-2.5 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200"
                 >
                   {tag}
                 </span>
@@ -95,13 +60,60 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
             )}
           </div>
 
-          <div className="mt-8 flex items-center justify-between border-t border-slate-200 dark:border-slate-800 pt-6">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-              7 Curated Scenarios • Difficulty 1–5
+          <div className="mt-8 flex items-center justify-between border-t border-slate-300 dark:border-[#1E3E62] pt-6">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+              25 Scenarios • Difficulty Levels 1–5
             </span>
-            <div className="flex items-center space-x-1.5 text-sm font-bold text-violet-600 dark:text-violet-400 group-hover:translate-x-1 transition-transform">
+            <div className="flex items-center space-x-1.5 text-base font-bold text-[#FF6500] group-hover:translate-x-1 transition-transform">
               <span>Enter Track</span>
-              <ArrowRight className="h-4 w-4" />
+              <ArrowRight className="h-5 w-5" />
+            </div>
+          </div>
+        </div>
+
+        {/* Sales Track */}
+        <div
+          id="track-card-sales"
+          onClick={() => onSelectTrack('sales')}
+          className="group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-slate-300 bg-white dark:border-[#2D5B8D] dark:bg-[#132B45] p-8 shadow-md dark:shadow-xl transition-all duration-200 hover:-translate-y-1 hover:border-[#FF6500] hover:shadow-xl"
+        >
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 group-hover:bg-[#FF6500] group-hover:text-white transition-colors">
+            <TrendingUp className="h-7 w-7" />
+          </div>
+
+          <div className="mt-6 flex items-center space-x-2">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white font-heading group-hover:text-[#FF6500] transition-colors">
+              Enterprise Sales Track
+            </h2>
+            <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-300 border border-amber-500/30">
+              25 Scenarios
+            </span>
+          </div>
+
+          <p className="mt-2 text-base text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
+            Conquer enterprise deal cycles: cold Fortune 500 discovery, displacing entrenched incumbents, defending ROI to skeptical CFOs, and handling aggressive procurement.
+          </p>
+
+          <div className="mt-6 flex flex-wrap gap-2">
+            {['Discovery Excellence', 'Incumbent Displacement', 'CFO ROI Defense', 'Procurement Hardball', 'Multi-Stakeholder Consensus'].map(
+              (tag) => (
+                <span
+                  key={tag}
+                  className="rounded-lg border border-slate-300 bg-slate-50 dark:border-[#1E3E62] dark:bg-[#0B192C] px-2.5 py-1 text-xs font-semibold text-slate-800 dark:text-slate-200"
+                >
+                  {tag}
+                </span>
+              )
+            )}
+          </div>
+
+          <div className="mt-8 flex items-center justify-between border-t border-slate-300 dark:border-[#1E3E62] pt-6">
+            <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
+              25 Scenarios • Difficulty Levels 1–5
+            </span>
+            <div className="flex items-center space-x-1.5 text-base font-bold text-[#FF6500] group-hover:translate-x-1 transition-transform">
+              <span>Enter Track</span>
+              <ArrowRight className="h-5 w-5" />
             </div>
           </div>
         </div>

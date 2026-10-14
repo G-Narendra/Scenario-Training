@@ -34,6 +34,8 @@ export interface ScenarioListItem {
   duration_limit_seconds: number;
   skills_assessed: SkillAssessedPreview[];
   tags: string[];
+  tactical_coaching_clue?: string;
+  target_capabilities?: string[];
 }
 
 export interface ScenarioDetail extends ScenarioListItem {
@@ -41,6 +43,8 @@ export interface ScenarioDetail extends ScenarioListItem {
   brief: string;
   persona: PersonaPreview;
   opening_line: string;
+  tactical_coaching_clue?: string;
+  target_capabilities?: string[];
 }
 
 export interface SessionMessage {
@@ -215,7 +219,7 @@ export interface AdminScenarioVersion {
   id: string;
   scenario_id: string;
   version: number;
-  snapshot: any;
+  snapshot: Record<string, unknown>;
   changed_by?: string;
   change_note?: string;
   created_at: string;
@@ -227,7 +231,7 @@ export interface AuditLogEntry {
   action: string;
   entity: string;
   entity_id?: string;
-  details: Record<string, any>;
+  details: Record<string, unknown>;
   ip?: string;
   created_at: string;
 }

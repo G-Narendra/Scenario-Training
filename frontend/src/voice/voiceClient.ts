@@ -9,6 +9,17 @@ export interface VoiceClientCallbacks {
   onSessionEnded?: (status: string) => void;
 }
 
+export interface VoiceServerMessage {
+  type: string;
+  persona_name?: string;
+  scenario_title?: string;
+  text?: string;
+  is_final?: boolean;
+  latency_ms?: number;
+  status?: string;
+  message?: string;
+}
+
 export class VoiceClient {
   private ws: WebSocket | null = null;
   private mediaStream: MediaStream | null = null;
@@ -104,19 +115,19 @@ export class VoiceClient {
     }
   }
 
-  private handleServerMessage(msg: any): void {
+  private handleServerMessage(msg: VoiceServerMessage): void {
     switch (msg.type) {
       case 'session.ready':
-        this.callbacks.onSessionReady?.(msg.persona_name, msg.scenario_title);
+        this.callbacks.onSessionReady?.(msg.persona_name || '', msg.scenario_title || '');
         break;
       case 'transcript.partial':
-        this.callbacks.onTranscriptPartial?.(msg.text);
+        this.callbacks.onTranscriptPartial?.(msg.text || '');
         break;
       case 'transcript.final':
-        this.callbacks.onTranscriptFinal?.(msg.text);
+        this.callbacks.onTranscriptFinal?.(msg.text || '');
         break;
       case 'assistant.text':
-        this.callbacks.onAssistantText?.(msg.text);
+        this.callbacks.onAssistantText?.(msg.text || '');
         break;
       case 'assistant.audio':
         this.callbacks.onAssistantSpeaking?.(true);
@@ -126,13 +137,13 @@ export class VoiceClient {
         break;
       case 'turn.complete':
         this.callbacks.onAssistantSpeaking?.(false);
-        this.callbacks.onTurnComplete?.(msg.latency_ms);
+        this.callbacks.onTurnComplete?.(msg.latency_ms || 0);
         break;
       case 'session.ended':
-        this.callbacks.onSessionEnded?.(msg.status);
+        this.callbacks.onSessionEnded?.(msg.status || 'completed');
         break;
       case 'error':
-        this.callbacks.onError?.(msg.message);
+        this.callbacks.onError?.(msg.message || 'Voice error');
         break;
       default:
         break;
@@ -154,7 +165,8 @@ export class VoiceClient {
         },
       });
 
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)({
+      const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      this.audioContext = new AudioCtx({
         sampleRate: 16000,
       });
       await this.audioContext.resume();
@@ -186,7 +198,7 @@ export class VoiceClient {
       source.connect(this.processor);
       this.processor.connect(this.audioContext.destination);
       this.isRecording = true;
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.warn('Microphone access denied or audio capture failed', err);
       this.callbacks.onError?.('Microphone access required for voice mode. Please grant microphone permission.');
       throw err;

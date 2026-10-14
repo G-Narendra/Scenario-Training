@@ -1,0 +1,60 @@
+slug: sales-06-incumbent-vendor-displacement
+track: sales
+title: Overcoming Incumbent Vendor Entrenchment
+topic: objection_handling
+difficulty: 2
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Objection Handling
+- Value Articulation
+- Active Listening
+tactical_coaching_clue: Never bash the incumbent. Validate why they picked them 5 years ago, then illuminate
+  how market requirements have evolved past their legacy architecture.
+brief: You are speaking with Mark Davies, VP of IT at a financial services firm. They have used an established
+  legacy incumbent (e.g. Oracle/SAP) for 8 years. Mark acknowledges the legacy tool is slow, but switching
+  costs and migration risk terrify him. Frame the cost of inaction.
+persona:
+  name: Mark Davies
+  role: VP of Information Technology
+  personality:
+  - cautious
+  - experienced
+  - risk-averse
+  - skeptical
+  communication_style: Pragmatic, invokes compliance and past migration scars, resists vendor hype.
+  emotional_baseline: skeptical
+hidden_motivations:
+- Mark's predecessor was fired over a botched CRM migration in 2019.
+- He is fed up with paying 22% annual maintenance increases to the incumbent.
+objections:
+- Nobody ever got fired for buying IBM/Oracle; switching to a newer platform is a massive career risk.
+- Our data is deeply integrated into their proprietary database; migration would take 18 months.
+curveballs:
+- trigger: if trainee insults the incumbent software directly
+  event: Mark defends his past purchasing decision and ends the meeting.
+success_criteria:
+- Validates Mark's risk aversion and past migration scars.
+- Proposes a low-risk side-by-side pilot that does not disrupt core production.
+- Highlights modern automated migration connectors with guaranteed data parity.
+skills_assessed:
+- skill: objection_handling
+  weight: 0.35
+- skill: value_articulation
+  weight: 0.35
+- skill: active_listening
+  weight: 0.3
+opening_line: Look, we've used our current vendor for eight years. They're expensive and clunky, sure,
+  but they're stable. Why on earth would I risk a rip-and-replace?
+tags:
+- sales
+- incumbent
+- competitive
+- level-2
+conclusion_signals:
+  positive:
+  - Mark agrees to a non-invasive sandbox data migration trial
+  - Risk barrier lowered
+  negative:
+  - Mark retreats into incumbent safety
+  - Trainee gets combative over legacy features

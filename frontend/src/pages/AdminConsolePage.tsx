@@ -26,6 +26,19 @@ import {
   X,
 } from 'lucide-react';
 
+export interface AdminScenarioItem {
+  id: string;
+  title: string;
+  slug?: string;
+  topic?: string;
+  difficulty?: number;
+  track?: string;
+  status?: string;
+  version?: number;
+  duration_limit_seconds?: number;
+  turn_limit?: number;
+}
+
 export const AdminConsolePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'cohorts' | 'scenarios' | 'usage' | 'audit'>('cohorts');
   const [loading, setLoading] = useState(false);
@@ -42,7 +55,7 @@ export const AdminConsolePage: React.FC = () => {
   const [createdPasscodeBanner, setCreatedPasscodeBanner] = useState<string | null>(null);
 
   // Scenarios state
-  const [scenarios, setScenarios] = useState<any[]>([]);
+  const [scenarios, setScenarios] = useState<AdminScenarioItem[]>([]);
   const [showYamlModal, setShowYamlModal] = useState(false);
   const [yamlContent, setYamlContent] = useState('');
   const [yamlValidation, setYamlValidation] = useState<{ valid: boolean; errors: string[]; warnings: string[] } | null>(null);
@@ -52,7 +65,7 @@ export const AdminConsolePage: React.FC = () => {
   const [aiDraftTrack, setAiDraftTrack] = useState('sales');
   const [isGeneratingAi, setIsGeneratingAi] = useState(false);
   const [showVersionHistoryModal, setShowVersionHistoryModal] = useState(false);
-  const [selectedScenarioForVersions, setSelectedScenarioForVersions] = useState<any | null>(null);
+  const [selectedScenarioForVersions, setSelectedScenarioForVersions] = useState<AdminScenarioItem | null>(null);
   const [scenarioVersions, setScenarioVersions] = useState<AdminScenarioVersion[]>([]);
 
   // Usage state
@@ -92,7 +105,7 @@ export const AdminConsolePage: React.FC = () => {
         setCohorts(data);
       } else if (activeTab === 'scenarios') {
         const data = await api.listAdminScenarios();
-        setScenarios(data);
+        setScenarios(data as unknown as AdminScenarioItem[]);
       } else if (activeTab === 'usage') {
         const data = await api.getAdminUsage();
         setUsageSummary(data);
@@ -100,9 +113,10 @@ export const AdminConsolePage: React.FC = () => {
         const data = await api.getAdminAuditLogs(auditFilterAction || undefined);
         setAuditLogs(data.items);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Failed to load admin data', err);
-      showFeedback(err.message || 'Error loading data', 'error');
+      const msg = err instanceof Error ? err.message : 'Error loading data';
+      showFeedback(msg, 'error');
     } finally {
       setLoading(false);
     }
@@ -129,8 +143,9 @@ export const AdminConsolePage: React.FC = () => {
       }
       showFeedback('Cohort created successfully');
       loadTabData();
-    } catch (err: any) {
-      showFeedback(err.message || 'Failed to create cohort', 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to create cohort';
+      showFeedback(msg, 'error');
     }
   };
 
@@ -140,8 +155,9 @@ export const AdminConsolePage: React.FC = () => {
       setCreatedPasscodeBanner(`Passcode rotated! New Code: ${res.new_passcode} (Previous code active for 30 min grace period)`);
       showFeedback('Passcode rotated successfully');
       loadTabData();
-    } catch (err: any) {
-      showFeedback(err.message || 'Failed to rotate passcode', 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to rotate passcode';
+      showFeedback(msg, 'error');
     }
   };
 
@@ -150,8 +166,9 @@ export const AdminConsolePage: React.FC = () => {
       await api.extendCohort(cohortId, 30);
       showFeedback('Cohort duration extended by 30 days');
       loadTabData();
-    } catch (err: any) {
-      showFeedback(err.message || 'Failed to extend cohort', 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to extend cohort';
+      showFeedback(msg, 'error');
     }
   };
 
@@ -160,8 +177,9 @@ export const AdminConsolePage: React.FC = () => {
     try {
       const res = await api.revokeCohortSessions(cohortId);
       showFeedback(res.message);
-    } catch (err: any) {
-      showFeedback(err.message || 'Failed to revoke sessions', 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to revoke sessions';
+      showFeedback(msg, 'error');
     }
   };
 
@@ -176,8 +194,9 @@ export const AdminConsolePage: React.FC = () => {
       } else {
         showFeedback(`Validation flagged ${res.errors.length} issue(s)`, 'error');
       }
-    } catch (err: any) {
-      showFeedback(err.message || 'Validation request failed', 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Validation request failed';
+      showFeedback(msg, 'error');
     }
   };
 
@@ -190,8 +209,9 @@ export const AdminConsolePage: React.FC = () => {
       setYamlValidation(null);
       showFeedback('Scenario imported and saved successfully');
       loadTabData();
-    } catch (err: any) {
-      showFeedback(err.message || 'Import failed', 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Import failed';
+      showFeedback(msg, 'error');
     }
   };
 
@@ -208,10 +228,11 @@ export const AdminConsolePage: React.FC = () => {
       setShowAiDraftModal(false);
       setAiDraftPrompt('');
       setShowYamlModal(true);
-      setYamlContent(draft.yaml_content);
+      setYamlContent(draft.yaml_content as string);
       showFeedback('AI generated draft scenario! Review and validate below.');
-    } catch (err: any) {
-      showFeedback(err.message || 'AI generation failed', 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'AI generation failed';
+      showFeedback(msg, 'error');
     } finally {
       setIsGeneratingAi(false);
     }
@@ -222,8 +243,9 @@ export const AdminConsolePage: React.FC = () => {
       await api.publishScenario(id);
       showFeedback('Scenario published for trainees');
       loadTabData();
-    } catch (err: any) {
-      showFeedback(err.message || 'Failed to publish', 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to publish';
+      showFeedback(msg, 'error');
     }
   };
 
@@ -232,8 +254,9 @@ export const AdminConsolePage: React.FC = () => {
       await api.archiveScenario(id);
       showFeedback('Scenario archived');
       loadTabData();
-    } catch (err: any) {
-      showFeedback(err.message || 'Failed to archive', 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to archive';
+      showFeedback(msg, 'error');
     }
   };
 
@@ -242,8 +265,9 @@ export const AdminConsolePage: React.FC = () => {
       await api.duplicateScenario(id);
       showFeedback('Scenario duplicated as new draft');
       loadTabData();
-    } catch (err: any) {
-      showFeedback(err.message || 'Failed to duplicate', 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to duplicate';
+      showFeedback(msg, 'error');
     }
   };
 
@@ -253,18 +277,19 @@ export const AdminConsolePage: React.FC = () => {
       await api.deleteScenario(id);
       showFeedback('Scenario deleted');
       loadTabData();
-    } catch (err: any) {
-      showFeedback(err.message || 'Failed to delete scenario', 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete scenario';
+      showFeedback(msg, 'error');
     }
   };
 
-  const handleOpenVersions = async (scenario: any) => {
+  const handleOpenVersions = async (scenario: AdminScenarioItem) => {
     setSelectedScenarioForVersions(scenario);
     try {
       const vList = await api.getScenarioVersions(scenario.id);
       setScenarioVersions(vList);
       setShowVersionHistoryModal(true);
-    } catch (err: any) {
+    } catch (err: unknown) {
       showFeedback('Failed to load version history', 'error');
     }
   };
@@ -276,8 +301,9 @@ export const AdminConsolePage: React.FC = () => {
       setShowVersionHistoryModal(false);
       showFeedback(`Successfully restored to version ${versionNum}`);
       loadTabData();
-    } catch (err: any) {
-      showFeedback(err.message || 'Failed to restore version', 'error');
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to restore version';
+      showFeedback(msg, 'error');
     }
   };
 

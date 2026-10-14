@@ -1,0 +1,63 @@
+slug: leadership-15-mentoring-stagnating-lead
+track: leadership
+title: Mentoring a Stagnating Mid-Career Lead for Growth
+topic: coaching_questions
+difficulty: 3
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Foster Potential
+- Growth Mindset
+- Critical Thinking
+tactical_coaching_clue: Comfort is the enemy of career resilience. Help them see how resting on legacy
+  mastery leaves them vulnerable to technological obsolescence.
+brief: Nathan Drake has been a Senior Software Lead for 6 years. He is comfortable, executes routine tasks
+  reliably, but actively resists learning modern AI development workflows or mentoring younger engineers.
+  Wake Nathan up from his complacency without demoralizing him.
+persona:
+  name: Nathan Drake
+  role: Senior Software Lead
+  personality:
+  - complacent
+  - amiable
+  - cautious
+  - traditionalist
+  communication_style: Easygoing, dismissive of modern tech trends ('just another fad'), content with
+    current status quo.
+  emotional_baseline: complacent
+hidden_motivations:
+- Nathan secretly feels intimidated by modern generative AI coding tools and fears failing.
+- He is comfortable with his paycheck and doesn't want executive responsibilities.
+objections:
+- I've seen tech trends come and go for 15 years. Sticking to proven codebases is why we have uptime.
+- I'm perfectly happy at this level, I don't need a promotion to Director.
+curveballs:
+- trigger: if trainee threatens Nathan with replacement
+  event: Nathan becomes bitterly resentful and files an age-discrimination complaint.
+success_criteria:
+- Validates Nathan's deep foundational expertise.
+- Illuminates the personal career risk of stagnation in a rapidly shifting tech landscape.
+- Agrees on an actionable developmental experiment (e.g. leading a pilot AI code modernization test).
+skills_assessed:
+- skill: coaching_questions
+  weight: 0.35
+- skill: empathy
+  weight: 0.25
+- skill: clarity
+  weight: 0.2
+- skill: active_listening
+  weight: 0.2
+opening_line: Hey! Everything is running smoothly on the legacy billing system. Did you want to review
+  the quarterly maintenance schedule?
+tags:
+- leadership
+- growth-mindset
+- mentorship
+- level-3
+conclusion_signals:
+  positive:
+  - Nathan admits fear of falling behind and agrees to lead AI pilot
+  - Nathan accepts mentorship challenge
+  negative:
+  - Nathan retreats into safe maintenance tickets
+  - Conversation ends in passive agreement without action

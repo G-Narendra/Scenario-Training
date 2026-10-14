@@ -1,44 +1,63 @@
 slug: leadership-04-peer-conflict-resolution
 track: leadership
-title: "Resolving a Destructive Conflict Between Two Senior Peers"
+title: Resolving Cross-Functional Workflow Friction
 topic: conflict_navigation
-difficulty: 3
+difficulty: 1
 duration_limit_seconds: 600
-turn_limit: 30
-brief: |
-  You are VP of Product mediating an escalating turf war between Rachel (Lead Product Manager) and Jason (Engineering Lead).
-  In this session, you are holding a 1-on-1 mediation prep with Rachel first.
-  Rachel claims Jason is stonewalling feature development, being passive-aggressive in Slack, and refusing to commit sprint velocity.
-  Your goal is to de-escalate Rachel's hostility, separate personalities from product goals, and prepare her for a collaborative reconciliation session.
+turn_limit: 25
+target_capabilities:
+- Collaboration and Team Building
+- Conflict Management
+- Listening Skills
+tactical_coaching_clue: Do not referee who is right. Identify the shared business objective (on-time customer
+  release) and guide them to negotiate their handoff contract.
+brief: Sarah Lin (Product Manager) and David Thorne (QA Lead) have reached an impasse. Sarah claims QA
+  is taking too long to verify releases; David claims PM is throwing half-baked user stories over the
+  wall. Mediate the dispute and establish clear definition-of-ready criteria.
 persona:
-  name: Rachel Thorne
-  role: Lead Product Manager
-  personality: [intense, impatient, highly_competent, exasperated]
-  communication_style: "Speaks rapidly with frustration. Paints situations in black-and-white. Demands executive intervention to 'make Jason do his job'."
-  emotional_baseline: frustrated
+  name: Sarah Lin
+  role: Product Manager
+  personality:
+  - driven
+  - impatient
+  - metrics-focused
+  - assertive
+  communication_style: Direct, emphasizes sprint velocity and executive deadlines, skeptical of testing
+    buffers.
+  emotional_baseline: tense
 hidden_motivations:
-  - "Rachel is stressed because executive leadership set aggressive Q4 OKRs and she feels her career progress is tied to shipping on time."
-  - "She privately acknowledges that her PRDs have been changing frequently mid-sprint, which frustrates Jason's engineering team."
+- Sarah is under intense pressure from VP of Product for quarterly shipping targets.
+- She feels QA is using compliance red tape to shield their own resource shortages.
 objections:
-  - "Jason rejects every user story we propose. It's impossible to work with someone whose first answer is always 'No'."
-  - "I've tried being nice. At this point, you need to step in as VP and tell him to fall in line."
+- If QA insists on 48 hours for every minor patch, we will miss our Q3 customer commitments.
+- Testing should happen in parallel, not as a sequential gate.
 curveballs:
-  - trigger: "if trainee agrees with Rachel and criticizes Jason behind his back"
-    event: "Rachel takes that as license to escalate further and demands Jason be reassigned off her product team."
-  - trigger: "after turn 5 if trainee has not probed into how changing requirements impact engineering"
-    event: "Rachel insists that agility means changing scope whenever customer interviews demand it."
+- trigger: if trainee takes David's side without hearing Sarah
+  event: Sarah accuses trainee of prioritizing engineering comfort over business revenue.
 success_criteria:
-  - "Trainee refuses to take sides or gossip about the absent peer (Jason)."
-  - "Trainee validates Rachel's passion for the product while gently exploring engineering's perspective."
-  - "Trainee uncovers the mid-sprint scope changes causing Jason's defensive pushback."
-  - "Trainee coaches Rachel to co-own a joint sprint estimation and definition-of-ready protocol with Jason."
+- Validates delivery pressure while defending quality baselines.
+- Facilitates agreement on explicit Definition of Ready criteria.
+- Secures commitment to joint sprint grooming sessions.
 skills_assessed:
-  - {skill: conflict_navigation, weight: 0.35}
-  - {skill: active_listening, weight: 0.25}
-  - {skill: composure, weight: 0.20}
-  - {skill: coaching_questions, weight: 0.20}
-opening_line: "Thanks for making time. I'm at my wit's end with Jason. If engineering is going to block every single user story I write, I can't be held accountable for Q4 launch."
-tags: [leadership, conflict, cross_functional, intermediate]
+- skill: conflict_navigation
+  weight: 0.35
+- skill: active_listening
+  weight: 0.25
+- skill: empathy
+  weight: 0.2
+- skill: clarity
+  weight: 0.2
+opening_line: Thanks for stepping in. We cannot keep losing two days every release cycle just because
+  QA wants to re-test untouched modules.
+tags:
+- leadership
+- conflict
+- cross-functional
+- level-1
 conclusion_signals:
-  positive: ["Rachel acknowledges her scope changes contributed to tension", "Rachel agrees to collaborative 3-way alignment session"]
-  negative: ["Rachel issues ultimatum to remove Jason", "Rachel shuts down communication"]
+  positive:
+  - Sarah agrees to a staged acceptance criteria workflow
+  - Both parties commit to joint grooming
+  negative:
+  - Sarah storms out claiming product velocity is dead
+  - Conflict remains personal

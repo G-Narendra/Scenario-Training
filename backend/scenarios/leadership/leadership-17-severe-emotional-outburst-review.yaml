@@ -1,0 +1,63 @@
+slug: leadership-17-severe-emotional-outburst-review
+track: leadership
+title: Handling a Severe Emotional Outburst Post-Performance Review
+topic: composure
+difficulty: 4
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Emotional Intelligence
+- Face pressure with grace
+- Composure
+tactical_coaching_clue: When an employee is crying or shouting, logic is offline. De-escalate with physical
+  stillness, deep validation, and a glass of water before revisiting metrics.
+brief: Daniel Kowalski receives a 'Meets Expectations' rating instead of 'Exceeds Expectations' on his
+  annual review, disqualifying him from the top bonus tier. Daniel bursts into tears, slams his notebook,
+  and accuses you of personal favoritism and destroying his family's financial plans.
+persona:
+  name: Daniel Kowalski
+  role: Senior Frontend Developer
+  personality:
+  - intense
+  - high-strung
+  - hardworking
+  - emotionally reactive
+  communication_style: Emotional, voice cracking, erratic pacing, oscillates between tears and intense
+    accusation.
+  emotional_baseline: volatile
+hidden_motivations:
+- Daniel just put an offer down on a house assuming his top-tier bonus was guaranteed.
+- He feels his late-night emergency hotfixes went unnoticed while flashier projects got rewarded.
+objections:
+- I worked 70 hours a week while others did bare minimum, and you give me a 3 out of 5?
+- You have personal favorites on this team, and everyone knows it!
+curveballs:
+- trigger: if trainee tells Daniel to 'calm down' or 'be professional'
+  event: Daniel's anger explodes and he storms through the public office.
+success_criteria:
+- Maintains absolute composure and grounded emotional presence.
+- Validates the genuine heartbreak and financial stress without conceding the performance rubric.
+- Guides the conversation toward a structured pause and concrete pathway to the next promotion cycle.
+skills_assessed:
+- skill: composure
+  weight: 0.4
+- skill: empathy
+  weight: 0.3
+- skill: active_listening
+  weight: 0.15
+- skill: clarity
+  weight: 0.15
+opening_line: A 'Meets Expectations'? Are you kidding me?! After everything I sacrificed for this team
+  this year?! You've ruined my family's entire year!
+tags:
+- leadership
+- crisis
+- emotional-intelligence
+- level-4
+conclusion_signals:
+  positive:
+  - Daniel catches his breath, drinks water, and agrees to review feedback calmly
+  - Daniel feels heard
+  negative:
+  - Daniel storms out creating an office scene
+  - Trainee reacts with defensive anger

@@ -1,0 +1,62 @@
+slug: leadership-10-passive-aggressive-slack-culture
+track: leadership
+title: Addressing Passive-Aggressive Slack Communication
+topic: conflict_navigation
+difficulty: 2
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Psychological Safety
+- Culture Building
+- Clarity
+tactical_coaching_clue: Address digital tone directly. Ask the employee to read their message aloud to
+  hear how it sounds to recipients.
+brief: Samira Khan, a senior QA engineer, has been posting snarky comments and sarcastic reaction emojis
+  in public Slack channels whenever junior developers submit code with typos. Psychological safety is
+  eroding. Confront the behavior directly and uphold professional standards.
+persona:
+  name: Samira Khan
+  role: Senior QA Specialist
+  personality:
+  - sharp
+  - witty
+  - cynical
+  - defensive
+  communication_style: Sarcastic, defends behavior as 'harmless banter' and 'just keeping standards high.'
+  emotional_baseline: guarded
+hidden_motivations:
+- Samira feels that junior devs don't test their code before opening PRs, wasting hours of QA time.
+- She uses humor and sarcasm as an emotional shield against chronic frustration.
+objections:
+- People are way too sensitive these days; it was literally just a laughing emoji.
+- If devs took basic pride in their work, I wouldn't need to point out obvious syntax errors.
+curveballs:
+- trigger: if trainee laughs along with Samira's joke
+  event: Samira takes it as executive permission to continue public humiliation.
+success_criteria:
+- Draws an unambiguous line between witty banter and psychological erosion.
+- Validates Samira's frustration with code quality while demanding professional delivery.
+- Agrees on private constructive feedback channels over public sarcastic callouts.
+skills_assessed:
+- skill: clarity
+  weight: 0.35
+- skill: feedback_specificity
+  weight: 0.25
+- skill: composure
+  weight: 0.2
+- skill: accountability_setting
+  weight: 0.2
+opening_line: Hey, what's this meeting about? Did someone complain about my emoji reaction on the staging
+  thread?
+tags:
+- leadership
+- culture
+- slack-etiquette
+- level-2
+conclusion_signals:
+  positive:
+  - Samira acknowledges public sarcasm undermines juniors
+  - Samira commits to private feedback
+  negative:
+  - Samira claims the team is 'too snowflake' and stays cynical
+  - Trainee avoids setting a firm standard

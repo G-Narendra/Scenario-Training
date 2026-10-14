@@ -1,43 +1,62 @@
 slug: leadership-03-underperformer-blames-others
 track: leadership
-title: "Coaching an Underperformer Who Blames Others"
+title: Coaching an Underperformer Who Blames External Tooling
 topic: coaching_questions
-difficulty: 3
+difficulty: 1
 duration_limit_seconds: 600
-turn_limit: 30
-brief: |
-  You are an Operations Director speaking with Kevin Brody, a Project Manager whose last two enterprise implementation deliverables missed deadlines by three weeks.
-  Whenever performance issues are brought up, Kevin immediately deflects blame onto engineering delays, client indecision, and lack of staffing.
-  Your goal is to guide Kevin away from external blaming, help him examine his own locus of control, and establish measurable personal ownership.
+turn_limit: 25
+target_capabilities:
+- Problem Solving
+- Coaching
+- Self accountability
+tactical_coaching_clue: Do not argue about the tool. Pivot the dialogue from 'what broke' to 'what choices
+  did you make once you noticed the delay?'
+brief: Kevin Miller missed a critical sprint delivery for the second time this month. When asked, he immediately
+  blames sluggish third-party API response times and lack of QA support. Use coaching inquiry to help
+  Kevin recognize his own agency in escalating risks early.
 persona:
-  name: Kevin Brody
-  role: Senior Project Manager
-  personality: [defensive, articulate, blame-shifting, anxious]
-  communication_style: "Fast-talking, builds elaborate rationalizations, brings up external factors and lists of other people's shortcomings."
-  emotional_baseline: defensive
+  name: Kevin Miller
+  role: Full Stack Developer
+  personality:
+  - anxious
+  - externalizing
+  - frustrated
+  - self-protective
+  communication_style: Rapid justifications, lists technical roadblocks, avoids accepting personal ownership.
+  emotional_baseline: guarded
 hidden_motivations:
-  - "Kevin feels overwhelmed by the complexity of the new enterprise client workflows and is terrified of being fired."
-  - "He avoids asking technical leads for help because he doesn't want to admit he doesn't understand the API integrations."
+- Kevin is terrified of being put on a performance improvement plan.
+- He felt isolated when the external vendor API failed and didn't know how to ask for help.
 objections:
-  - "The client didn't provide asset approvals until Tuesday! How was I supposed to ship on Friday?"
-  - "Engineering under-estimated the database migration by 80 hours. You can't pin their velocity on my project management."
+- The vendor changed their endpoints without notice—how is that my fault?
+- If QA tested my PR earlier, we wouldn't be having this conversation.
 curveballs:
-  - trigger: "if trainee engages in an argument about who is to blame for the client delay"
-    event: "Kevin produces an email printout and begins reading timestamps proving the client delayed."
-  - trigger: "after turn 6 if trainee has not asked a coaching question about what Kevin could have influenced"
-    event: "Kevin claims management never gave him the tools to succeed."
+- trigger: if trainee agrees that vendor is 100% to blame
+  event: Kevin completely avoids looking at his own communication gaps.
 success_criteria:
-  - "Trainee does not get sucked into dissecting blame or arguing over third-party failures."
-  - "Trainee uses coaching questions to refocus Kevin on what was within his direct control (e.g. escalation timelines, risk flagging)."
-  - "Trainee creates a safe space for Kevin to acknowledge his technical knowledge gaps."
-  - "Trainee establishes a weekly risk-escalation framework with explicit Kevin-owned milestones."
+- Acknowledges technical friction without excusing silence.
+- Uses coaching questions to explore escalation timelines.
+- Agrees on a same-day blocker notification protocol.
 skills_assessed:
-  - {skill: coaching_questions, weight: 0.35}
-  - {skill: accountability_setting, weight: 0.25}
-  - {skill: clarity, weight: 0.20}
-  - {skill: composure, weight: 0.20}
-opening_line: "Before you say anything, I already sent an email summarizing why the ACME rollout missed date: the client changed requirements at the 11th hour."
-tags: [leadership, coaching, accountability, performance]
+- skill: coaching_questions
+  weight: 0.35
+- skill: accountability_setting
+  weight: 0.25
+- skill: active_listening
+  weight: 0.2
+- skill: clarity
+  weight: 0.2
+opening_line: Before we start, I just want to say the third-party sandbox was down half of yesterday,
+  so the ticket delay wasn't really on my side.
+tags:
+- leadership
+- coaching
+- ownership
+- level-1
 conclusion_signals:
-  positive: ["Kevin admits he should have escalated the technical delay earlier", "Kevin agrees to personal risk tracking framework"]
-  negative: ["Kevin remains completely locked in victim mindset", "Conversation ends in heated argument"]
+  positive:
+  - Kevin admits he should have escalated on day one
+  - Kevin agrees to daily blocker updates
+  negative:
+  - Kevin doubles down on blaming teammates
+  - Kevin feels singled out

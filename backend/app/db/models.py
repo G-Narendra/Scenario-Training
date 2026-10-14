@@ -185,6 +185,8 @@ class Scenario(Base, TimestampMixin):
     )
     opening_line: Mapped[str] = mapped_column(Text, nullable=False)
     tags: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=False)
+    tactical_coaching_clue: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    target_capabilities: Mapped[List[str]] = mapped_column(JSON, default=list, nullable=False)
     conclusion_signals: Mapped[Dict[str, Any]] = mapped_column(JSON, default=dict, nullable=False)
 
     track: Mapped["Track"] = relationship("Track", back_populates="scenarios")

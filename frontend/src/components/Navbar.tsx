@@ -1,7 +1,8 @@
 import React from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { LogOut, Moon, ShieldCheck, Sparkles, Sun, User as UserIcon } from 'lucide-react';
+import { LogOut, Moon, ShieldCheck, Sun, User as UserIcon } from 'lucide-react';
+import { ThreeHSolutionsLogo } from './ThreeHSolutionsLogo';
 
 interface NavbarProps {
   currentView: string;
@@ -13,48 +14,33 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
   const { theme, toggleTheme } = useTheme();
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b border-slate-200 bg-white/90 dark:border-slate-800 dark:bg-[#0B0F19]/90 backdrop-blur-md transition-colors duration-200">
+    <header className="sticky top-0 z-40 w-full border-b border-slate-300 bg-white/95 dark:border-[#1E3E62] dark:bg-[#0B192C]/95 backdrop-blur-md transition-colors duration-200">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-        {/* Brand */}
+        {/* Brand: 3H Solutions Group Official */}
         <div
           onClick={() => onNavigate('tracks')}
-          className="flex cursor-pointer items-center space-x-3 transition hover:opacity-95"
+          className="flex cursor-pointer items-center transition hover:opacity-95"
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
             if (e.key === 'Enter' || e.key === ' ') onNavigate('tracks');
           }}
-          aria-label="ScenarioLab home"
+          aria-label="3H Solutions Scenario Training home"
         >
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-violet-500 shadow-lg shadow-indigo-500/25">
-            <Sparkles className="h-5 w-5 text-white" />
-          </div>
-          <div className="flex flex-col">
-            <div className="flex items-center space-x-2">
-              <span className="text-lg font-black tracking-tight text-slate-900 dark:text-white font-heading">
-                ScenarioLab
-              </span>
-              <span className="hidden rounded-full border border-indigo-500/20 bg-indigo-50 px-2 py-0.5 text-[10px] font-semibold text-indigo-700 dark:border-indigo-500/30 dark:bg-indigo-500/10 dark:text-indigo-300 sm:inline">
-                Enterprise Training
-              </span>
-            </div>
-            <span className="hidden text-[11px] text-slate-500 dark:text-slate-400 sm:inline -mt-0.5">
-              Workplace Roleplay Simulations
-            </span>
-          </div>
+          <ThreeHSolutionsLogo size="md" variant="full" />
         </div>
 
         {/* Navigation Actions */}
         {user && (
           <div className="flex items-center space-x-2 sm:space-x-4">
-            <nav className="flex items-center space-x-1 rounded-xl border border-slate-200 bg-slate-100/80 p-1 dark:border-slate-800/80 dark:bg-slate-900/50">
+            <nav className="flex items-center space-x-1 rounded-xl border border-slate-300 bg-slate-100 p-1 dark:border-[#1E3E62] dark:bg-[#132B45]">
               <button
                 id="nav-scenarios-btn"
                 onClick={() => onNavigate('tracks')}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition ${
                   currentView === 'tracks' || currentView === 'scenarios'
-                    ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
-                    : 'text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-white'
+                    ? 'bg-[#FF6500] text-white shadow-sm shadow-[#FF6500]/30'
+                    : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-white'
                 }`}
               >
                 Scenarios
@@ -63,10 +49,10 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
               <button
                 id="nav-progress-btn"
                 onClick={() => onNavigate('progress')}
-                className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition ${
                   currentView === 'progress'
-                    ? 'bg-indigo-600 text-white shadow-sm shadow-indigo-600/30'
-                    : 'text-slate-600 hover:bg-slate-200/70 hover:text-slate-900 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-white'
+                    ? 'bg-[#FF6500] text-white shadow-sm shadow-[#FF6500]/30'
+                    : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-white'
                 }`}
               >
                 Progress

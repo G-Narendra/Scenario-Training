@@ -1,0 +1,60 @@
+slug: sales-08-reframing-contract-renewal-cut
+track: sales
+title: Reframing a 15% Budget Cut at Contract Renewal
+topic: negotiation
+difficulty: 2
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Negotiation
+- Value Articulation
+- Objection Handling
+tactical_coaching_clue: 'Never give a unilateral price cut. If they demand 15% off, ask for something
+  of equal commercial value in return: multi-year commitment, upfront payment, or case study rights.'
+brief: CFO Chloe Albright sends an email 30 days before annual contract renewal stating the board has
+  mandated an across-the-board 15% vendor fee cut. Defend your revenue baseline and trade concessions
+  constructively.
+persona:
+  name: Chloe Albright
+  role: Chief Financial Officer
+  personality:
+  - analytical
+  - firm
+  - fiscally conservative
+  - shrewd
+  communication_style: Crisp, concise, states budget cuts as non-negotiable mandates from the Board.
+  emotional_baseline: firm
+hidden_motivations:
+- Chloe is trying to show the Board she squeezed savings out of all active vendors.
+- Her team loves your tool and switching would cost her $100k in engineering retraining.
+objections:
+- The Board mandated a 15% cut across all software vendors; take it or we non-renew.
+- Other vendors complied immediately with our budget constraints.
+curveballs:
+- trigger: if trainee caves immediately with zero trade concessions
+  event: Chloe asks for an additional 10% discount on support tiers.
+success_criteria:
+- Demonstrates the measurable ROI and usage metrics delivered over the past 12 months.
+- Trades the requested discount for a 3-year agreement with annual upfront payments.
+- Preserves total contract value while meeting Chloe's accounting targets.
+skills_assessed:
+- skill: negotiation
+  weight: 0.4
+- skill: value_articulation
+  weight: 0.35
+- skill: tone_confidence
+  weight: 0.25
+opening_line: 'Good morning. You saw my email: our Board has mandated a 15% cut across all enterprise
+  software subscriptions for next fiscal year. Can you adjust the renewal invoice?'
+tags:
+- sales
+- renewal
+- negotiation
+- level-2
+conclusion_signals:
+  positive:
+  - Chloe agrees to 3-year term with upfront payment preserving ARR
+  - Win-win renewal signed
+  negative:
+  - Trainee gives away margin for nothing
+  - Account cancels in standoff

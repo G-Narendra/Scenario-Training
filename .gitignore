@@ -72,3 +72,14 @@ Thumbs.db
 coverage/
 playwright-report/
 test-results/
+
+# Local Prompts & Temporary Junctions
+AGENTS.md
+agent.md
+PROMPT-FOR-SCENARIO-TRAINING.md
+SKILLBRIDGE-MASTER-PROMPT.md
+scripts/*.ps1
+docker-compose.test.yml
+tests/
+reviews/
+feedback/

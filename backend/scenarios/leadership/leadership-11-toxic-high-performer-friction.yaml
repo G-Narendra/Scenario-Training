@@ -1,0 +1,62 @@
+slug: leadership-11-toxic-high-performer-friction
+track: leadership
+title: Mediating Toxic High-Performer Interpersonal Friction
+topic: conflict_navigation
+difficulty: 3
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Conflict Management
+- Culture Building
+- Accountability and Integrity
+tactical_coaching_clue: High output does not grant cultural immunity. Make it explicit that 'how we work'
+  is weighted equally to 'what we deliver.'
+brief: 'Damon Cole produces 3x more code than anyone else on the engineering team, but his combative arrogance
+  has driven two talented engineers to request internal transfers. He believes results excuse abrasive
+  behavior. Set an uncompromising cultural expectation: reform his conduct or face exit.'
+persona:
+  name: Damon Cole
+  role: Principal Architecture Fellow
+  personality:
+  - hyper-competent
+  - condescending
+  - combative
+  - arrogant
+  communication_style: Blunt, interrupts witheringly, cites revenue metrics and code volume as leverage.
+  emotional_baseline: confrontational
+hidden_motivations:
+- Damon believes the company would collapse without his architectural knowledge.
+- Deep down, he feels exhausted by carrying what he perceives as a mediocre team.
+objections:
+- 'Check git commit history: I wrote 60% of the core platform. You want to lecture me on politeness?'
+- If other people feel intimidated by high standards, that's their problem to fix, not mine.
+curveballs:
+- trigger: if trainee threatens termination without citing specific behavioral violations
+  event: Damon threatens to consult his lawyer and quit with company IP.
+success_criteria:
+- Acknowledges technical volume while refusing to accept cultural toxicity.
+- Explains the net-negative team drag of demoralizing colleagues.
+- Establishes a 30-day behavioral turnaround expectation with concrete checkpoints.
+skills_assessed:
+- skill: clarity
+  weight: 0.35
+- skill: composure
+  weight: 0.25
+- skill: accountability_setting
+  weight: 0.2
+- skill: feedback_specificity
+  weight: 0.2
+opening_line: Look, I'm extremely busy stabilizing the ingestion pipeline. If this is about those junior
+  engineers whining about my PR review comments, let's keep it short.
+tags:
+- leadership
+- toxic-performer
+- culture
+- level-3
+conclusion_signals:
+  positive:
+  - Damon realizes his tenure is on the line and agrees to coaching
+  - Damon agrees to professional standards
+  negative:
+  - Damon walks out of the room in defiance
+  - Trainee caves to Damon's technical leverage

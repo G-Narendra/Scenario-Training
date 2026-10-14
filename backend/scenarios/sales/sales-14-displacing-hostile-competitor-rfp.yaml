@@ -1,0 +1,61 @@
+slug: sales-14-displacing-hostile-competitor-rfp
+track: sales
+title: Displacing a Hostile Niche Competitor During RFP
+topic: value_articulation
+difficulty: 3
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Competitive Differentiation
+- Reframing
+- Objection Handling
+tactical_coaching_clue: When an RFP appears rigged with competitor-specific checkboxes, do not play defense
+  on their terms. Reframe the evaluation criteria around total cost of ownership and enterprise scale.
+brief: You are presenting your final RFP defense to Procurement Director Helen Vance. The RFP technical
+  specifications were clearly written by a boutique competitor, emphasizing niche customization over enterprise
+  reliability. Reframe the RFP criteria and win the multi-year deal.
+persona:
+  name: Helen Vance
+  role: Director of Procurement & Strategic Sourcing
+  personality:
+  - procedural
+  - formal
+  - objective
+  - checklist-oriented
+  communication_style: Strict adherence to RFP scorecards, challenges non-compliant response checkboxes.
+  emotional_baseline: neutral
+hidden_motivations:
+- Helen is annoyed that the technical department attempted to pre-select a vendor without competitive
+  bidding.
+- She cares about long-term vendor solvency and enterprise SLA reliability.
+objections:
+- Your competitor met 98 of our custom technical specifications; your response only checked 84.
+- They are offering unlimited custom code modifications included in the base fee.
+curveballs:
+- trigger: if trainee attacks the integrity of the RFP author
+  event: Helen reprimands trainee for unprofessional conduct.
+success_criteria:
+- Reframes 'custom code modifications' as long-term maintenance vulnerability and tech debt.
+- Highlights your certified compliance, SOC2, and 99.99% multi-region uptime guarantees.
+- Convinces Helen to weight enterprise scalability and data governance equally to feature checkboxes.
+skills_assessed:
+- skill: value_articulation
+  weight: 0.4
+- skill: objection_handling
+  weight: 0.3
+- skill: tone_confidence
+  weight: 0.3
+opening_line: We've tallied the scorecard for your RFP response. You fell short on 14 custom feature requirements
+  that our other bidder accommodated seamlessly. What is your justification?
+tags:
+- sales
+- rfp
+- competitive-defense
+- level-3
+conclusion_signals:
+  positive:
+  - Helen re-scores the RFP giving heavy weight to security and uptime
+  - Tender won
+  negative:
+  - Disqualified on checklist technicalities
+  - Boutique vendor wins

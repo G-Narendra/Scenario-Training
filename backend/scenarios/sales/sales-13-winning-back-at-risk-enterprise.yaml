@@ -1,0 +1,63 @@
+slug: sales-13-winning-back-at-risk-enterprise
+track: sales
+title: Rescuing an At-Risk Enterprise Account Post-Outage
+topic: empathy
+difficulty: 3
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- De-escalation
+- Empathy
+- Restoring Trust
+tactical_coaching_clue: When an angry customer is threatening to cancel, do not defend the software or
+  cite SLA percentages. Own the business interruption fully, listen without interrupting, and present
+  concrete corrective safeguards.
+brief: Marcus Cole, VP of Operations at your largest enterprise customer ($650k ARR), calls a crisis meeting
+  following a 3-hour system outage during their peak order processing window. He is threatening immediate
+  contract termination. De-escalate Marcus, restore trust, and preserve the account.
+persona:
+  name: Marcus Cole
+  role: VP of Global Operations
+  personality:
+  - furious
+  - under extreme executive fire
+  - blunt
+  - demanding
+  communication_style: Aggressive, interrupted, quotes financial losses per minute, threatens breach litigation.
+  emotional_baseline: furious
+hidden_motivations:
+- Marcus had to explain the downtime directly to his Board of Directors yesterday.
+- Deep down, switching vendors right now would be catastrophic for his upcoming quarter.
+objections:
+- Your outage cost us $450,000 in cancelled orders; your SLA credit of 5% is a joke.
+- Our legal counsel is already drafting our formal notice of material breach.
+curveballs:
+- trigger: if trainee cites section 8.4 of the contract limiting liability
+  event: Marcus explodes and instructs legal to file suit immediately.
+success_criteria:
+- Allows Marcus to vent completely without defensive interruptions.
+- Presents a comprehensive Root Cause Analysis (RCA) and $0 architecture redundancy upgrade.
+- Secures agreement for a weekly executive uptime check-in, keeping the account active.
+skills_assessed:
+- skill: composure
+  weight: 0.4
+- skill: empathy
+  weight: 0.3
+- skill: active_listening
+  weight: 0.3
+opening_line: I'm not interested in your canned apologies. Your system flatlined for three hours during
+  our biggest promotional event of the year. Why shouldn't I terminate our contract today for material
+  breach?
+tags:
+- sales
+- churn-risk
+- crisis
+- executive-deescalation
+- level-3
+conclusion_signals:
+  positive:
+  - Marcus agrees to review dedicated disaster recovery cluster upgrade
+  - Account saved
+  negative:
+  - Account formally cancels and files lawsuit
+  - Trainee gets defensive over contract SLA

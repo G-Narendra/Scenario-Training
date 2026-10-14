@@ -43,6 +43,8 @@ class ScenarioConfigSchema(BaseModel):
     skills_assessed: List[SkillAssessedSchema] = Field(..., min_length=1)
     opening_line: str = Field(..., min_length=3)
     tags: List[str] = Field(default_factory=list)
+    tactical_coaching_clue: Optional[str] = Field(default=None)
+    target_capabilities: List[str] = Field(default_factory=list)
     conclusion_signals: Optional[ConclusionSignalsSchema] = None
 
     @model_validator(mode="after")
@@ -77,6 +79,8 @@ class PublicScenarioListItem(BaseModel):
     duration_limit_seconds: int
     skills_assessed: List[PublicSkillPreview]
     tags: List[str]
+    tactical_coaching_clue: Optional[str] = None
+    target_capabilities: List[str] = Field(default_factory=list)
 
 
 class PublicScenarioDetail(BaseModel):
@@ -93,6 +97,8 @@ class PublicScenarioDetail(BaseModel):
     opening_line: str
     skills_assessed: List[PublicSkillPreview]
     tags: List[str]
+    tactical_coaching_clue: Optional[str] = None
+    target_capabilities: List[str] = Field(default_factory=list)
 
 
 # Admin Response Schemas (Full scenario info)
@@ -116,6 +122,8 @@ class AdminScenarioResponse(BaseModel):
     skills_assessed: List[Dict[str, Any]]
     opening_line: str
     tags: List[str]
+    tactical_coaching_clue: Optional[str] = None
+    target_capabilities: List[str] = Field(default_factory=list)
     conclusion_signals: Dict[str, Any]
 
 

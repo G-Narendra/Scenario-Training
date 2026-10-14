@@ -1,0 +1,62 @@
+slug: sales-19-upselling-global-expansion
+track: sales
+title: Upselling Multi-Year Enterprise Expansion to Global VP
+topic: value_articulation
+difficulty: 4
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Strategic Account Growth
+- Value Realization
+- Negotiation
+tactical_coaching_clue: To expand from 500 seats to 5,000 seats across global regions, leverage the validated
+  success metrics from the North America division to de-risk European rollout.
+brief: Your software has been running successfully in North America for 12 months with 500 users. You
+  are meeting with Global Operations EVP Julian Sterling to pitch a worldwide expansion to 5,000 seats
+  across EMEA and APAC, growing ARR from $150k to $1.2M. Structure the strategic expansion roadmap.
+persona:
+  name: Julian Sterling
+  role: Executive Vice President, Global Operations
+  personality:
+  - visionary
+  - demanding
+  - international
+  - scale-minded
+  communication_style: Macro-focused, thinks in multi-million dollar annual budgets, concerned with cross-border
+    localization.
+  emotional_baseline: interested
+hidden_motivations:
+- Julian is evaluated on global operational consolidation and eliminating rogue regional software spend.
+- He fears European GDPR compliance and Asian latency issues.
+objections:
+- What works in North America often fails in Germany and Japan due to compliance and language friction.
+- Scaling 10x in seat volume should yield at least a 50% discount per license.
+curveballs:
+- trigger: if trainee offers a 50% discount immediately without volume commitments
+  event: Julian questions whether your infrastructure can genuinely support enterprise tier load.
+success_criteria:
+- 'Presents concrete North America performance metrics: 34% productivity lift, 99.98% uptime.'
+- Demonstrates verified GDPR compliance, EU data sovereignty clusters, and multi-language support.
+- Secures agreement for a phased global rollout roadmap totaling $1.1M ARR.
+skills_assessed:
+- skill: value_articulation
+  weight: 0.4
+- skill: negotiation
+  weight: 0.3
+- skill: tone_confidence
+  weight: 0.3
+opening_line: Our North American team speaks highly of your tool. But scaling this from 500 users in Ohio
+  to 5,000 users across London, Frankfurt, and Singapore is a completely different ballgame.
+tags:
+- sales
+- expansion
+- global-account
+- enterprise
+- level-4
+conclusion_signals:
+  positive:
+  - Julian signs multi-million dollar global expansion letter of intent
+  - Tiered global master agreement closed
+  negative:
+  - Regional rollout blocked due to compliance fears
+  - Account remains localized to North America

@@ -132,9 +132,9 @@ class ConversationEngine:
             yield "I have to run to another meeting now. We'll have to pick this up another time."
             return
 
-        # 2. Enforce turn limit
+        # 2. Enforce turn limit (default 25 turns per client spec)
         turn_count = meta.get("turn_count", 0) + 1
-        turn_limit = meta.get("turn_limit", 30)
+        turn_limit = meta.get("turn_limit") or 25
         if turn_count > turn_limit:
             session.status = "completed"
             session.end_reason = "turn_limit"
@@ -254,10 +254,12 @@ class ConversationEngine:
         )
         self.db.add(c_msg)
 
-        # 10. Check for natural conclusion
+        # 10. Check for natural conclusion (guarded: min 5 turns before natural conclusion allowed)
         is_concluded, outcome, reason = ConclusionDetector.detect_heuristic(
             last_counterpart_message=full_reply,
             conclusion_signals=session.scenario.conclusion_signals,
+            current_turn=turn_count,
+            min_turns=2,
         )
         if is_concluded:
             session.status = "completed"
