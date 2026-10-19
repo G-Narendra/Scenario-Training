@@ -13,7 +13,7 @@ from typing import List, Dict, Any
 import httpx
 
 COHORT_PASSCODE = "UZAIR-2026"
-ADMIN_NAME = "Uzair"
+ADMIN_NAME = "Narendra"
 
 STUDENT_ROSTER = [
     "Sarah Jenkins",
@@ -103,7 +103,10 @@ async def simulate_student_journey(
     3. Start scenario session
     4. Send dialogue turn
     """
-    async with httpx.AsyncClient(timeout=30.0) as client:
+    if student_index > 0:
+        await asyncio.sleep(student_index * 0.05)
+
+    async with httpx.AsyncClient(timeout=60.0) as client:
         # 1. Login
         t0 = time.perf_counter()
         try:

@@ -1,5 +1,6 @@
 import asyncio
 import json
+import time
 from typing import List, Optional
 
 from fastapi import APIRouter, Depends, Header, HTTPException, Query, status
@@ -33,6 +34,22 @@ from backend.app.security.deps import get_current_user
 from backend.app.services.scoring_service import ScoringService
 
 router = APIRouter(prefix="/api/sessions", tags=["sessions"])
+
+_cohort_spend_cache: dict[str, tuple[float, float]] = {}
+
+
+async def _get_cached_cohort_spend(db: AsyncSession, cohort_id: str) -> float:
+    now_m = time.monotonic()
+    if cohort_id in _cohort_spend_cache:
+        cached_spend, expiry = _cohort_spend_cache[cohort_id]
+        if now_m < expiry:
+            return cached_spend
+    usage_stmt = select(func.coalesce(func.sum(UsageEvent.cost_estimate), 0.0)).where(
+        UsageEvent.cohort_id == cohort_id
+    )
+    total_spend = (await db.execute(usage_stmt)).scalar() or 0.0
+    _cohort_spend_cache[cohort_id] = (total_spend, now_m + 60.0)
+    return total_spend
 
 
 @router.post("", response_model=SessionDetailResponse, status_code=status.HTTP_201_CREATED)
@@ -83,11 +100,8 @@ async def create_session(
                         detail="ATTEMPT_LIMIT_REACHED: You have completed your 10 assigned practice attempts for this scenario. Please wait for the trainer's instructions.",
                     )
 
-                # Check Cohort Budget Cap ($10 USD safety ceiling)
-                usage_stmt = select(func.coalesce(func.sum(UsageEvent.cost_estimate), 0.0)).where(
-                    UsageEvent.cohort_id == cohort.id
-                )
-                total_spend = (await db.execute(usage_stmt)).scalar() or 0.0
+                # Check Cohort Budget Cap ($10 USD safety ceiling) with fast-path memory cache
+                total_spend = await _get_cached_cohort_spend(db, cohort.id)
                 if total_spend >= cohort.budget_cap_usd:
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
@@ -111,7 +125,7 @@ async def create_session(
                         last_attempt_at=now,
                     )
                     db.add(new_ledger)
-                await db.commit()
+                await db.flush()
 
     engine = ConversationEngine(db)
     sim_session, opening_msg = await engine.start_session(
@@ -120,14 +134,15 @@ async def create_session(
         mode=payload.mode,
     )
 
-    # Fetch scenario details for title
-    scen_res = await db.execute(select(Scenario).where(Scenario.id == sim_session.scenario_id))
-    scenario = scen_res.scalar_one()
+    scenario_title = (
+        (sim_session.state_metadata or {}).get("scenario_title")
+        or "Workplace Simulation Scenario"
+    )
 
     return SessionDetailResponse(
         id=sim_session.id,
         scenario_id=sim_session.scenario_id,
-        scenario_title=scenario.title,
+        scenario_title=scenario_title,
         mode=sim_session.mode,
         status=sim_session.status,
         started_at=sim_session.started_at,
