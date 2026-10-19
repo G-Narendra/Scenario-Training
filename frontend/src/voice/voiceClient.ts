@@ -45,12 +45,17 @@ export class VoiceClient {
 
   async connect(sessionId: string, token: string): Promise<void> {
     const isDevPort = window.location.port === '5173';
+    const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const hostDirect = `${protocol === 'wss:' ? 'wss:' : 'ws:'}//${window.location.hostname || '127.0.0.1'}:8000`;
-    const hostProxy = `${protocol}//${window.location.host}`;
+    const hostProxy = isVercel
+      ? 'wss://scenariolab-api.onrender.com'
+      : `${protocol}//${window.location.host}`;
 
     // When running under Vite dev server (port 5173), try direct connection to backend first
-    const primaryUrl = isDevPort
+    const primaryUrl = isVercel
+      ? `wss://scenariolab-api.onrender.com/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`
+      : isDevPort
       ? `${hostDirect}/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`
       : `${hostProxy}/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`;
     const fallbackUrl = isDevPort

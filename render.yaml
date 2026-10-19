@@ -17,12 +17,10 @@ services:
       - key: CORS_ORIGINS
         value: '["*"]'
       - key: DATABASE_URL
-        fromDatabase:
-          name: scenariolab-db
-          property: connectionString
-
-databases:
-  - name: scenariolab-db
-    databaseName: scenariolab
-    user: scenariolab_user
-    plan: free
+        value: "postgresql://neondb_owner:npg_U8h9BPzHxnOR@ep-wispy-surf-aern98ft.c-2.us-east-2.aws.neon.tech/neondb?ssl=require"
+      - key: DEFAULT_LLM_PROVIDER
+        value: "nvidia"
+      - key: NVIDIA_API_KEY
+        value: "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"
+      - key: NVIDIA_MODEL
+        value: "meta/llama-3.2-11b-vision-instruct"
