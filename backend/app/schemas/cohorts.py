@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -40,3 +40,25 @@ class RotatePasscodeResponse(BaseModel):
 
 class ExtendCohortRequest(BaseModel):
     additional_days: int = Field(..., ge=1, le=365)
+
+
+class CohortMemberResponse(BaseModel):
+    id: str
+    cohort_id: Optional[str]
+    display_name: str
+    role: str
+    is_active: bool
+    last_login_at: Optional[datetime] = None
+    created_at: datetime
+
+
+class AddCohortMemberRequest(BaseModel):
+    display_name: str = Field(..., min_length=2, max_length=100)
+    role: str = Field(default="trainee")  # trainee, group_admin, super_admin
+
+
+class BulkAddMembersRequest(BaseModel):
+    names: List[str] = Field(..., min_items=1)
+    role: str = Field(default="trainee")
+
+

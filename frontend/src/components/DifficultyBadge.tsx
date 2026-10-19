@@ -1,7 +1,8 @@
 import React from 'react';
 
 export interface DifficultyBadgeProps {
-  difficulty: number; // 1 to 5
+  difficulty?: number; // 1 to 5
+  difficultyLevel?: 'Normal' | 'Challenging' | 'Crisis' | string;
   showPips?: boolean;
   size?: 'sm' | 'md' | 'lg';
   className?: string;
@@ -17,12 +18,13 @@ interface DifficultyMeta {
   badgeTextLight: string;
   badgeBorderLight: string;
   pipActiveColor: string;
+  totalPips: number;
 }
 
-const DIFFICULTY_MAP: Record<number, DifficultyMeta> = {
-  1: {
+const THREE_TIER_MAP: Record<string, DifficultyMeta> = {
+  Normal: {
     level: 1,
-    label: 'Level 1: Foundational',
+    label: 'Level 1: Normal',
     badgeBgDark: 'bg-emerald-950/70',
     badgeTextDark: 'text-emerald-300',
     badgeBorderDark: 'border-emerald-600/50',
@@ -30,43 +32,23 @@ const DIFFICULTY_MAP: Record<number, DifficultyMeta> = {
     badgeTextLight: 'text-emerald-800',
     badgeBorderLight: 'border-emerald-300',
     pipActiveColor: 'bg-emerald-500',
+    totalPips: 3,
   },
-  2: {
+  Challenging: {
     level: 2,
-    label: 'Level 2: Intermediate',
-    badgeBgDark: 'bg-cyan-950/70',
-    badgeTextDark: 'text-cyan-300',
-    badgeBorderDark: 'border-cyan-600/50',
-    badgeBgLight: 'bg-cyan-50',
-    badgeTextLight: 'text-cyan-800',
-    badgeBorderLight: 'border-cyan-300',
-    pipActiveColor: 'bg-cyan-500',
-  },
-  3: {
-    level: 3,
-    label: 'Level 3: Advanced',
+    label: 'Level 2: Challenging',
     badgeBgDark: 'bg-amber-950/70',
     badgeTextDark: 'text-amber-300',
     badgeBorderDark: 'border-amber-600/50',
     badgeBgLight: 'bg-amber-50',
     badgeTextLight: 'text-amber-900',
     badgeBorderLight: 'border-amber-400',
-    pipActiveColor: 'bg-amber-500',
+    pipActiveColor: 'bg-[#FF6500]',
+    totalPips: 3,
   },
-  4: {
-    level: 4,
-    label: 'Level 4: High-Stakes',
-    badgeBgDark: 'bg-orange-950/70',
-    badgeTextDark: 'text-orange-300',
-    badgeBorderDark: 'border-orange-600/50',
-    badgeBgLight: 'bg-orange-50',
-    badgeTextLight: 'text-orange-900',
-    badgeBorderLight: 'border-orange-400',
-    pipActiveColor: 'bg-orange-500',
-  },
-  5: {
-    level: 5,
-    label: 'Level 5: Crisis / Executive',
+  Crisis: {
+    level: 3,
+    label: 'Level 3: Crisis',
     badgeBgDark: 'bg-rose-950/80',
     badgeTextDark: 'text-rose-200',
     badgeBorderDark: 'border-rose-600/60',
@@ -74,17 +56,34 @@ const DIFFICULTY_MAP: Record<number, DifficultyMeta> = {
     badgeTextLight: 'text-rose-950',
     badgeBorderLight: 'border-rose-400',
     pipActiveColor: 'bg-rose-600',
+    totalPips: 3,
   },
 };
 
 export const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({
-  difficulty,
+  difficulty = 1,
+  difficultyLevel,
   showPips = true,
   size = 'md',
   className = '',
 }) => {
-  const clampedLevel = Math.max(1, Math.min(5, difficulty || 1));
-  const meta = DIFFICULTY_MAP[clampedLevel];
+  // Determine tier
+  let tierKey: 'Normal' | 'Challenging' | 'Crisis' = 'Normal';
+  if (difficultyLevel) {
+    if (difficultyLevel.toLowerCase().includes('crisis') || difficultyLevel.toLowerCase().includes('high') || difficultyLevel.toLowerCase().includes('advanced')) {
+      tierKey = 'Crisis';
+    } else if (difficultyLevel.toLowerCase().includes('challenging') || difficultyLevel.toLowerCase().includes('intermediate')) {
+      tierKey = 'Challenging';
+    } else {
+      tierKey = 'Normal';
+    }
+  } else {
+    if (difficulty <= 1) tierKey = 'Normal';
+    else if (difficulty <= 3) tierKey = 'Challenging';
+    else tierKey = 'Crisis';
+  }
+
+  const meta = THREE_TIER_MAP[tierKey];
 
   const sizeClasses = {
     sm: 'text-xs px-2 py-0.5 space-x-1.5',
@@ -107,11 +106,11 @@ export const DifficultyBadge: React.FC<DifficultyBadgeProps> = ({
       {/* Visual Pip Indicators */}
       {showPips && (
         <div className="flex items-center space-x-1" aria-hidden="true">
-          {[1, 2, 3, 4, 5].map((pip) => (
+          {Array.from({ length: meta.totalPips }, (_, i) => i + 1).map((pip) => (
             <span
               key={pip}
               className={`rounded-full transition-all ${pipSizes[size]} ${
-                pip <= clampedLevel
+                pip <= meta.level
                   ? meta.pipActiveColor
                   : 'bg-slate-300 dark:bg-slate-700/60'
               }`}

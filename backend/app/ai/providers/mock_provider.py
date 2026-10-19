@@ -95,7 +95,68 @@ class MockLLMProvider(LLMProvider):
             ]
         )
 
-        # 1. Closing / Next Steps commitment (Guard: do not agree on first turn)
+        # Extract dynamic persona & scenario metadata from system_prompt
+        import re
+
+        scenario_match = re.search(r"Scenario:\s*(.+)", system_prompt)
+        scenario_title = scenario_match.group(1).strip() if scenario_match else "the situation"
+
+        name_match = re.search(r"Your Name:\s*(.+)", system_prompt)
+        char_name = name_match.group(1).strip() if name_match else "Partner"
+
+        role_match = re.search(r"Your Role:\s*(.+)", system_prompt)
+        char_role = role_match.group(1).strip() if role_match else ("Manager" if is_leadership else "Decision Maker")
+
+        # Parse key objections from system prompt block
+        objections = []
+        in_obj_block = False
+        for line in system_prompt.splitlines():
+            line_str = line.strip()
+            if line_str == "=== YOUR KEY OBJECTIONS ===":
+                in_obj_block = True
+                continue
+            if in_obj_block and line_str.startswith("==="):
+                in_obj_block = False
+                break
+            if in_obj_block and line_str.startswith("-"):
+                obj_text = line_str.lstrip("- ").strip()
+                if obj_text and obj_text != "None specified.":
+                    objections.append(obj_text)
+
+        # Fallback objections if not parsed
+        if not objections:
+            if is_leadership:
+                objections = [
+                    "our current team workload is already at capacity",
+                    "we cannot compromise on deliverable quality or deadlines",
+                    "any changes must have clear leadership backing",
+                ]
+            else:
+                objections = [
+                    "our current budget is tightly capped for this quarter",
+                    "we cannot risk workflow disruption during implementation",
+                    "we need clear proof of ROI before committing to anything",
+                ]
+
+        primary_objection = objections[0]
+        secondary_objection = objections[1] if len(objections) > 1 else objections[0]
+
+        # 1. Apologies / passive / deflated responses ("sorry", "my apologies", "apologize", "my bad")
+        if any(w in msg_lower for w in ["sorry", "apolog", "my bad", "forgive", "excuse me"]):
+            if is_leadership:
+                return f"I appreciate the apology, but we have a live deadline here. What can we actually adjust today so we aren't blocked again tomorrow?"
+            else:
+                return f"Look, an apology doesn't fix our deliverable timeline. What is your team actually doing today to resolve this roadblock?"
+
+        # 2. Extremely short / non-substantive answers ("ok", "k", "yes", "no", "fine", "cool", "sure", "idk", <= 2 words)
+        words = msg_lower.split()
+        if len(words) <= 2 and any(w in ["ok", "k", "yes", "no", "sure", "fine", "cool", "idk", "why", "what", "hello", "hi", "hey"] for w in words):
+            if is_leadership:
+                return f"Thanks for stepping in. We cannot keep losing two days every release cycle just because QA wants to re-test untouched modules. Where do you stand on resolving this?"
+            else:
+                return f"A one-word reply doesn't give me any confidence. We're considering a significant commitment here. Walk me through your actual approach and timeline."
+
+        # 3. Closing / Next Steps commitment (Guard: do not agree on first turn)
         if any(
             w in msg_lower
             for w in [
@@ -113,72 +174,49 @@ class MockLLMProvider(LLMProvider):
             ]
         ):
             if user_turn_count <= 1:
-                if is_leadership:
-                    return "Setting another meeting won't resolve this if we don't align on the core expectations right now. How do you propose we handle the immediate team workload?"
-                else:
-                    return "It's too early to put time on my calendar. I still haven't heard how your solution solves our direct integration bottleneck. What specific proof do you have?"
+                return f"It's too early to put time on the calendar. We still haven't resolved our core blocker. How do you propose we address that first?"
             else:
-                if is_leadership:
-                    return "Fair enough. Let's document these agreed action items and review our alignment with the team on Thursday at 2 PM."
-                else:
-                    return "Fair enough. Send me an invite for Thursday at 2 PM. Put the rollout timeline in the description and I'll review it with my team."
+                return f"Fair enough. Let's document these agreed action items and review our alignment this Thursday at 2 PM."
 
-        # 2. Premature concessions / discounts
-        if any(w in msg_lower for w in ["discount", "drop the price", "20%", "cheaper", "lower our price", "concession"]):
+        # 4. Premature concessions / discounts / compromises
+        if any(w in msg_lower for w in ["discount", "drop the price", "20%", "cheaper", "lower our price", "concession", "compromise"]):
             if is_leadership:
-                return "Dropping the bar on standards isn't the answer here. If we lower expectations for one person, it compromises the entire team's discipline."
+                return f"Dropping standards or making quick compromises won't solve the core issue. What we need is to solve this without cutting corners."
             else:
-                return "Dropping the price right away makes me wonder what was padded in your initial quote. What are we actually getting here?"
+                return f"Dropping the price right away makes me wonder what was padded in your initial numbers. The real issue is whether you can handle our requirements."
 
-        # 3. Handling polite / casual / meta remarks
+        # 5. Handling polite / casual / meta remarks
         if any(
             w in msg_lower
-            for w in ["polite", "courtesy", "manner", "test my", "shall we test", "be nice", "play nice", "hello", "good morning", "hi"]
+            for w in ["polite", "courtesy", "manner", "test my", "shall we test", "be nice", "play nice", "hello", "good morning", "hi", "hey", "how are you"]
         ):
             if user_turn_count <= 2:
-                if is_leadership:
-                    return "Good morning. I know we have limited time today, and there are some serious team challenges we need to get through. What is top of mind for you?"
-                else:
-                    return "I appreciate the courtesy, but I've got back-to-back meetings today. What specific problem are you here to solve?"
+                return f"Hey. Good to connect. Honestly, I'm pretty stressed about our release timeline right now. We really need to get engineering and QA aligned today. What's your take on how we handle the testing backlog?"
             else:
-                if is_leadership:
-                    return "Courtesy is fine, but my team needs concrete guidance right now. What is the specific plan of action?"
-                else:
-                    return "Good to stay professional, but my team needs results. Where do you stand on integration time and support?"
+                return f"I appreciate the courtesy, but we need concrete answers right now regarding our deliverables. What is your specific plan?"
 
-        # 4. Straight to the point / directness
+        # 6. Straight to the point / directness
         if any(
             w in msg_lower
             for w in ["straight to the point", "cut to the chase", "direct", "no fluff", "bottom line"]
         ):
-            if is_leadership:
-                return "Good, let's keep it direct: The team is burning out under current sprint scope, and morale is dropping. If we don't cut back deliverables, we will lose key engineers."
-            else:
-                if "hidden motivations" in system_prompt.lower() or "cost-cut" in system_prompt.lower():
-                    return "Good, let's keep it direct. Leadership gave us a strict mandate to cut external vendor spending this quarter. How does this justify itself to our CFO?"
-                return "I appreciate that. Here is our bottleneck: our current setup takes three weeks for custom integration. Can you beat that?"
+            return f"Good, let's keep it direct: My main concern right now is that {primary_objection}. How do you solve that?"
 
-        # 5. Direct / confrontational / frustrated questions
+        # 7. Direct / confrontational / frustrated questions
         if any(
             phrase in msg_lower
             for phrase in ["what's your problem", "what is your problem", "why are you", "what is wrong", "what's the issue", "what's the catch"]
         ):
-            if is_leadership:
-                return "My concern is accountability and fairness. My people have been delivering nights and weekends, and seeing senior management bypass our input creates serious resentment."
-            else:
-                return "My issue is accountability. I answer for our department's deadlines. Every new tool carries risk until we see proof on our own data. How do you address that?"
+            return f"My concern is accountability. As {char_role}, I answer for our deliverables, and {primary_objection}. How do you address that?"
 
-        # 6. Priorities / Budget / Objectives inquiry
+        # 8. Priorities / Budget / Objectives inquiry
         if any(
             q in msg_lower
-            for q in ["priorit", "cost", "roi", "finance", "mandate", "budget cap", "cfo", "budget", "resource"]
+            for q in ["priorit", "cost", "roi", "finance", "mandate", "budget cap", "cfo", "budget", "resource", "target"]
         ):
-            if is_leadership:
-                return "Our priority has to be operational continuity. If we shuffle headcount or change priorities mid-quarter, we risk missing our core SLA commitments."
-            else:
-                return "Our leadership set a strict cost reduction mandate this quarter. If you can show clear ROI to finance, we can take a serious look."
+            return f"Our priority is straightforward: we must ensure {primary_objection} is resolved without putting the rest of the operation at risk. If you can prove that, we can move forward."
 
-        # 7. General Discovery questions
+        # 9. General Discovery questions
         if any(
             q in msg_lower
             for q in [
@@ -193,45 +231,24 @@ class MockLLMProvider(LLMProvider):
                 "where do you stand",
             ]
         ):
-            if is_leadership:
-                if user_turn_count >= 2:
-                    return "Here is the reality on the ground: people feel blindsided by recent decisions and are hesitant to speak up. How will you rebuild that psychological safety?"
-                return "Right now there is deep friction between engineering and product on delivery expectations. How do you propose we bridge that divide?"
-            else:
-                if "hidden motivations" in system_prompt.lower() or "cost-cut" in system_prompt.lower():
-                    if user_turn_count >= 2:
-                        return "Here is the reality: our leadership set a strict budget cap for this quarter. If you can help us prove ROI to finance, we can talk."
-                return "Right now we're losing hours every week to manual workarounds. What specifically can your team do to fix that without disrupting daily ops?"
+            active_obj = objections[user_turn_count % len(objections)]
+            return f"From my perspective: {active_obj}. How does your approach address that directly?"
 
-        # 8. Value proposition & differentiation claims
+        # 10. Value proposition & claims
         if any(
             w in msg_lower
-            for w in ["differentiat", "better", "faster", "efficiency", "save time", "advantage", "guarantee", "quality"]
+            for w in ["differentiat", "better", "faster", "efficiency", "save time", "advantage", "guarantee", "quality", "proven"]
         ):
-            if is_leadership:
-                return "That sounds good in theory, but when rubber meets the road, how do we hold leadership accountable to these standards?"
-            else:
-                return "That sounds good on paper, but how does that play out for our daily team members who actually have to use it?"
+            return f"That sounds good on paper, but in our day-to-day work, {secondary_objection}. What concrete evidence can you show me?"
 
-        # 9. Natural rotating responses without formulaic phrasing
-        if is_leadership:
-            fallback_cycle = [
-                "I hear your point, but how does this impact our team's current quarterly delivery commitments?",
-                "That sounds reasonable in theory, but my people are already working 50-hour weeks. What are we deprioritizing?",
-                "I need concrete reassurance that senior leadership will back us if cross-functional dependencies stall.",
-                "If we commit to this new process, what specific support or escalation path will you provide when roadblocks emerge?",
-                "I appreciate you listening to my perspective. What does success look like for this initiative over the next 30 days?",
-                "Let's make sure we have clear alignment before announcing this to the broader department. What are the key messages?",
-            ]
-        else:
-            fallback_cycle = [
-                "Thanks for reaching out. We're looking at our options this week. What makes your approach different from what we already have?",
-                "I hear you, but my biggest worry is rollout friction. How do you get our coordinators onboard without dropping orders?",
-                "That makes sense. The real sticking point with our executive team is whether you can commit to strict SLA numbers in writing.",
-                "We're looking at two other proposals this week. What makes your solution safer to bet on than sticking with our current process?",
-                "We need to make a decision by Friday. If we move forward with you, what happens on day one?",
-                "If you can show me how this saves real hours without breaking our current workflow, I'm open to a trial.",
-            ]
+        # 11. Contextual Scenario Fallback Cycle
+        fallback_cycle = [
+            f"I hear what you're saying, but my biggest concern remains that {primary_objection}. How do we navigate that?",
+            f"That sounds reasonable in theory, but as {char_role}, I need to know: how does this impact our immediate commitments?",
+            f"If we commit to this direction, what specific support or escalation path will you provide when issues arise?",
+            f"I appreciate you listening to my perspective. What does a successful resolution look like from your side over the next 30 days?",
+            f"Let's make sure we have clear alignment before we proceed. What are the key milestones you're committing to?",
+        ]
 
         # Pick the first response in fallback_cycle that has not already been said
         for candidate in fallback_cycle:
@@ -282,6 +299,109 @@ class MockLLMProvider(LLMProvider):
         q2_seq, q2_text = trainee_turns[min(1, len(trainee_turns) - 1)]
         q3_seq, q3_text = trainee_turns[-1]
 
+        total_trainee_words = sum(len(text.split()) for _, text in trainee_turns)
+        total_trainee_turns = len(trainee_turns)
+        all_trainee_text = " ".join(t.lower() for _, t in trainee_turns).strip()
+
+        # Check if conversation is non-substantive / trivial (e.g., student only said "sorry", single-word, or very few words)
+        is_apology_only = any(
+            all_trainee_text == w or all_trainee_text.startswith(w)
+            for w in ["sorry", "i am sorry", "im sorry", "my apologies", "apologies", "my bad"]
+        )
+        is_trivial = total_trainee_turns <= 1 or total_trainee_words < 12 or is_apology_only
+
+        if is_trivial:
+            overall_summary = (
+                f"Session terminated prematurely with non-substantive participation. You submitted minimal dialogue (e.g., \"{q1_text}\"), offering no discovery questions, active listening, or structured problem-solving. In an executive interaction, passive or single-word responses fail to build credibility or resolve counterpart concerns."
+            )
+            report = {
+                "overall_summary": overall_summary,
+                "skill_scores": [
+                    {
+                        "skill": s,
+                        "score": 1,
+                        "rubric_level_reached": "Level 1: Minimal or no demonstration of skill. Trainee offered non-substantive responses without addressing core scenario objectives.",
+                        "justification": f"Failed to demonstrate {s.replace('_', ' ')}. Submitted minimal dialogue (\"{q1_text}\") without exploring counterpart requirements or proposing structured solutions.",
+                    }
+                    for s in skills
+                ],
+                "what_worked": [
+                    {
+                        "moment_seq": q1_seq,
+                        "quote": q1_text,
+                        "why_it_worked": "Acknowledged communication politely, though without addressing any business objectives or underlying operational issues.",
+                    }
+                ],
+                "what_didnt": [
+                    {
+                        "moment_seq": q1_seq,
+                        "quote": q1_text,
+                        "why_it_missed": "Submitted a superficial response without probing the counterpart's core business problem or establishing actionable direction.",
+                    }
+                ],
+                "key_moments": [
+                    {
+                        "moment_seq": q1_seq,
+                        "quote": q1_text,
+                        "what_happened": "Non-substantive or premature interaction.",
+                        "why_it_matters": "Leaving a stakeholder or client with a minimal response halts the conversation and damages professional standing.",
+                        "alternative_phrasing": "I understand the urgency around this deliverable and take full ownership. Can you share what impact this is having on your team's immediate milestones so we can prioritize together?",
+                        "reasoning": "This works better because pairing accountability with an exploratory question immediately re-opens constructive problem-solving.",
+                    },
+                    {
+                        "moment_seq": q1_seq,
+                        "quote": q1_text,
+                        "what_happened": "Absence of discovery inquiry.",
+                        "why_it_matters": "Failing to ask open questions leaves the counterpart's constraints unaddressed.",
+                        "alternative_phrasing": "What are the two most critical bottlenecks your department needs resolved before the end of the week?",
+                        "reasoning": "This works better because structured discovery uncovers the counterpart's real operational constraints.",
+                    },
+                    {
+                        "moment_seq": q1_seq,
+                        "quote": q1_text,
+                        "what_happened": "Failure to establish follow-up or commitment.",
+                        "why_it_matters": "Ending without a defined next step stalls the relationship and leaves issues unresolved.",
+                        "alternative_phrasing": "Let's review the revised operational plan together on Thursday at 2 PM to ensure we are aligned.",
+                        "reasoning": "This works better because proposing a concrete time and agenda secures stakeholder buy-in.",
+                    },
+                ],
+                "hidden_reveal": "The counterpart needed structured operational reassurance and proactive problem-solving rather than passive agreement or bare apologies.",
+                "success_criteria_results": [
+                    {
+                        "criterion": "Uncover underlying counterpart objectives",
+                        "met": False,
+                        "evidence": f"Trainee exited after non-substantive input \"{q1_text}\" without asking discovery questions.",
+                    },
+                    {
+                        "criterion": "Secure clear commitment and next steps",
+                        "met": False,
+                        "evidence": "Session concluded prematurely without establishing actionable follow-up or commitments.",
+                    },
+                ],
+                "improvement_steps": [
+                    {
+                        "step": "Engage in at least 4 to 6 substantive conversation exchanges",
+                        "why": "Executive problem-solving requires thorough discovery before reaching solutions.",
+                        "practice_drill": "Practice complete responses that combine empathy with an open-ended question.",
+                        "linked_skill": skills[0] if skills else "discovery_questions",
+                    },
+                    {
+                        "step": "Never reply with an isolated apology or single-word agreement",
+                        "why": "A bare apology leaves the counterpart holding the problem with zero confidence in resolution.",
+                        "practice_drill": "Pair every apology with a concrete corrective action proposal and a clarifying question.",
+                        "linked_skill": skills[1] if len(skills) > 1 else "objection_handling",
+                    },
+                    {
+                        "step": "Lock down concrete next steps and milestones before concluding",
+                        "why": "Unscheduled intentions lead to stalled initiatives and lost deals.",
+                        "practice_drill": "Propose an exact date, time, and attendee list on your final turn.",
+                        "linked_skill": skills[2] if len(skills) > 2 else "closing_next_steps",
+                    },
+                ],
+            }
+            return json.dumps(report)
+
+        # Substantive conversation evaluation
         overall_summary = (
             "You maintained executive presence under pushback and focused on aligning expectations and psychological safety. To improve, clarify concrete operational boundaries earlier in the discussion."
             if is_leadership_eval

@@ -31,6 +31,8 @@ export interface ScenarioListItem {
   title: string;
   topic: string;
   difficulty: number;
+  difficulty_level?: 'Normal' | 'Challenging' | 'Crisis' | string;
+  primary_capability?: string;
   duration_limit_seconds: number;
   skills_assessed: SkillAssessedPreview[];
   tags: string[];
@@ -66,6 +68,10 @@ export interface SimulationSession {
   end_reason?: string;
   token_usage: number;
   turn_count: number;
+  trainee_name?: string;
+  user_id?: string;
+  cohort_name?: string;
+  overall_score?: number;
   messages: SessionMessage[];
 }
 
@@ -213,6 +219,16 @@ export interface AdminCohort {
   budget_cap_usd: number;
   track_access: string[];
   initial_passcode?: string;
+}
+
+export interface CohortMember {
+  id: string;
+  cohort_id?: string;
+  display_name: string;
+  role: 'trainee' | 'group_admin' | 'super_admin';
+  is_active: boolean;
+  last_login_at?: string;
+  created_at: string;
 }
 
 export interface AdminScenarioVersion {

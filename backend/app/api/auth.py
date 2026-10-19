@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
-from typing import Any, Dict
+from typing import Any, Dict, Optional
 
 from fastapi import APIRouter, Depends, Request, status
-from fastapi.security import HTTPAuthorizationCredentials
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from sqlalchemy import and_, delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
@@ -47,21 +47,21 @@ async def login(
 
 @router.post("/logout", status_code=status.HTTP_200_OK)
 async def logout(
-    credentials: HTTPAuthorizationCredentials = Depends(security),
-    current_user: User = Depends(get_current_user),
+    credentials: Optional[HTTPAuthorizationCredentials] = Depends(HTTPBearer(auto_error=False)),
     db: AsyncSession = Depends(get_db),
 ):
-    token = credentials.credentials
-    t_hash = hash_token(token)
-    now = datetime.now(timezone.utc)
+    if credentials:
+        token = credentials.credentials
+        t_hash = hash_token(token)
+        now = datetime.now(timezone.utc)
 
-    stmt = (
-        update(AuthSession)
-        .where(and_(AuthSession.token_hash == t_hash, AuthSession.user_id == current_user.id))
-        .values(revoked_at=now)
-    )
-    await db.execute(stmt)
-    await db.commit()
+        stmt = (
+            update(AuthSession)
+            .where(AuthSession.token_hash == t_hash)
+            .values(revoked_at=now)
+        )
+        await db.execute(stmt)
+        await db.commit()
     return {"message": "Logged out successfully"}
 
 

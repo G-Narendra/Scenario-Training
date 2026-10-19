@@ -55,6 +55,20 @@ class ScenarioConfigSchema(BaseModel):
                 f"Sum of skills_assessed weights must equal 1.0, got {total_weight:.3f}"
             )
         return self
+    @property
+    def difficulty_level(self) -> str:
+        if self.difficulty <= 1:
+            return "Normal"
+        elif self.difficulty == 2:
+            return "Challenging"
+        else:
+            return "Crisis"
+
+    @property
+    def primary_capability(self) -> str:
+        if self.target_capabilities and len(self.target_capabilities) > 0:
+            return self.target_capabilities[0]
+        return self.topic.replace("_", " ").title()
 
 
 # Public Trainee Response Schemas (Zero Leakage)
@@ -76,6 +90,8 @@ class PublicScenarioListItem(BaseModel):
     title: str
     topic: str
     difficulty: int
+    difficulty_level: str = "Normal"
+    primary_capability: str = ""
     duration_limit_seconds: int
     skills_assessed: List[PublicSkillPreview]
     tags: List[str]
@@ -90,6 +106,8 @@ class PublicScenarioDetail(BaseModel):
     title: str
     topic: str
     difficulty: int
+    difficulty_level: str = "Normal"
+    primary_capability: str = ""
     duration_limit_seconds: int
     turn_limit: int
     brief: str

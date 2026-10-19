@@ -147,7 +147,19 @@ async def voice_websocket_endpoint(websocket: WebSocket, session_id: str):
             elif msg_type == "audio.commit":
                 # Trainee finished turn speaking
                 turn_start_time = time.perf_counter()
-                final_trainee_text = await voice_provider.finalize_trainee_turn()
+                client_text = (msg.get("text") or msg.get("transcript") or "").strip()
+                if client_text:
+                    final_trainee_text = client_text
+                else:
+                    final_trainee_text = await voice_provider.finalize_trainee_turn()
+
+                if not final_trainee_text or final_trainee_text.strip() in ("...", ".", ""):
+                    logger.info(f"Silence/noise detected on session {session_id}, ignoring turn.")
+                    await websocket.send_text(
+                        json.dumps({"type": "transcript.silence", "message": "Listening..."})
+                    )
+                    continue
+
                 await websocket.send_text(
                     json.dumps({"type": "transcript.final", "text": final_trainee_text})
                 )

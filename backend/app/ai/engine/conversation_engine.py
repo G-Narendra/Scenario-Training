@@ -97,7 +97,7 @@ class ConversationEngine:
             .where(SimulationSession.id == session_id)
             .options(
                 selectinload(SimulationSession.messages),
-                selectinload(SimulationSession.scenario),
+                selectinload(SimulationSession.scenario).selectinload(Scenario.track),
                 selectinload(SimulationSession.user),
             )
         )
@@ -114,6 +114,18 @@ class ConversationEngine:
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"Session is already closed with status '{session.status}'.",
             )
+
+        # Snapshot scenario attributes upfront to prevent any async lazy-load issues during stream
+        scenario = session.scenario
+        scenario_track_key = scenario.track.key if (scenario and scenario.track) else "leadership"
+        scenario_title = scenario.title if scenario else "Practice Scenario"
+        scenario_brief = scenario.brief if scenario else ""
+        scenario_difficulty = scenario.difficulty if scenario else 3
+        scenario_persona = scenario.persona if scenario else {}
+        scenario_objections = scenario.objections if scenario else []
+        scenario_hidden_motivations = scenario.hidden_motivations if scenario else []
+        scenario_conclusion_signals = scenario.conclusion_signals if scenario else {}
+        scenario_curveballs = scenario.curveballs if scenario else []
 
         now = datetime.now(timezone.utc)
         meta = dict(session.state_metadata)
@@ -158,7 +170,7 @@ class ConversationEngine:
         await self.db.flush()
 
         # 4. Evaluate curveballs
-        curveballs = session.scenario.curveballs or []
+        curveballs = scenario_curveballs
         fired_curveballs = list(meta.get("fired_curveballs", []))
         history_dicts = [{"role": m.role, "content": m.content} for m in session.messages]
 
@@ -189,7 +201,7 @@ class ConversationEngine:
                 emotional_state = "softening"
 
             # Check if trainee questions uncovered an unrevealed motivation
-            hidden_motivations = session.scenario.hidden_motivations or []
+            hidden_motivations = scenario_hidden_motivations
             for h in hidden_motivations:
                 if h not in revealed_motivations and ("cost" in h.lower() or "budget" in h.lower()):
                     if any(
@@ -208,13 +220,14 @@ class ConversationEngine:
 
         # 6. Compose system prompt using PersonaPromptBuilder
         scenario_data = {
-            "title": session.scenario.title,
-            "brief": session.scenario.brief,
-            "difficulty": session.scenario.difficulty,
-            "persona": session.scenario.persona,
-            "objections": session.scenario.objections,
-            "hidden_motivations": session.scenario.hidden_motivations,
-            "conclusion_signals": session.scenario.conclusion_signals,
+            "title": scenario_title,
+            "brief": scenario_brief,
+            "difficulty": scenario_difficulty,
+            "persona": scenario_persona,
+            "objections": scenario_objections,
+            "hidden_motivations": scenario_hidden_motivations,
+            "conclusion_signals": scenario_conclusion_signals,
+            "track": scenario_track_key,
         }
 
         system_prompt = PersonaPromptBuilder.build_system_prompt(
@@ -254,12 +267,12 @@ class ConversationEngine:
         )
         self.db.add(c_msg)
 
-        # 10. Check for natural conclusion (guarded: min 5 turns before natural conclusion allowed)
+        # 10. Check for natural conclusion (guarded: min 4 turns before natural conclusion allowed)
         is_concluded, outcome, reason = ConclusionDetector.detect_heuristic(
             last_counterpart_message=full_reply,
-            conclusion_signals=session.scenario.conclusion_signals,
+            conclusion_signals=scenario_conclusion_signals,
             current_turn=turn_count,
-            min_turns=2,
+            min_turns=3,
         )
         if is_concluded:
             session.status = "completed"

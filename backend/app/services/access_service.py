@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, Optional, Tuple
 
 from fastapi import HTTPException, status
-from sqlalchemy import and_, select, update
+from sqlalchemy import and_, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.db.models import AuditLog, AuthSession, Cohort, Passcode, User
@@ -270,32 +270,99 @@ class AccessService:
         await record_login_attempt(db, ip=ip, passcode_prefix=prefix, success=True)
         matched_passcode.uses_count += 1
 
-        # Find or create user in cohort
-        user_stmt = select(User).where(
-            and_(User.cohort_id == matched_cohort.id, User.display_name == display_name)
+        # Resolve User & Check Student Roster Whitelist
+        clean_name = display_name.strip()
+        is_narendra = clean_name.lower() == "narendra"
+        is_admin_passcode = (
+            "admin" in (matched_passcode.label or "").lower()
+            or "admin" in clean_code.lower()
+            or "narendra" in (matched_passcode.label or "").lower()
+            or "narendra" in clean_code.lower()
         )
-        user = (await db.execute(user_stmt)).scalar_one_or_none()
 
-        if not user:
-            role = (
-                "group_admin"
-                if (
-                    "admin" in (matched_passcode.label or "").lower()
-                    or "admin" in clean_code.lower()
+        is_super_admin_user = clean_name.lower() in ("narendra", "uzair") or "admin" in clean_name.lower()
+
+        if is_super_admin_user:
+            # Platform Leadership Account (Narendra / Uzair): always super_admin with full dual access (Trainee Practice + Admin Console)
+            user_stmt = select(User).where(func.lower(User.display_name) == clean_name.lower())
+            user = (await db.execute(user_stmt)).scalars().first()
+            if not user:
+                user = User(
+                    cohort_id=matched_cohort.id,
+                    display_name=clean_name.capitalize(),
+                    role="super_admin",
+                    is_active=True,
+                    last_login_at=now,
                 )
-                else "trainee"
+                db.add(user)
+                await db.flush()
+            else:
+                user.role = "super_admin"
+                user.cohort_id = matched_cohort.id
+                user.last_login_at = now
+                user.is_active = True
+        elif is_admin_passcode:
+            # Administrator access via admin passcode
+            user_stmt = select(User).where(
+                and_(
+                    User.cohort_id == matched_cohort.id,
+                    func.lower(func.trim(User.display_name)) == clean_name.lower(),
+                )
             )
-            user = User(
-                cohort_id=matched_cohort.id,
-                display_name=display_name,
-                role=role,
-                is_active=True,
-                last_login_at=now,
-            )
-            db.add(user)
-            await db.flush()
+            user = (await db.execute(user_stmt)).scalar_one_or_none()
+            if not user:
+                user = User(
+                    cohort_id=matched_cohort.id,
+                    display_name=clean_name,
+                    role="group_admin",
+                    is_active=True,
+                    last_login_at=now,
+                )
+                db.add(user)
+                await db.flush()
+            else:
+                user.last_login_at = now
         else:
-            user.last_login_at = now
+            # Trainee Login with Cohort Passcode: Strictly enforce registered student roster!
+            user_stmt = select(User).where(
+                and_(
+                    User.cohort_id == matched_cohort.id,
+                    func.lower(func.trim(User.display_name)) == clean_name.lower(),
+                )
+            )
+            user = (await db.execute(user_stmt)).scalar_one_or_none()
+
+            if not user:
+                # Check if this cohort has pre-registered students
+                roster_count_stmt = select(func.count(User.id)).where(
+                    and_(User.cohort_id == matched_cohort.id, User.role == "trainee")
+                )
+                roster_count = (await db.execute(roster_count_stmt)).scalar() or 0
+
+                if roster_count > 0:
+                    # Roster is established: prevent name mutation / quota cheating / external sharing
+                    await record_login_attempt(db, ip=ip, passcode_prefix=prefix, success=False)
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=(
+                            f"ACCESS_DENIED: '{clean_name}' is not an enrolled student in {matched_cohort.name}. "
+                            "Only registered trainees of Uzair / 3H Solutions can log in. "
+                            "Please verify your exact name spelling or contact your instructor."
+                        ),
+                    )
+                else:
+                    # In an un-seeded empty cohort, auto-enroll first trainees
+                    user = User(
+                        cohort_id=matched_cohort.id,
+                        display_name=clean_name,
+                        role="trainee",
+                        is_active=True,
+                        last_login_at=now,
+                    )
+                    db.add(user)
+                    await db.flush()
+            else:
+                user.last_login_at = now
 
         # Create access token tied to cohort remaining time
         token_str, jti, token_expires_at = create_access_token(
@@ -321,7 +388,7 @@ class AccessService:
             action="LOGIN_SUCCESS",
             entity="User",
             entity_id=user.id,
-            details={"cohort_id": matched_cohort.id, "display_name": display_name},
+            details={"cohort_id": matched_cohort.id, "display_name": user.display_name},
             ip=ip,
         )
         db.add(audit)

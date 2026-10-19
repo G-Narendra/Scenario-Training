@@ -141,7 +141,7 @@ export const TacticalClueCard: React.FC<TacticalClueCardProps> = ({
             {targetCapabilities.length > 0 && (
               <div className="space-y-2">
                 <h4 className="text-sm font-bold uppercase tracking-wider text-[#FF6500]">
-                  Targeted Leadership Capabilities (160 Rubric)
+                  Targeted Leadership Competencies
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {targetCapabilities.map((cap, i) => (
@@ -164,7 +164,7 @@ export const TacticalClueCard: React.FC<TacticalClueCardProps> = ({
                 onClick={() => setIsModalOpen(false)}
                 className="rounded-xl bg-[#FF6500] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#E05A00] transition shadow-md"
               >
-                Got It — Return to Simulation
+                Got It — Return to Practice
               </button>
             </div>
           </div>

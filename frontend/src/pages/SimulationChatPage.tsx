@@ -2,29 +2,21 @@ import React, { useEffect, useRef, useState } from 'react';
 import { api } from '../api/client';
 import { ScenarioDetail, SessionMessage, SimulationSession } from '../types';
 import { VoiceClient } from '../voice/voiceClient';
-import { DifficultyBadge } from '../components/DifficultyBadge';
-import { TacticalClueCard } from '../components/TacticalClueCard';
 import {
-  Activity,
   AlertTriangle,
   ArrowRight,
-  BookOpen,
-  CheckCircle,
-  ChevronLeft,
-  ChevronRight,
+  ChevronDown,
+  ChevronUp,
   Clock,
-  Compass,
   Hand,
-  Info,
   LogOut,
   MessageSquare,
   Mic,
   MicOff,
-  Radio,
   Send,
-  Shield,
   Sparkles,
-  Target,
+  UserCheck,
+  Volume2,
 } from 'lucide-react';
 
 interface SimulationChatPageProps {
@@ -47,8 +39,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   const [elapsedSeconds, setElapsedSeconds] = useState(0);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [isEnding, setIsEnding] = useState(false);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [activeTab, setActiveTab] = useState<'persona' | 'brief' | 'rubric'>('persona');
+  const [showRoleDrawer, setShowRoleDrawer] = useState(false);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -62,16 +53,17 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
   // Voice Mode State
   const [voiceClient, setVoiceClient] = useState<VoiceClient | null>(null);
-  const [isVoiceConnected, setIsVoiceConnected] = useState(false);
-  const [isRecordingMic, setIsRecordingMic] = useState(false);
+  const [, setIsVoiceConnected] = useState(false);
+  const [, setIsRecordingMic] = useState(false);
+  const [isMicMuted, setIsMicMuted] = useState(false);
   const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
   const [voicePartial, setVoicePartial] = useState('');
-  const [voiceLatencyMs, setVoiceLatencyMs] = useState<number | null>(null);
+  const [, setVoiceLatencyMs] = useState<number | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load Scenario Specification (Persona, Brief, Rubric Skills)
+  // Load Scenario Specification (Persona, Brief)
   useEffect(() => {
     if (!session.scenario_id) return;
     api.getScenarioDetail(session.scenario_id)
@@ -79,24 +71,13 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       .catch((err) => console.error('Failed to load scenario details', err));
   }, [session.scenario_id]);
 
-  // Auto-scroll to bottom
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages, streamingReply, voicePartial]);
-
-  // Elapsed timer
+  // Timer Effect
   useEffect(() => {
     if (session.status !== 'active') return;
-
-    const timer = setInterval(() => {
+    const interval = setInterval(() => {
       setElapsedSeconds((prev) => prev + 1);
     }, 1000);
-
-    return () => clearInterval(timer);
+    return () => clearInterval(interval);
   }, [session.status]);
 
   // Initialize Voice Client if in voice mode
@@ -138,11 +119,15 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       onAssistantSpeaking: (speaking) => {
         setIsAssistantSpeaking(speaking);
       },
+      onMicStatusChange: (isCapturing, muted) => {
+        setIsRecordingMic(isCapturing);
+        setIsMicMuted(muted);
+      },
       onTurnComplete: (latency) => {
         setVoiceLatencyMs(latency);
       },
       onError: (err) => {
-        console.error('Voice client notice:', err);
+        console.error('Voice notice:', err);
         setVoiceError(err);
       },
       onSessionEnded: () => {
@@ -163,6 +148,11 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     };
   }, [session.id, session.mode, session.status]);
 
+  // Scroll to bottom on message updates
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages, streamingReply]);
+
   const formatTimer = (totalSec: number) => {
     const mins = Math.floor(totalSec / 60);
     const secs = totalSec % 60;
@@ -175,8 +165,8 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
     const traineeText = inputText.trim();
     setInputText('');
-
     const nextSeq = messages.length + 1;
+
     const traineeMsg: SessionMessage = {
       seq: nextSeq,
       role: 'trainee',
@@ -224,28 +214,55 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     );
   };
 
-  const toggleMicCapture = async () => {
+  const toggleMicMute = () => {
     if (!voiceClient) return;
+    const muted = voiceClient.toggleMute();
+    setIsMicMuted(muted);
+  };
 
-    if (!isRecordingMic) {
-      try {
-        await voiceClient.startAudioCapture();
-        setIsRecordingMic(true);
-      } catch (err) {
-        console.error('Mic capture failed', err);
-      }
-    } else {
-      voiceClient.commitTurn();
-      voiceClient.stopAudioCapture();
-      setIsRecordingMic(false);
+  const handlePlayMessageAudio = (text: string) => {
+    if (voiceClient) {
+      voiceClient.speakText(text);
+    } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      const utterance = new SpeechSynthesisUtterance(
+        text
+          .replace(/\*\*([^*]+)\*\*/g, '$1')
+          .replace(/\*([^*]+)\*/g, '$1')
+          .replace(/#+\s/g, '')
+          .replace(/`/g, '')
+          .trim()
+      );
+      utterance.rate = 1.02;
+      utterance.pitch = 1.0;
+      utterance.lang = 'en-US';
+      const voices = window.speechSynthesis.getVoices();
+      const naturalVoice =
+        voices.find(
+          (v) =>
+            v.lang.startsWith('en') &&
+            (v.name.includes('Natural') ||
+              v.name.includes('Google') ||
+              v.name.includes('Online') ||
+              v.name.includes('Guy') ||
+              v.name.includes('Jenny') ||
+              v.name.includes('Samantha'))
+        ) ||
+        voices.find((v) => v.lang.startsWith('en')) ||
+        voices[0];
+      if (naturalVoice) utterance.voice = naturalVoice;
+      window.speechSynthesis.speak(utterance);
     }
   };
 
   const handleInterrupt = () => {
     if (voiceClient) {
       voiceClient.interrupt();
-      setIsAssistantSpeaking(false);
     }
+    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+    }
+    setIsAssistantSpeaking(false);
   };
 
   const handleEndSessionExplicit = async () => {
@@ -267,575 +284,437 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   };
 
   const isSessionClosed = session.status !== 'active';
-  const personaName = scenarioDetail?.persona?.name || 'Simulation Partner';
-  const personaRole = scenarioDetail?.persona?.role || 'Prospect / Executive';
-  const currentExchange = Math.floor(messages.length / 2) + 1;
-  const maxExchanges = scenarioDetail?.turn_limit || 25;
-  const progressPercent = Math.min(100, Math.round((currentExchange / maxExchanges) * 100));
-
-  // Dynamic emotional state indicator
-  const emotionalState =
-    currentExchange <= 2
-      ? { label: 'Pleasant & Guarded', color: 'text-amber-400', bg: 'bg-amber-400/10 border-amber-400/30' }
-      : currentExchange <= 4
-      ? { label: 'Cautiously Listening', color: 'text-[#FF6500]', bg: 'bg-[#FF6500]/10 border-[#FF6500]/30' }
-      : { label: 'Evaluating Value & ROI', color: 'text-emerald-400', bg: 'bg-emerald-400/10 border-emerald-400/30' };
+  const personaName = scenarioDetail?.persona?.name || 'Counterpart';
+  const personaRole = scenarioDetail?.persona?.role || 'Executive';
+  const counterpartInitials = personaName
+    .split(' ')
+    .filter(Boolean)
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] bg-slate-50 text-slate-900 dark:bg-[#0B192C] dark:text-slate-100 overflow-hidden transition-colors duration-200">
-      {/* ================================================================= */}
-      {/* LEFT SIDEBAR: Character Persona & Scenario Briefing Cockpit       */}
-      {/* ================================================================= */}
-      <aside
-        className={`${
-          isSidebarOpen ? 'w-80 lg:w-96' : 'w-0'
-        } transition-all duration-300 ease-in-out border-r border-slate-200 bg-white/95 dark:border-slate-800/80 dark:bg-slate-900/60 flex flex-col overflow-hidden relative backdrop-blur-xl z-20`}
-      >
-        <div className="p-4 border-b border-slate-200 dark:border-slate-800/80 flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Shield className="h-4 w-4 text-indigo-500 dark:text-indigo-400" />
-            <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300 font-heading">
-              Scenario Briefing
-            </span>
-          </div>
-          <button
-            onClick={() => setIsSidebarOpen(false)}
-            className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition lg:hidden"
-            aria-label="Collapse briefing"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Tab Navigation in Sidebar */}
-        <div className="flex border-b border-slate-800/80 px-3 pt-2 bg-slate-950/40">
-          <button
-            onClick={() => setActiveTab('persona')}
-            className={`flex-1 pb-2 text-xs font-semibold text-center border-b-2 transition ${
-              activeTab === 'persona'
-                ? 'border-indigo-500 text-indigo-300'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Partner Profile
-          </button>
-          <button
-            onClick={() => setActiveTab('brief')}
-            className={`flex-1 pb-2 text-xs font-semibold text-center border-b-2 transition ${
-              activeTab === 'brief'
-                ? 'border-indigo-500 text-indigo-300'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Mission & Goals
-          </button>
-          <button
-            onClick={() => setActiveTab('rubric')}
-            className={`flex-1 pb-2 text-xs font-semibold text-center border-b-2 transition ${
-              activeTab === 'rubric'
-                ? 'border-indigo-500 text-indigo-300'
-                : 'border-transparent text-slate-400 hover:text-slate-200'
-            }`}
-          >
-            Skills Tested
-          </button>
-        </div>
-
-        {/* Tab Contents */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-4">
-          {activeTab === 'persona' && (
-            <div className="space-y-4">
-              {/* Persona Avatar & Title */}
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-                <div className="flex items-center space-x-3">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-indigo-600 to-violet-600 font-bold text-white shadow-lg shadow-indigo-600/30">
-                    {personaName.split(' ').map((n) => n[0]).join('')}
-                  </div>
-                  <div>
-                    <h3 className="text-base font-bold text-white">{personaName}</h3>
-                    <p className="text-xs text-indigo-300 font-medium">{personaRole}</p>
-                  </div>
-                </div>
-
-                {/* Emotional State Indicator */}
-                <div className="mt-4 pt-3 border-t border-slate-800/80">
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center space-x-1.5">
-                    <Activity className="h-3 w-3 text-indigo-400" />
-                    <span>Real-Time Emotional Baseline</span>
-                  </div>
-                  <div className={`inline-flex items-center space-x-2 rounded-full border px-2.5 py-1 text-xs font-semibold ${emotionalState.bg} ${emotionalState.color}`}>
-                    <span className="h-2 w-2 rounded-full bg-current animate-pulse" />
-                    <span>{emotionalState.label}</span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Communication Style */}
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1 flex items-center space-x-1">
-                  <Info className="h-3 w-3 text-indigo-400" />
-                  <span>Communication Profile</span>
-                </div>
-                <p className="text-xs text-slate-300 leading-relaxed">
-                  {scenarioDetail?.persona?.communication_style ||
-                    'Speaks pleasantly but provides brief, high-level answers. Avoids commitment unless prompted with relevant, high-impact business questions.'}
-                </p>
-              </div>
-
-              {/* High-Contrast Tactical Coaching Clue in Sidebar */}
-              {scenarioDetail?.tactical_coaching_clue && (
-                <div className="pt-2">
-                  <TacticalClueCard
-                    clue={scenarioDetail.tactical_coaching_clue}
-                    scenarioTitle={scenarioDetail.title}
-                    targetCapabilities={scenarioDetail.target_capabilities}
-                  />
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === 'brief' && (
-            <div className="space-y-4">
-              <div className="rounded-2xl border border-slate-800 bg-slate-950/60 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 flex items-center space-x-1.5">
-                  <Target className="h-3.5 w-3.5 text-indigo-400" />
-                  <span>Your Role & Situation</span>
-                </div>
-                <p className="text-xs text-slate-200 leading-relaxed whitespace-pre-line">
-                  {scenarioDetail?.brief ||
-                    'You are holding an initial discovery meeting with a prospective customer. Establish relevance, listen actively, and secure a concrete next step.'}
-                </p>
-              </div>
-
-              <div className="rounded-2xl border border-emerald-500/20 bg-emerald-950/15 p-4">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-400 mb-1.5 flex items-center space-x-1.5">
-                  <CheckCircle className="h-3.5 w-3.5" />
-                  <span>Primary Mission Target</span>
-                </div>
-                <p className="text-xs text-emerald-200/90 leading-relaxed">
-                  Secure a calendar-confirmed follow-up meeting with team data or workflow deep-dive, without making premature pricing concessions.
-                </p>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'rubric' && (
-            <div className="space-y-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-1">
-                Executive Competencies Evaluated
-              </div>
-              {scenarioDetail?.skills_assessed && scenarioDetail.skills_assessed.length > 0 ? (
-                scenarioDetail.skills_assessed.map((sa, idx) => (
-                  <div key={idx} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-                    <div className="flex items-center justify-between text-xs font-bold text-white capitalize">
-                      <span>{sa.skill.replace(/_/g, ' ')}</span>
-                      <span className="text-indigo-400">{Math.round(sa.weight * 100)}% Weight</span>
-                    </div>
-                    <div className="mt-2 h-1.5 w-full rounded-full bg-slate-800 overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-violet-500"
-                        style={{ width: `${Math.round(sa.weight * 100)}%` }}
-                      />
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <div className="text-xs text-slate-400">
-                  Active Listening, Discovery Questions, Rapport Adaptation, and Closing Next Steps.
-                </div>
-              )}
-            </div>
-          )}
-        </div>
-      </aside>
-
-      {/* ================================================================= */}
-      {/* MAIN STAGE: Live Simulation Arena & Message Stream               */}
-      {/* ================================================================= */}
-      <main className="flex-1 flex flex-col relative overflow-hidden">
-        {/* Top Header Bar */}
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white/90 px-4 py-3 backdrop-blur-xl sm:px-6 z-10 dark:border-slate-800/80 dark:bg-slate-900/60">
-          <div className="flex items-center space-x-3">
-            {!isSidebarOpen && (
-              <button
-                onClick={() => setIsSidebarOpen(true)}
-                className="p-1.5 rounded-xl border border-slate-200 bg-slate-50 text-slate-700 hover:text-slate-900 hover:bg-slate-100 dark:border-slate-800 dark:bg-slate-950 dark:text-slate-300 dark:hover:text-white dark:hover:bg-slate-800 transition"
-                title="Expand Scenario Briefing"
-                aria-label="Expand Scenario Briefing"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            )}
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FF6500]/15 text-[#FF6500] border border-[#FF6500]/30">
-              <Compass className="h-5 w-5" />
-            </div>
-
-            <div>
-              <div className="flex items-center space-x-2.5">
-                <h2 className="text-sm font-black text-slate-900 dark:text-white tracking-tight sm:text-base font-heading">
-                  {session.scenario_title}
-                </h2>
-                {scenarioDetail && (
-                  <DifficultyBadge difficulty={scenarioDetail.difficulty} size="sm" />
-                )}
-              </div>
-              <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400">
-                <span className="flex items-center space-x-1.5">
-                  <span
-                    className={`h-2 w-2 rounded-full ${
-                      session.mode === 'voice' ? 'bg-[#FF6500] animate-pulse' : 'bg-emerald-500'
-                    }`}
-                  />
-                  <span className="font-semibold text-slate-700 dark:text-slate-300">
-                    {session.mode === 'voice' ? 'Voice Mode' : 'Text Mode'}
-                  </span>
-                </span>
-                <span>•</span>
-                <span className="font-mono text-slate-600 dark:text-slate-300 font-bold">
-                  Exchange {currentExchange} of {maxExchanges}
-                </span>
-                {voiceLatencyMs !== null && (
-                  <>
-                    <span>•</span>
-                    <span className="text-[#FF6500] font-mono">Latency: {voiceLatencyMs}ms</span>
-                  </>
-                )}
-              </div>
-            </div>
+    <div className="flex h-[calc(100vh-4rem)] bg-slate-50 text-slate-900 dark:bg-[#0B192C] dark:text-slate-100 flex-col overflow-hidden transition-colors duration-200">
+      {/* Top Header Bar */}
+      <header className="flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md sm:px-6 dark:border-[#1E3E62] dark:bg-[#0B192C] z-10">
+        <div className="flex items-center space-x-3">
+          {/* Counterpart Avatar with CRISP WHITE text on dark navy background */}
+          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[#0B192C] text-white font-bold text-sm border border-[#1E3E62] shadow-sm">
+            {counterpartInitials}
           </div>
 
-          {/* Controls: Timer, Briefing Toggle, End Session */}
-          <div className="flex items-center space-x-3">
-            <button
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              className="hidden sm:flex items-center space-x-1.5 rounded-lg border border-slate-300 bg-white px-2.5 py-1 text-xs font-semibold text-slate-700 shadow-sm hover:text-slate-900 dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-300 dark:hover:text-white transition"
-            >
-              <BookOpen className="h-3.5 w-3.5 text-[#FF6500]" />
-              <span>{isSidebarOpen ? 'Hide Brief' : 'Show Brief'}</span>
-            </button>
-
-            <div className="flex items-center space-x-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3 py-1 font-mono text-xs font-bold text-slate-700 shadow-sm dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-200">
-              <Clock className="h-3.5 w-3.5 text-[#FF6500]" />
-              <span>{formatTimer(elapsedSeconds)}</span>
-            </div>
-
-            {!isSessionClosed && (
-              <button
-                id="end-simulation-btn"
-                onClick={() => setShowEndConfirm(true)}
-                className="flex items-center space-x-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-500/20 dark:text-rose-300 transition"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                <span>End Session</span>
-              </button>
-            )}
-          </div>
-        </header>
-
-        {/* Progress Bar of Conversation Depth */}
-        <div className="h-1.5 w-full bg-slate-200 dark:bg-[#0B192C] overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-amber-500 to-[#FF6500] transition-all duration-500"
-            style={{ width: `${progressPercent}%` }}
-          />
-        </div>
-
-        {/* Prominent High-Contrast Tactical Coaching Clue Banner */}
-        {scenarioDetail?.tactical_coaching_clue && !isSessionClosed && (
-          <div className="px-4 py-2 sm:px-6 bg-[#0B192C]/5 dark:bg-[#0B192C] border-b border-amber-300/60 dark:border-[#1E3E62]">
-            <TacticalClueCard
-              clue={scenarioDetail.tactical_coaching_clue}
-              scenarioTitle={scenarioDetail.title}
-              targetCapabilities={scenarioDetail.target_capabilities}
-            />
-          </div>
-        )}
-
-        {/* Completion Banner if closed */}
-        {isSessionClosed && (
-          <div className="flex items-center justify-between border-b border-[#FF6500]/40 bg-gradient-to-r from-[#0B192C] via-[#132B45] to-[#1E3E62] px-6 py-4 z-10">
-            <div className="flex items-center space-x-2 text-sm text-white">
-              <Sparkles className="h-5 w-5 text-[#FF6500]" />
-              <span className="font-bold">
-                Simulation complete. Your executive transcript has been recorded and evaluated.
+          <div>
+            <div className="flex items-center space-x-2">
+              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+                {personaName}
+              </h2>
+              <span className="text-xs text-slate-400">•</span>
+              <span className="text-xs font-semibold text-[#FF6500] uppercase tracking-wider">
+                {personaRole}
               </span>
             </div>
-            <button
-              id="view-evaluation-btn"
-              onClick={() => onViewEvaluation(session.id)}
-              className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2.5 text-sm font-bold text-white shadow-lg shadow-[#FF6500]/25 transition"
-            >
-              <span>View Executive Coaching Evaluation</span>
-              <ArrowRight className="h-4 w-4" />
-            </button>
+            <p className="text-xs text-slate-500 dark:text-slate-300 truncate max-w-xs sm:max-w-md">
+              {session.scenario_title}
+            </p>
           </div>
-        )}
+        </div>
 
-        {/* ================================================================= */}
-        {/* VOICE MODE: Pulsating Audio Orb & Real-Time Waveform               */}
-        {/* ================================================================= */}
-        {session.mode === 'voice' && !isSessionClosed && (
-          <div className="border-b border-indigo-500/20 bg-gradient-to-b from-indigo-950/30 via-slate-900/60 to-transparent p-6 flex flex-col items-center justify-center">
-            <div className="flex items-center space-x-5">
-              {/* Audio Wave Visualizer Orb */}
+        {/* Controls: Timer & End Practice Button */}
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3 py-1 font-mono text-xs font-bold text-slate-700 shadow-sm dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-200">
+            <Clock className="h-3.5 w-3.5 text-[#FF6500]" />
+            <span>{formatTimer(elapsedSeconds)}</span>
+          </div>
+
+          {!isSessionClosed && (
+            <button
+              id="end-practice-btn"
+              onClick={() => setShowEndConfirm(true)}
+              className="flex items-center space-x-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-500/20 dark:text-rose-300 transition"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+              <span>End Practice</span>
+            </button>
+          )}
+        </div>
+      </header>
+
+      {/* Pinned Your Role & Mission Banner */}
+      <div className="border-b border-amber-500/30 bg-amber-500/10 dark:bg-[#132B45] px-4 py-2 sm:px-6 flex items-center justify-between text-xs z-10 transition-colors">
+        <div className="flex items-center space-x-2 flex-wrap gap-y-1">
+          <span className="font-black text-[#FF6500] uppercase tracking-wider flex items-center space-x-1">
+            <UserCheck className="h-3.5 w-3.5 inline mr-1" />
+            <span>YOU (STUDENT):</span>
+          </span>
+          <span className="font-bold text-slate-900 dark:text-white">
+            {scenarioDetail?.track === 'sales' ? 'Enterprise Sales Representative' : 'Direct Manager / Team Leader'}
+          </span>
+          <span className="text-slate-400 hidden sm:inline">•</span>
+          <span className="text-slate-600 dark:text-slate-300">
+            {scenarioDetail?.track === 'sales'
+              ? `Negotiating with client ${personaName}`
+              : `Leading meeting with direct report ${personaName} (${personaRole})`}
+          </span>
+        </div>
+        <button
+          onClick={() => setShowRoleDrawer(!showRoleDrawer)}
+          className="ml-2 font-bold text-[#FF6500] hover:underline flex items-center space-x-1 flex-shrink-0"
+        >
+          <span>{showRoleDrawer ? 'Hide Brief' : 'Scenario Mission'}</span>
+          {showRoleDrawer ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
+        </button>
+      </div>
+
+      {showRoleDrawer && scenarioDetail && (
+        <div className="border-b border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] px-6 py-3.5 text-xs z-10 space-y-2 shadow-md animate-in slide-in-from-top-1">
+          <div className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] text-[#FF6500]">
+            Meeting Context & Your Objective:
+          </div>
+          <p className="text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
+            {scenarioDetail.brief}
+          </p>
+          {scenarioDetail.tactical_coaching_clue && (
+            <div className="rounded-lg border border-amber-400/40 bg-amber-50 dark:bg-[#132B45] p-2.5 text-slate-800 dark:text-amber-200">
+              💡 <span className="font-bold">Tactical Guidance:</span> {scenarioDetail.tactical_coaching_clue}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Completion Banner if closed */}
+      {isSessionClosed && (
+        <div className="flex items-center justify-between border-b border-[#FF6500]/40 bg-[#0B192C] px-6 py-3.5 z-10 text-white">
+          <div className="flex items-center space-x-2 text-sm font-semibold">
+            <Sparkles className="h-4 w-4 text-[#FF6500]" />
+            <span>Practice session complete. Review your performance evaluation report below.</span>
+          </div>
+          <button
+            id="view-evaluation-btn"
+            onClick={() => onViewEvaluation(session.id)}
+            className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 py-2 text-xs font-bold text-white shadow-md shadow-[#FF6500]/30 transition"
+          >
+            <span>View Evaluation</span>
+            <ArrowRight className="h-4 w-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Hands-Free Live Voice Call Control Deck */}
+      {session.mode === 'voice' && !isSessionClosed && (
+        <div className="border-b border-slate-300 dark:border-[#1E3E62] bg-gradient-to-b from-slate-100 to-slate-200/80 dark:from-[#0B192C] dark:to-[#071322] p-5">
+          <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+            
+            {/* Left: Call Status & Persona Info */}
+            <div className="flex items-center space-x-4">
               <div
-                className={`relative flex h-20 w-20 items-center justify-center rounded-full transition-all duration-500 ${
+                className={`relative flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl transition-all duration-300 shadow-lg ${
                   isAssistantSpeaking
-                    ? 'bg-gradient-to-tr from-indigo-600 to-violet-500 scale-110 shadow-2xl shadow-indigo-500/50'
-                    : isRecordingMic
-                    ? 'bg-rose-600 scale-110 shadow-2xl shadow-rose-500/50 animate-pulse'
-                    : 'bg-slate-900 border border-slate-700 shadow-inner'
+                    ? 'bg-[#FF6500] text-white shadow-[#FF6500]/40 scale-105'
+                    : isMicMuted
+                    ? 'bg-slate-700 text-slate-300'
+                    : 'bg-emerald-600 text-white shadow-emerald-500/30 animate-pulse'
                 }`}
               >
                 {isAssistantSpeaking ? (
-                  <div className="flex items-center space-x-1 text-white">
+                  <div className="flex items-center space-x-1">
                     <span className="sound-bar [animation-delay:0.1s]" />
                     <span className="sound-bar [animation-delay:0.3s]" />
                     <span className="sound-bar [animation-delay:0.2s]" />
-                    <span className="sound-bar [animation-delay:0.4s]" />
                   </div>
-                ) : isRecordingMic ? (
-                  <Radio className="h-8 w-8 text-white animate-spin" />
+                ) : isMicMuted ? (
+                  <MicOff className="h-6 w-6 text-rose-300" />
                 ) : (
-                  <Mic className="h-8 w-8 text-slate-400" />
+                  <Mic className="h-6 w-6 text-white" />
                 )}
               </div>
 
               <div>
-                <div className="text-sm font-bold text-white flex items-center space-x-2">
-                  <span>
+                <div className="flex items-center space-x-2">
+                  <span className={`inline-block h-2.5 w-2.5 rounded-full ${isAssistantSpeaking ? 'bg-[#FF6500] animate-ping' : isMicMuted ? 'bg-slate-400' : 'bg-emerald-500 animate-pulse'}`} />
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
                     {isAssistantSpeaking
                       ? `${personaName} is speaking...`
-                      : isRecordingMic
-                      ? 'Listening to you... (Click Done when finished)'
-                      : isVoiceConnected
-                      ? 'Ready: Click Speak to start turn'
-                      : voiceError
-                      ? 'Voice Channel Offline'
-                      : 'Connecting to Real-Time Voice Audio...'}
+                      : isMicMuted
+                      ? 'Microphone Muted'
+                      : 'Live Call Active • Hands-Free'}
                   </span>
                 </div>
-                <p className="text-xs text-slate-400 mt-0.5">
-                  Natural conversation with speech-to-speech cadence. You can interrupt anytime.
-                </p>
+                <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 font-medium">
+                  {isAssistantSpeaking
+                    ? 'Listen to the client response (barge in anytime by speaking)'
+                    : isMicMuted
+                    ? 'Click Unmute when you want to respond'
+                    : 'Speak naturally — pauses auto-send without clicking buttons'}
+                </div>
               </div>
             </div>
 
-            {/* Voice Action Controls */}
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            {/* Right: Actions (Mute, Interrupt, Text Switch, Conclude) */}
+            <div className="flex flex-wrap items-center gap-2">
               <button
-                id="voice-record-btn"
-                onClick={toggleMicCapture}
-                className={`flex items-center space-x-2 rounded-xl px-5 py-2.5 text-xs font-bold transition shadow-lg ${
-                  isRecordingMic
-                    ? 'bg-rose-600 text-white shadow-rose-600/30 hover:bg-rose-500'
-                    : 'bg-gradient-to-r from-indigo-600 to-violet-600 text-white shadow-indigo-600/25 hover:opacity-95'
+                id="voice-mic-mute-btn"
+                type="button"
+                onClick={toggleMicMute}
+                className={`flex items-center space-x-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition shadow-sm ${
+                  isMicMuted
+                    ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30'
+                    : 'bg-slate-200 hover:bg-slate-300 dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] text-slate-800 dark:text-white'
                 }`}
               >
-                {isRecordingMic ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
-                <span>{isRecordingMic ? 'Done Speaking (Send Turn)' : 'Speak Turn'}</span>
+                {isMicMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4 text-emerald-500" />}
+                <span>{isMicMuted ? 'Unmute Mic' : 'Mute Mic'}</span>
               </button>
 
               {isAssistantSpeaking && (
                 <button
                   id="voice-interrupt-btn"
+                  type="button"
                   onClick={handleInterrupt}
-                  className="flex items-center space-x-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-2.5 text-xs font-bold text-amber-300 hover:bg-amber-500/20 transition shadow-sm"
+                  className="flex items-center space-x-1.5 rounded-xl border border-amber-500/50 bg-amber-500/20 px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-200 hover:bg-amber-500/30 transition"
                 >
-                  <Hand className="h-4 w-4" />
-                  <span>Interrupt & Speak</span>
+                  <Hand className="h-3.5 w-3.5" />
+                  <span>Interrupt</span>
+                </button>
+              )}
+
+              {messages.some((m) => m.role === 'counterpart') && !isAssistantSpeaking && (
+                <button
+                  id="voice-replay-btn"
+                  type="button"
+                  onClick={() => {
+                    const last = [...messages].reverse().find((m) => m.role === 'counterpart');
+                    if (last) handlePlayMessageAudio(last.content);
+                  }}
+                  className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:text-[#FF6500] dark:hover:text-[#FF6500] transition"
+                  title="Re-play the counterpart's last spoken sentence"
+                >
+                  <Volume2 className="h-3.5 w-3.5 text-[#FF6500]" />
+                  <span>Replay</span>
                 </button>
               )}
 
               <button
                 id="fallback-to-text-btn"
-                onClick={() => setSession((prev) => ({ ...prev, mode: 'text' }))}
-                className="flex items-center space-x-1.5 rounded-xl border border-slate-800 bg-slate-900/90 px-3.5 py-2.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 transition"
+                type="button"
+                onClick={() => {
+                  if (voiceClient) voiceClient.stopSpeaking();
+                  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+                    window.speechSynthesis.cancel();
+                  }
+                  setSession((prev) => ({ ...prev, mode: 'text' }));
+                }}
+                className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white transition"
               >
                 <MessageSquare className="h-3.5 w-3.5" />
-                <span>Switch to Text Mode</span>
+                <span>Text Mode</span>
+              </button>
+
+              <button
+                id="voice-end-call-btn"
+                type="button"
+                onClick={() => setShowEndConfirm(true)}
+                className="flex items-center space-x-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-rose-600/20 transition"
+              >
+                <span>End Call</span>
               </button>
             </div>
-
-            {/* Live partial captions */}
-            {voicePartial && (
-              <div className="mt-3 text-xs text-indigo-300 font-serif italic max-w-lg text-center bg-indigo-950/30 px-3 py-1.5 rounded-lg border border-indigo-500/20">
-                "{voicePartial}"
-              </div>
-            )}
-            {voiceError && (
-              <div className="mt-2 text-xs text-rose-400 bg-rose-500/10 border border-rose-500/20 px-3 py-1 rounded-lg">
-                {voiceError}
-              </div>
-            )}
           </div>
-        )}
 
-        {/* ================================================================= */}
-        {/* TRANSCRIPT VIEW: Professional Message Stream                      */}
-        {/* ================================================================= */}
-        <div
-          id="chat-messages-container"
-          className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 space-y-6"
-        >
-          {messages.map((m) => (
-            <div
-              key={m.seq}
-              data-role={m.role}
-              className={`flex items-start space-x-3 ${
-                m.role === 'trainee' ? 'flex-row-reverse space-x-reverse' : ''
-              }`}
-            >
-              {/* Avatar */}
-              <div
-                className={`flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl text-xs font-black shadow-md ${
-                  m.role === 'trainee'
-                    ? 'bg-[#FF6500] text-white shadow-[#FF6500]/25'
-                    : 'border-2 border-slate-300 bg-[#0B192C] text-[#FF6500] dark:border-[#2D5B8D] dark:bg-[#0B192C]'
-                }`}
-              >
-                {m.role === 'trainee' ? (
-                  'You'
-                ) : (
-                  personaName.split(' ').map((n) => n[0]).join('')
-                )}
-              </div>
-
-              {/* Message Bubble — 18px for Senior Executive Readability */}
-              <div
-                className={`max-w-[88%] rounded-3xl px-6 py-5 text-base sm:text-[18px] leading-relaxed sm:max-w-[75%] shadow-md ${
-                  m.role === 'trainee'
-                    ? 'bg-[#FF6500] text-white rounded-tr-none shadow-[#FF6500]/20 font-medium'
-                    : 'border-2 border-slate-300 bg-white text-slate-900 rounded-tl-none shadow-sm dark:border-[#2D5B8D] dark:bg-[#132B45] dark:text-white dark:shadow-black/30 font-medium'
-                }`}
-              >
-                <div className="text-xs font-bold text-slate-500 dark:text-slate-300 mb-2 uppercase tracking-wider flex items-center justify-between">
-                  <span>{m.role === 'trainee' ? 'You (Trainee)' : `${personaName} · ${personaRole}`}</span>
-                  <span className="text-[11px] text-slate-400 dark:text-slate-400 font-mono font-bold">Turn #{m.seq}</span>
-                </div>
-                <div className="whitespace-pre-line text-base sm:text-[18px] leading-relaxed">{m.content}</div>
-              </div>
-            </div>
-          ))}
-
-          {/* Live Streaming Bubble for Text mode */}
-          {isStreaming && (
-            <div className="flex items-start space-x-3">
-              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-2xl border-2 border-slate-300 bg-[#0B192C] text-[#FF6500] dark:border-[#2D5B8D]">
-                {personaName.split(' ').map((n) => n[0]).join('')}
-              </div>
-              <div className="max-w-[88%] rounded-3xl rounded-tl-none border-2 border-[#FF6500]/50 bg-white px-6 py-5 text-base sm:text-[18px] leading-relaxed text-slate-900 sm:max-w-[75%] shadow-md dark:border-[#FF6500]/50 dark:bg-[#132B45] dark:text-white font-medium">
-                <div className="text-xs font-bold text-[#FF6500] mb-2 uppercase tracking-wider flex items-center space-x-2">
-                  <span>{personaName} (Responding...)</span>
-                </div>
-                <div className="whitespace-pre-line text-base sm:text-[18px] leading-relaxed">
-                  {streamingReply || (
-                    <span className="flex items-center space-x-1.5 py-1">
-                      <span className="h-2.5 w-2.5 rounded-full bg-[#FF6500] animate-bounce" />
-                      <span className="h-2.5 w-2.5 rounded-full bg-[#FF6500] animate-bounce [animation-delay:0.2s]" />
-                      <span className="h-2.5 w-2.5 rounded-full bg-[#FF6500] animate-bounce [animation-delay:0.4s]" />
-                    </span>
-                  )}
-                  <span className="inline-block h-5 w-2 bg-[#FF6500] ml-1 animate-pulse" />
-                </div>
-              </div>
+          {/* Live Speech Recognition Transcript Pill */}
+          {voicePartial && (
+            <div className="max-w-4xl mx-auto mt-3 flex items-center space-x-2 text-xs bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 text-emerald-900 dark:text-emerald-200 px-4 py-2 rounded-xl">
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+              <span className="font-semibold">Hearing You:</span>
+              <span className="italic">"{voicePartial}"</span>
             </div>
           )}
 
-          <div ref={messagesEndRef} />
+          {voiceError && (
+            <div className="max-w-4xl mx-auto mt-3 text-xs text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-500/30 px-3 py-1.5 rounded-lg">
+              {voiceError}
+            </div>
+          )}
         </div>
+      )}
 
-        {/* ================================================================= */}
-        {/* INPUT STAGE: Text Input Area & Keyboard Handlers                   */}
-        {/* ================================================================= */}
-        {session.mode === 'text' && (
-          <div className="border-t border-slate-300 bg-white/95 p-4 backdrop-blur-xl sm:px-6 dark:border-[#1E3E62] dark:bg-[#132B45]">
-            <form onSubmit={handleSendMessage} className="mx-auto max-w-4xl">
-              <div className="relative rounded-2xl border-2 border-slate-300 bg-slate-50 p-3 transition focus-within:border-[#FF6500] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#FF6500]/25 shadow-md dark:border-[#2D5B8D] dark:bg-[#0B192C]">
-                <textarea
-                  id="chat-message-input"
-                  rows={2}
-                  value={inputText}
-                  onChange={(e) => setInputText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSendMessage();
-                    }
-                  }}
-                  disabled={isStreaming || isSessionClosed}
-                  placeholder={
-                    isSessionClosed
-                      ? 'Simulation has concluded. Review your feedback report above.'
-                      : `Respond to ${personaName}... (Press Enter to send, Shift+Enter for new line)`
-                  }
-                  className="w-full resize-none bg-transparent p-2 text-base text-slate-900 placeholder-slate-400 focus:outline-none disabled:opacity-50 dark:text-white dark:placeholder-slate-500 font-medium"
-                />
+      {/* Main Clean Chat Stream */}
+      <div
+        id="chat-messages-container"
+        className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 space-y-5 max-w-4xl mx-auto w-full"
+      >
+        {messages.map((m) => {
+          const isUser = m.role === 'trainee';
+          return (
+            <div
+              key={m.seq}
+              data-role={m.role}
+              className={`flex items-start space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}
+            >
+              {/* Avatar with pure crisp white text */}
+              <div
+                className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-xs font-bold shadow-sm avatar-counterpart ${
+                  isUser
+                    ? 'bg-[#FF6500] text-white'
+                    : 'bg-[#0B192C] text-white border border-[#1E3E62]'
+                }`}
+                style={{ color: '#ffffff' }}
+              >
+                <span className="text-white font-bold text-xs" style={{ color: '#ffffff' }}>
+                  {isUser ? 'You' : counterpartInitials}
+                </span>
+              </div>
 
-                <div className="flex items-center justify-between border-t border-slate-200 dark:border-[#1E3E62] pt-2 px-2">
-                  <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-2 font-medium">
-                    <span>Press Enter to send</span>
-                    <span>•</span>
-                    <span>{inputText.length} chars</span>
+              {/* Message Bubble */}
+              <div
+                className={`max-w-[85%] sm:max-w-[78%] rounded-2xl p-4 shadow-sm ${
+                  isUser
+                    ? 'bg-[#FF6500] text-white rounded-tr-sm font-medium'
+                    : 'border border-slate-300 bg-white text-slate-900 rounded-tl-sm dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-white font-medium'
+                }`}
+              >
+                {/* Header inside bubble — counterpart only to prevent duplicate 'You' on user messages */}
+                {!isUser && (
+                  <div className="flex items-center justify-between text-[11px] font-bold mb-1.5 uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                    <span>
+                      {personaName} · {personaRole}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handlePlayMessageAudio(m.content)}
+                      title="Listen out loud"
+                      className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#1E3E62] text-slate-500 hover:text-[#FF6500] dark:text-slate-400 dark:hover:text-[#FF6500] transition"
+                    >
+                      <Volume2 className="h-3.5 w-3.5" />
+                    </button>
                   </div>
-
-                  <button
-                    id="send-message-btn"
-                    type="submit"
-                    disabled={!inputText.trim() || isStreaming || isSessionClosed}
-                    className="flex items-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2.5 text-sm font-bold text-white shadow-md shadow-[#FF6500]/25 transition disabled:opacity-30"
-                  >
-                    <span>Send Response</span>
-                    <Send className="h-4 w-4" />
-                  </button>
+                )}
+                <div className={`whitespace-pre-line text-base leading-relaxed ${isUser ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+                  {m.content}
                 </div>
               </div>
-            </form>
-          </div>
-        )}
+            </div>
+          );
+        })}
 
-        {/* End Session Confirmation Modal */}
-        {showEndConfirm && (
-          <div
-            role="alertdialog"
-            aria-modal="true"
-            aria-labelledby="conclude-dialog-title"
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          >
+        {/* Live Streaming Bubble for Text mode */}
+        {isStreaming && (
+          <div className="flex items-start space-x-3">
             <div
-              onClick={() => setShowEndConfirm(false)}
-              className="fixed inset-0 bg-[#0B0F19]/80 backdrop-blur-sm"
-            />
-            <div className="relative w-full max-w-md rounded-2xl border border-slate-800 bg-[#111827] p-6 shadow-2xl z-10">
-              <div className="flex items-center space-x-3 text-amber-400">
-                <AlertTriangle className="h-6 w-6" />
-                <h3 id="conclude-dialog-title" className="text-lg font-bold text-white font-heading">Conclude Simulation?</h3>
+              className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#0B192C] text-white font-bold text-xs border border-[#1E3E62] shadow-sm avatar-counterpart"
+              style={{ color: '#ffffff' }}
+            >
+              <span className="text-white font-bold text-xs" style={{ color: '#ffffff' }}>
+                {counterpartInitials}
+              </span>
+            </div>
+            <div className="max-w-[85%] sm:max-w-[78%] rounded-2xl rounded-tl-sm border border-slate-300 bg-white p-4 shadow-sm dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-white font-medium">
+              <div className="text-[11px] font-bold text-[#FF6500] mb-1.5 uppercase tracking-wider">
+                {personaName} · Responding...
               </div>
-              <p className="mt-3 text-xs text-slate-300 leading-relaxed">
-                Ending this conversation will lock the roleplay transcript and generate your comprehensive rubric scoring, moment analysis, and practice drills.
-              </p>
-              <div className="mt-6 flex items-center justify-end space-x-3">
-                <button
-                  onClick={() => setShowEndConfirm(false)}
-                  className="rounded-xl border border-slate-800 bg-slate-950 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white"
-                >
-                  Keep Practicing
-                </button>
-                <button
-                  id="confirm-end-session-btn"
-                  onClick={handleEndSessionExplicit}
-                  disabled={isEnding}
-                  className="rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-500 transition shadow-lg shadow-rose-600/25 disabled:opacity-50"
-                >
-                  {isEnding ? 'Concluding...' : 'Conclude and Evaluate'}
-                </button>
+              <div className="whitespace-pre-line text-base leading-relaxed text-slate-900 dark:text-white">
+                {streamingReply || (
+                  <span className="flex items-center space-x-1.5 py-1">
+                    <span className="h-2 w-2 rounded-full bg-[#FF6500] animate-bounce" />
+                    <span className="h-2 w-2 rounded-full bg-[#FF6500] animate-bounce [animation-delay:0.2s]" />
+                    <span className="h-2 w-2 rounded-full bg-[#FF6500] animate-bounce [animation-delay:0.4s]" />
+                  </span>
+                )}
+                <span className="inline-block h-4 w-1.5 bg-[#FF6500] ml-1 animate-pulse" />
               </div>
             </div>
           </div>
         )}
-      </main>
+
+        <div ref={messagesEndRef} />
+      </div>
+
+      {/* Input Area */}
+      {session.mode === 'text' && (
+        <div className="border-t border-slate-200 bg-white/95 p-4 backdrop-blur-md dark:border-[#1E3E62] dark:bg-[#0B192C]">
+          <form onSubmit={handleSendMessage} className="mx-auto max-w-4xl">
+            <div className="relative rounded-2xl border border-slate-300 bg-slate-50 p-3 transition focus-within:border-[#FF6500] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#FF6500]/25 shadow-sm dark:border-[#1E3E62] dark:bg-[#132B45]">
+              <textarea
+                id="chat-message-input"
+                rows={2}
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage();
+                  }
+                }}
+                disabled={isStreaming || isSessionClosed}
+                placeholder={
+                  isSessionClosed
+                    ? 'Practice session has ended. Review your evaluation report above.'
+                    : `Respond to ${personaName}... (Press Enter to send, Shift+Enter for new line)`
+                }
+                className="w-full resize-none bg-transparent p-1.5 text-base text-slate-900 placeholder-slate-400 focus:outline-none disabled:opacity-50 dark:text-white dark:placeholder-slate-400 font-medium"
+              />
+
+              <div className="flex items-center justify-between border-t border-slate-200 dark:border-[#1E3E62] pt-2 px-1">
+                <div className="text-xs text-slate-500 dark:text-slate-400">
+                  Press Enter to send
+                </div>
+
+                <button
+                  id="send-message-btn"
+                  type="submit"
+                  disabled={!inputText.trim() || isStreaming || isSessionClosed}
+                  className="flex items-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2 text-sm font-bold text-white shadow-md shadow-[#FF6500]/25 transition disabled:opacity-40"
+                >
+                  <span>Send</span>
+                  <Send className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* End Session Confirmation Modal */}
+      {showEndConfirm && (
+        <div
+          role="alertdialog"
+          aria-modal="true"
+          aria-labelledby="conclude-dialog-title"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+        >
+          <div
+            onClick={() => setShowEndConfirm(false)}
+            className="fixed inset-0 bg-[#0B192C]/80 backdrop-blur-sm"
+          />
+          <div className="relative w-full max-w-md rounded-2xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-6 shadow-2xl z-10">
+            <div className="flex items-center space-x-3 text-[#FF6500]">
+              <AlertTriangle className="h-6 w-6" />
+              <h3 id="conclude-dialog-title" className="text-lg font-bold text-slate-900 dark:text-white font-heading">
+                End Practice Session?
+              </h3>
+            </div>
+            <p className="mt-3 text-sm text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+              Ending this conversation will finalize the dialogue transcript and generate your executive coaching evaluation debrief.
+            </p>
+            <div className="mt-6 flex items-center justify-end space-x-3">
+              <button
+                onClick={() => setShowEndConfirm(false)}
+                className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-4 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1E3E62]"
+              >
+                Keep Practicing
+              </button>
+              <button
+                id="confirm-end-session-btn"
+                onClick={handleEndSessionExplicit}
+                disabled={isEnding}
+                className="rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white transition shadow-md shadow-rose-600/25 disabled:opacity-50"
+              >
+                {isEnding ? 'Concluding...' : 'Conclude & Evaluate'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

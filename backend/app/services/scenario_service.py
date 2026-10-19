@@ -171,6 +171,8 @@ class ScenarioService:
                 PublicSkillPreview(skill=s["skill"], weight=s["weight"])
                 for s in scen.skills_assessed
             ]
+            diff_level = "Normal" if scen.difficulty <= 1 else ("Challenging" if scen.difficulty == 2 else "Crisis")
+            primary_cap = scen.target_capabilities[0] if (scen.target_capabilities and len(scen.target_capabilities) > 0) else scen.topic.replace("_", " ").title()
             items.append(
                 PublicScenarioListItem(
                     id=scen.id,
@@ -179,6 +181,8 @@ class ScenarioService:
                     title=scen.title,
                     topic=scen.topic,
                     difficulty=scen.difficulty,
+                    difficulty_level=diff_level,
+                    primary_capability=primary_cap,
                     duration_limit_seconds=scen.duration_limit_seconds,
                     skills_assessed=skills_preview,
                     tags=scen.tags,
@@ -217,6 +221,8 @@ class ScenarioService:
             role=persona_dict.get("role", "Colleague"),
             communication_style=persona_dict.get("communication_style"),
         )
+        diff_level = "Normal" if scen.difficulty <= 1 else ("Challenging" if scen.difficulty == 2 else "Crisis")
+        primary_cap = scen.target_capabilities[0] if (scen.target_capabilities and len(scen.target_capabilities) > 0) else scen.topic.replace("_", " ").title()
 
         return PublicScenarioDetail(
             id=scen.id,
@@ -225,6 +231,8 @@ class ScenarioService:
             title=scen.title,
             topic=scen.topic,
             difficulty=scen.difficulty,
+            difficulty_level=diff_level,
+            primary_capability=primary_cap,
             duration_limit_seconds=scen.duration_limit_seconds,
             turn_limit=scen.turn_limit,
             brief=scen.brief,

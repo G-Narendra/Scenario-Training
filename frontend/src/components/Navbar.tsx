@@ -19,7 +19,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
         {/* Brand: 3H Solutions Group Official */}
         <div
           onClick={() => onNavigate('tracks')}
-          className="flex cursor-pointer items-center transition hover:opacity-95"
+          className="flex cursor-pointer items-center transition hover:opacity-95 flex-shrink-0"
           role="button"
           tabIndex={0}
           onKeyDown={(e) => {
@@ -27,60 +27,77 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
           }}
           aria-label="3H Solutions Scenario Training home"
         >
-          <ThreeHSolutionsLogo size="md" variant="full" />
+          <div className="hidden sm:block">
+            <ThreeHSolutionsLogo size="md" variant="full" />
+          </div>
+          <div className="block sm:hidden">
+            <ThreeHSolutionsLogo size="md" variant="monogram" />
+          </div>
         </div>
 
         {/* Navigation Actions */}
         {user && (
-          <div className="flex items-center space-x-2 sm:space-x-4">
+          <div className="flex items-center space-x-1.5 sm:space-x-4">
             <nav className="flex items-center space-x-1 rounded-xl border border-slate-300 bg-slate-100 p-1 dark:border-[#1E3E62] dark:bg-[#132B45]">
               <button
-                id="nav-scenarios-btn"
+                id="nav-tracks-btn"
                 onClick={() => onNavigate('tracks')}
-                className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition ${
-                  currentView === 'tracks' || currentView === 'scenarios'
+                className={`rounded-lg px-2.5 sm:px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
+                  currentView === 'tracks'
                     ? 'bg-[#FF6500] text-white shadow-sm shadow-[#FF6500]/30'
                     : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-white'
                 }`}
               >
-                Scenarios
+                <span className="hidden sm:inline">Curriculum </span>Tracks
+              </button>
+
+              <button
+                id="nav-scenarios-btn"
+                onClick={() => onNavigate('scenarios')}
+                className={`rounded-lg px-2.5 sm:px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
+                  currentView === 'scenarios'
+                    ? 'bg-[#FF6500] text-white shadow-sm shadow-[#FF6500]/30'
+                    : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-white'
+                }`}
+              >
+                <span className="hidden sm:inline">Scenario </span>Library
               </button>
 
               <button
                 id="nav-progress-btn"
                 onClick={() => onNavigate('progress')}
-                className={`rounded-lg px-3.5 py-1.5 text-xs font-bold transition ${
+                className={`rounded-lg px-2.5 sm:px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
                   currentView === 'progress'
                     ? 'bg-[#FF6500] text-white shadow-sm shadow-[#FF6500]/30'
                     : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-white'
                 }`}
               >
-                Progress
+                <span className="hidden sm:inline">My </span>Progress
               </button>
 
               {user.role === 'group_admin' || user.role === 'super_admin' ? (
                 <button
                   id="nav-admin-btn"
                   onClick={() => onNavigate('admin')}
-                  className={`flex items-center space-x-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
+                  className={`flex items-center space-x-1.5 rounded-lg px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition ${
                     currentView === 'admin'
                       ? 'bg-emerald-600 text-white shadow-sm shadow-emerald-600/30'
-                      : 'text-slate-600 hover:bg-slate-200/70 hover:text-emerald-600 dark:text-slate-300 dark:hover:bg-slate-800/60 dark:hover:text-emerald-400'
+                      : 'text-slate-700 hover:bg-slate-200 hover:text-emerald-600 dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-emerald-400'
                   }`}
                 >
                   <ShieldCheck className="h-3.5 w-3.5" />
-                  <span>Admin</span>
+                  <span className="hidden sm:inline">Admin</span>
                 </button>
               ) : null}
             </nav>
 
-            {/* User Pill */}
-            <div className="flex items-center space-x-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-xs text-slate-700 shadow-sm dark:border-slate-800 dark:bg-slate-900/80 dark:text-slate-300">
-              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
+            {/* User Pill — Desktop/Tablet only for optimal mobile spacing */}
+            <div className="hidden lg:flex items-center space-x-2 rounded-full border border-slate-300 bg-white px-3 py-1 text-xs text-slate-800 shadow-sm dark:border-[#1E3E62] dark:bg-[#0B192C] dark:text-slate-200">
+              <div className="flex h-5 w-5 items-center justify-center rounded-full bg-[#FF6500]/20 text-[#FF6500]">
                 <UserIcon className="h-3 w-3" />
               </div>
-              <span className="font-semibold text-slate-900 dark:text-white max-w-[120px] truncate">{user.display_name}</span>
-              <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] font-bold text-indigo-700 uppercase tracking-wider dark:bg-slate-800 dark:text-indigo-300">
+              <span className="font-bold text-slate-900 dark:text-white max-w-[120px] truncate">{user.display_name}</span>
+              <span className="rounded bg-[#FF6500]/15 px-1.5 py-0.5 text-[9px] font-bold text-[#FF6500] uppercase tracking-wider border border-[#FF6500]/30">
                 {user.role}
               </span>
             </div>
@@ -98,6 +115,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
 
             {/* Logout */}
             <button
+              id="logout-btn"
               onClick={logout}
               title="Sign Out"
               aria-label="Sign Out"

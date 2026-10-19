@@ -2,6 +2,7 @@ import {
   AdminCohort,
   AdminScenarioVersion,
   AuditLogEntry,
+  CohortMember,
   CohortProgress,
   FeedbackReport,
   ScenarioDetail,
@@ -12,6 +13,8 @@ import {
   UsageSummary,
   User,
 } from '../types';
+
+import { getDeviceFingerprint } from '../utils/fingerprint';
 
 const API_BASE = '/api';
 
@@ -32,8 +35,16 @@ function getAuthHeader(): Record<string, string> {
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  let fp = '';
+  try {
+    fp = await getDeviceFingerprint();
+  } catch {
+    // fallback
+  }
+
   const headers = {
     'Content-Type': 'application/json',
+    ...(fp ? { 'X-Device-Fingerprint': fp } : {}),
     ...getAuthHeader(),
     ...(options.headers || {}),
   };
@@ -44,6 +55,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   });
 
   if (!response.ok) {
+    if (response.status === 401 || (response.status === 403 && !endpoint.startsWith('/admin'))) {
+      localStorage.removeItem('auth_token');
+    }
     let errorMsg = `Request failed (${response.status})`;
     let errorCode = 'UNKNOWN';
     try {
@@ -106,9 +120,10 @@ export const api = {
 
   // Sessions
   async createSession(scenarioId: string, mode: 'text' | 'voice' = 'text'): Promise<SimulationSession> {
+    const fp = await getDeviceFingerprint();
     return request<SimulationSession>('/sessions', {
       method: 'POST',
-      body: JSON.stringify({ scenario_id: scenarioId, mode }),
+      body: JSON.stringify({ scenario_id: scenarioId, mode, device_fingerprint: fp }),
     });
   },
 
@@ -124,6 +139,10 @@ export const api = {
 
   async listMySessions(): Promise<SimulationSession[]> {
     return request<SimulationSession[]>('/sessions?mine=true');
+  },
+
+  async listCohortSessions(): Promise<SimulationSession[]> {
+    return request<SimulationSession[]>('/sessions?mine=false');
   },
 
   // Evaluation
@@ -201,6 +220,30 @@ export const api = {
   async revokeCohortSessions(cohortId: string): Promise<{ message: string }> {
     return request(`/admin/cohorts/${cohortId}/revoke-sessions`, {
       method: 'POST',
+    });
+  },
+
+  async listCohortMembers(cohortId: string): Promise<CohortMember[]> {
+    return request<CohortMember[]>(`/admin/cohorts/${cohortId}/members`);
+  },
+
+  async addCohortMember(cohortId: string, displayName: string, role: string = 'trainee'): Promise<CohortMember> {
+    return request<CohortMember>(`/admin/cohorts/${cohortId}/members`, {
+      method: 'POST',
+      body: JSON.stringify({ display_name: displayName, role }),
+    });
+  },
+
+  async bulkAddCohortMembers(cohortId: string, names: string[], role: string = 'trainee'): Promise<CohortMember[]> {
+    return request<CohortMember[]>(`/admin/cohorts/${cohortId}/members/bulk`, {
+      method: 'POST',
+      body: JSON.stringify({ names, role }),
+    });
+  },
+
+  async removeCohortMember(cohortId: string, userId: string): Promise<void> {
+    await request(`/admin/cohorts/${cohortId}/members/${userId}`, {
+      method: 'DELETE',
     });
   },
 

@@ -8,12 +8,12 @@ import yaml
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import select
+from sqlalchemy import and_, func, select
 
 import backend.app.db.models  # noqa: F401 - ensure models registered
 from backend.app.db.base import Base
 from backend.app.db.session import async_session_factory, engine
-from backend.app.db.models import Skill, Cohort, Passcode
+from backend.app.db.models import Skill, Cohort, Passcode, User
 from backend.app.security.passcodes import hash_passcode
 from backend.app.services.scenario_service import ScenarioService
 
@@ -25,86 +25,108 @@ async def init_db():
     print("Database tables initialized successfully.")
 
 
-async def seed_demo_cohort(db):
-    stmt = select(Cohort).where(Cohort.name == "Demo Cohort")
-    cohort = (await db.execute(stmt)).scalar_one_or_none()
+async def seed_official_cohort(db):
     now = datetime.now(timezone.utc)
-    demo_expiry = now + timedelta(days=30)
+    cohort_expiry = now + timedelta(days=90)
+
+    # 1. Deactivate old demo cohorts and revoke demo passcodes
+    old_cohorts = (await db.execute(select(Cohort).where(Cohort.name == "Demo Cohort"))).scalars().all()
+    for oc in old_cohorts:
+        oc.is_active = False
+
+    demo_passcodes = (await db.execute(select(Passcode))).scalars().all()
+    for p in demo_passcodes:
+        if any(w in (p.label or "").lower() for w in ["demo", "legacy"]):
+            p.revoked_at = now
+
+    # 2. Find or create official Uzair Executive Training Cohort
+    stmt = select(Cohort).where(Cohort.name == "Uzair Executive Training Cohort")
+    cohort = (await db.execute(stmt)).scalar_one_or_none()
+
     if not cohort:
         cohort = Cohort(
-            name="Demo Cohort",
-            description="Default demo training cohort for exploratory scenario practice.",
+            name="Uzair Executive Training Cohort",
+            description="Official 3H Solutions Executive Scenario Training Cohort for enrolled students.",
             starts_at=now,
-            expires_at=demo_expiry,
+            expires_at=cohort_expiry,
             track_access="both",
-            budget_cap_usd=500.0,
+            budget_cap_usd=1000.0,
+            is_active=True,
+            max_members=100,
         )
         db.add(cohort)
         await db.flush()
-
-        passcode = Passcode(
-            cohort_id=cohort.id,
-            code_hash=hash_passcode("DEMO-2026"),
-            label="Default Demo Passcode",
-            valid_from=now,
-            valid_until=demo_expiry,
-            max_uses=1000,
-        )
-        passcode_alt = Passcode(
-            cohort_id=cohort.id,
-            code_hash=hash_passcode("DEMO-PASS"),
-            label="Legacy Demo Passcode",
-            valid_from=now,
-            valid_until=demo_expiry,
-            max_uses=1000,
-        )
-        admin_passcode = Passcode(
-            cohort_id=cohort.id,
-            code_hash=hash_passcode("ADMIN-PASS"),
-            label="Administrator Passcode",
-            valid_from=now,
-            valid_until=demo_expiry,
-            max_uses=1000,
-        )
-        db.add_all([passcode, passcode_alt, admin_passcode])
-        await db.commit()
-        print("Demo cohort, DEMO-2026, DEMO-PASS, and ADMIN-PASS seeded successfully.")
     else:
-        # The local demo database may have been seeded more than 30 days ago.
-        # Refresh the cohort and known demo codes so the documented login remains usable.
-        cohort.expires_at = demo_expiry
         cohort.is_active = True
-        demo_codes = {
-            "Default Demo Passcode": "DEMO-2026",
-            "Legacy Demo Passcode": "DEMO-PASS",
-            "Administrator Passcode": "ADMIN-PASS",
-        }
-        existing_codes = (
-            await db.execute(select(Passcode).where(Passcode.cohort_id == cohort.id))
-        ).scalars().all()
-        codes_by_label = {code.label: code for code in existing_codes}
+        cohort.expires_at = cohort_expiry
+        cohort.track_access = "both"
+        cohort.budget_cap_usd = 1000.0
 
-        for label, plain_code in demo_codes.items():
-            code = codes_by_label.get(label)
-            if code is None:
-                db.add(
-                    Passcode(
-                        cohort_id=cohort.id,
-                        code_hash=hash_passcode(plain_code),
-                        label=label,
-                        valid_from=now,
-                        valid_until=demo_expiry,
-                        max_uses=1000,
-                    )
+    # 3. Seed Passcodes: UZAIR-2026 and NARENDRA-2026
+    passcodes_to_seed = {
+        "Uzair Student Passcode": "UZAIR-2026",
+        "Narendra Developer SuperAdmin Passcode": "NARENDRA-2026",
+    }
+    existing_codes = (
+        await db.execute(select(Passcode).where(Passcode.cohort_id == cohort.id))
+    ).scalars().all()
+    codes_by_label = {code.label: code for code in existing_codes}
+
+    for label, plain_code in passcodes_to_seed.items():
+        code = codes_by_label.get(label)
+        if code is None:
+            db.add(
+                Passcode(
+                    cohort_id=cohort.id,
+                    code_hash=hash_passcode(plain_code),
+                    label=label,
+                    valid_from=now,
+                    valid_until=cohort_expiry,
+                    max_uses=2000,
                 )
-            else:
-                code.valid_from = now
-                code.valid_until = demo_expiry
-                code.revoked_at = None
-                code.max_uses = 1000
+            )
+        else:
+            code.valid_from = now
+            code.valid_until = cohort_expiry
+            code.revoked_at = None
+            code.max_uses = 2000
 
-        await db.commit()
-        print("Demo cohort and DEMO-2026, DEMO-PASS, and ADMIN-PASS verified for 30 days.")
+    # 4. Seed Enrolled Student Roster
+    # Narendra (super_admin developer with dual trainee + admin console access)
+    narendra_stmt = select(User).where(func.lower(User.display_name) == "narendra")
+    narendra = (await db.execute(narendra_stmt)).scalars().first()
+    if not narendra:
+        narendra = User(
+            cohort_id=cohort.id,
+            display_name="Narendra",
+            role="super_admin",
+            is_active=True,
+        )
+        db.add(narendra)
+    else:
+        narendra.cohort_id = cohort.id
+        narendra.role = "super_admin"
+        narendra.is_active = True
+
+    # Andrew Doherty (official enrolled trainee)
+    andrew_stmt = select(User).where(
+        and_(User.cohort_id == cohort.id, func.lower(User.display_name) == "andrew doherty")
+    )
+    andrew = (await db.execute(andrew_stmt)).scalar_one_or_none()
+    if not andrew:
+        andrew = User(
+            cohort_id=cohort.id,
+            display_name="Andrew Doherty",
+            role="trainee",
+            is_active=True,
+        )
+        db.add(andrew)
+    else:
+        andrew.is_active = True
+
+    await db.commit()
+    print("Uzair Executive Training Cohort, passcodes (UZAIR-2026, NARENDRA-2026), and roster (Narendra, Andrew Doherty) seeded successfully.")
+
 
 
 async def seed_skills(db):
@@ -171,7 +193,7 @@ async def main():
     print("=== Starting Database Seeding ===")
     await init_db()
     async with async_session_factory() as db:
-        await seed_demo_cohort(db)
+        await seed_official_cohort(db)
         await seed_skills(db)
         await seed_scenarios(db)
     print("=== Seeding Finished ===")

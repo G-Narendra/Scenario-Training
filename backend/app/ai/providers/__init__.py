@@ -3,6 +3,7 @@ from typing import Optional
 from backend.app.ai.providers.anthropic_provider import AnthropicProvider
 from backend.app.ai.providers.base import LLMMessage, LLMProvider, LLMProviderError, LLMResponse
 from backend.app.ai.providers.mock_provider import MockLLMProvider
+from backend.app.ai.providers.nvidia_provider import NVIDIAProvider
 from backend.app.ai.providers.openai_provider import OpenAIProvider
 from backend.app.config import settings
 
@@ -17,6 +18,15 @@ def get_llm_provider(
 
     name = (provider_name or settings.DEFAULT_LLM_PROVIDER).lower()
 
+    if name in ("nvidia", "nvidia_nim", "nim"):
+        if not settings.NVIDIA_API_KEY:
+            raise LLMProviderError("NVIDIA_API_KEY is not configured", retryable=False)
+        return NVIDIAProvider(
+            api_key=settings.NVIDIA_API_KEY,
+            base_url=settings.NVIDIA_BASE_URL,
+            model=settings.NVIDIA_MODEL,
+        )
+
     if name == "anthropic":
         if not settings.ANTHROPIC_API_KEY:
             raise LLMProviderError("ANTHROPIC_API_KEY is not configured", retryable=False)
@@ -27,7 +37,15 @@ def get_llm_provider(
             raise LLMProviderError("OPENAI_API_KEY is not configured", retryable=False)
         return OpenAIProvider(api_key=settings.OPENAI_API_KEY)
 
-    # Default to mock
+    # Auto-detect: if NVIDIA key is available, use it instead of mock
+    if settings.NVIDIA_API_KEY:
+        return NVIDIAProvider(
+            api_key=settings.NVIDIA_API_KEY,
+            base_url=settings.NVIDIA_BASE_URL,
+            model=settings.NVIDIA_MODEL,
+        )
+
+    # Fallback to mock
     return MockLLMProvider()
 
 
@@ -39,5 +57,6 @@ __all__ = [
     "MockLLMProvider",
     "AnthropicProvider",
     "OpenAIProvider",
+    "NVIDIAProvider",
     "get_llm_provider",
 ]

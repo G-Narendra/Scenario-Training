@@ -1,8 +1,13 @@
+import os
 import pytest
 from sqlalchemy import delete
 
+# CRITICAL: Isolate test database to test.db so running tests never wipes development data.db
+os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///./test.db"
+
 from backend.app.db.base import Base
 from backend.app.db.models import (
+    AttemptLedger,
     AuditLog,
     AuthSession,
     Cohort,
@@ -27,6 +32,7 @@ async def clean_test_database():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     async with async_session_factory() as db:
+        await db.execute(delete(AttemptLedger))
         await db.execute(delete(UsageEvent))
         await db.execute(delete(Evaluation))
         await db.execute(delete(Message))

@@ -8,6 +8,16 @@ def utc_now() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def is_expired(dt: datetime) -> bool:
+    """Safe datetime expiry comparison for both SQLite (naive) and Postgres (aware)."""
+    now = utc_now()
+    if dt.tzinfo is None:
+        now = now.replace(tzinfo=None)
+    elif now.tzinfo is None:
+        dt = dt.replace(tzinfo=None)
+    return dt < now
+
+
 class Base(DeclarativeBase):
     """Base class for all SQLAlchemy declarative models."""
 

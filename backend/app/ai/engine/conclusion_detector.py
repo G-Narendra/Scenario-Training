@@ -14,11 +14,11 @@ class ConclusionDetector:
         last_counterpart_message: str,
         conclusion_signals: Dict[str, Any],
         current_turn: Optional[int] = None,
-        min_turns: int = 2,
+        min_turns: int = 3,
     ) -> Tuple[bool, Optional[str], Optional[str]]:
         """
         Fast heuristic scan of counterpart reply against known completion patterns.
-        Enforces a minimum turn threshold (default 2 turns) so that early single-turn
+        Enforces a minimum turn threshold (minimum 3 substantive trainee turns) so that early single-turn
         phrases (e.g. 'schedule', 'Thursday at 2') do not prematurely terminate simulations.
         """
         if current_turn is not None and current_turn < min_turns:

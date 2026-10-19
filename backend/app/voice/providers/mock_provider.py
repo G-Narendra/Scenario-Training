@@ -23,16 +23,12 @@ class MockVoiceProvider(VoiceProvider):
 
     async def process_incoming_audio(self, chunk_bytes: bytes) -> Optional[str]:
         self.accumulated_audio_bytes += len(chunk_bytes)
-        # Return mock partial transcript if meaningful audio accumulated
-        if self.accumulated_audio_bytes > 500:
-            return "Could you share what your top priorities are..."
         return None
 
     async def finalize_trainee_turn(self) -> str:
         self.last_speech_end_time = time.perf_counter()
         self.interrupted = False
-        # Return complete transcript of what trainee said
-        return "Could you share what your top priorities are for this quarter?"
+        return ""
 
     async def generate_counterpart_speech(
         self,

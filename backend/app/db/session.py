@@ -6,14 +6,26 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from backend.app.config import settings
 
 # Engine configuration
-connect_args: dict[str, Any] = {}
+engine_kwargs: dict[str, Any] = {
+    "echo": settings.DEBUG,
+    "future": True,
+}
 if "sqlite" in settings.DATABASE_URL:
-    connect_args["check_same_thread"] = False
-    connect_args["timeout"] = 60
+    engine_kwargs["connect_args"] = {
+        "check_same_thread": False,
+        "timeout": 60,
+    }
+else:
+    # Production connection pool tuned for concurrency, failover resilience & zero stale socket drops
+    engine_kwargs.update({
+        "pool_size": 20,
+        "max_overflow": 10,
+        "pool_timeout": 30,
+        "pool_recycle": 1800,
+        "pool_pre_ping": True,
+    })
 
-engine = create_async_engine(
-    settings.DATABASE_URL, echo=settings.DEBUG, connect_args=connect_args, future=True
-)
+engine = create_async_engine(settings.DATABASE_URL, **engine_kwargs)
 
 if "sqlite" in settings.DATABASE_URL:
     @event.listens_for(engine.sync_engine, "connect")

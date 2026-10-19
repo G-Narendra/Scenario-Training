@@ -12,7 +12,7 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
       <div className="text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center space-x-2 rounded-full border border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/60 px-3.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-sm">
           <Sparkles className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
-          <span>ScenarioLab Curriculum Tracks</span>
+          <span>3H Solutions Practice Tracks</span>
         </div>
         <h1 className="mt-4 text-4xl font-black tracking-tight text-slate-900 dark:text-white font-heading sm:text-5xl">
           Choose Your Training Track
@@ -44,7 +44,7 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
           </div>
 
           <p className="mt-2 text-base text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
-            Master the 160 Core Leadership Capabilities: handling underperformers, psychological safety in reorgs, board crises, toxic stars, and ethical whistleblowers.
+            Master essential leadership conversations: handling underperformers, psychological safety in reorgs, board crises, toxic stars, and ethical whistleblowers.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">

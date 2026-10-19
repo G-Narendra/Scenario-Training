@@ -7,6 +7,7 @@ from pydantic import BaseModel, Field
 class CreateSessionRequest(BaseModel):
     scenario_id: str = Field(..., description="ID of the published scenario")
     mode: str = Field(default="text", pattern="^(text|voice)$")
+    device_fingerprint: Optional[str] = Field(default=None, max_length=128)
 
 
 class SessionMessageResponse(BaseModel):
@@ -35,6 +36,8 @@ class SessionDetailResponse(BaseModel):
     end_reason: Optional[str] = None
     token_usage: int = 0
     turn_count: int = 0
+    trainee_name: Optional[str] = None
+    cohort_name: Optional[str] = None
     messages: List[SessionMessageResponse] = []
 
     class Config:
@@ -51,6 +54,8 @@ class SessionListItemResponse(BaseModel):
     ended_at: Optional[datetime] = None
     turn_count: int = 0
     overall_score: Optional[int] = None
+    trainee_name: Optional[str] = None
+    user_id: Optional[str] = None
 
     class Config:
         from_attributes = True

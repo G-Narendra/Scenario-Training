@@ -24,8 +24,11 @@ class Settings(BaseSettings):
     DATABASE_URL: str = Field(default="sqlite+aiosqlite:///./data.db")
 
     # AI & Voice Providers
-    DEFAULT_LLM_PROVIDER: str = Field(default="mock")
-    LLM_PROVIDER: str = Field(default="mock")
+    DEFAULT_LLM_PROVIDER: str = Field(default="nvidia")
+    LLM_PROVIDER: str = Field(default="nvidia")
+    NVIDIA_API_KEY: Optional[str] = Field(default="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")
+    NVIDIA_BASE_URL: str = Field(default="https://integrate.api.nvidia.com/v1/chat/completions")
+    NVIDIA_MODEL: str = Field(default="meta/llama-3.2-11b-vision-instruct")
     ANTHROPIC_API_KEY: Optional[str] = Field(default=None)
     OPENAI_API_KEY: Optional[str] = Field(default=None)
     DEFAULT_VOICE_PROVIDER: str = Field(default="mock")

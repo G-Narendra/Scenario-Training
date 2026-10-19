@@ -3,7 +3,7 @@ import { api } from '../api/client';
 import { ScenarioDetail, ScenarioListItem } from '../types';
 import { ScenarioBriefingModal } from '../components/ScenarioBriefingModal';
 import { DifficultyBadge } from '../components/DifficultyBadge';
-import { ArrowLeft, Clock, Lightbulb, Search } from 'lucide-react';
+import { Clock, Lightbulb, Search } from 'lucide-react';
 
 interface ScenarioLibraryPageProps {
   selectedTrack: string;
@@ -20,8 +20,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
 }) => {
   const [scenarios, setScenarios] = useState<ScenarioListItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedTopic, setSelectedTopic] = useState<string>('all');
-  const [difficultyFilter, setDifficultyFilter] = useState<number | 'all'>('all');
+  const [difficultyFilter, setDifficultyFilter] = useState<string | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [briefingScenario, setBriefingScenario] = useState<ScenarioDetail | null>(null);
 
@@ -43,11 +42,11 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
     }
   };
 
-  const topics = Array.from(new Set(scenarios.map((s) => s.topic)));
-
   const filteredScenarios = scenarios.filter((s) => {
-    if (selectedTopic !== 'all' && s.topic !== selectedTopic) return false;
-    if (difficultyFilter !== 'all' && s.difficulty !== difficultyFilter) return false;
+    if (difficultyFilter !== 'all') {
+      const tier = s.difficulty_level || (s.difficulty <= 1 ? 'Normal' : s.difficulty <= 3 ? 'Challenging' : 'Crisis');
+      if (tier !== difficultyFilter) return false;
+    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchTitle = s.title.toLowerCase().includes(q);
@@ -59,13 +58,11 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
     return true;
   });
 
-  const difficultyTabs: Array<{ level: number | 'all'; label: string }> = [
-    { level: 'all', label: 'All Levels' },
-    { level: 1, label: 'L1: Foundational' },
-    { level: 2, label: 'L2: Intermediate' },
-    { level: 3, label: 'L3: Advanced' },
-    { level: 4, label: 'L4: High-Stakes' },
-    { level: 5, label: 'L5: Crisis' },
+  const difficultyTabs: Array<{ level: string | 'all'; label: string }> = [
+    { level: 'all', label: 'All Scenarios' },
+    { level: 'Normal', label: 'Level 1: Normal' },
+    { level: 'Challenging', label: 'Level 2: Challenging' },
+    { level: 'Crisis', label: 'Level 3: Crisis' },
   ];
 
   return (
@@ -73,14 +70,19 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
       {/* Top Header */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
         <div>
-          <button
-            onClick={onBackToTracks}
-            className="group flex items-center space-x-1.5 text-xs font-bold text-slate-500 hover:text-[#FF6500] dark:text-slate-400 dark:hover:text-[#FF6500] transition"
-          >
-            <ArrowLeft className="h-4 w-4 transition group-hover:-translate-x-1" />
-            <span>Back to Curriculum Tracks</span>
-          </button>
-          <div className="flex items-center space-x-3 mt-2">
+          <nav className="flex items-center space-x-2 text-xs font-bold text-slate-500 dark:text-slate-400 mb-2">
+            <button
+              onClick={onBackToTracks}
+              className="rounded-lg bg-slate-100 dark:bg-[#132B45] border border-slate-300 dark:border-[#1E3E62] px-2.5 py-1 text-slate-700 dark:text-slate-200 hover:text-[#FF6500] dark:hover:text-[#FF6500] transition"
+            >
+              Curriculum Tracks
+            </button>
+            <span className="text-slate-400">›</span>
+            <span className="font-semibold text-slate-900 dark:text-white">
+              {selectedTrack === 'sales' ? 'Enterprise Sales Scenarios' : 'Executive Leadership Scenarios'}
+            </span>
+          </nav>
+          <div className="flex items-center space-x-3 mt-1">
             <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white font-heading">
               {selectedTrack === 'sales' ? 'Enterprise Sales Scenarios' : 'Executive Leadership Scenarios'}
             </h1>
@@ -89,7 +91,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
             </span>
           </div>
           <p className="mt-1 text-base text-slate-700 dark:text-slate-200 font-medium">
-            Select an executive scenario, review the tactical coaching clue, and launch your roleplay simulation.
+            Select an executive scenario, review the briefing, and start your practice session.
           </p>
         </div>
 
@@ -106,9 +108,9 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
         </div>
       </div>
 
-      {/* Difficulty Level Tabs Filter (Directive 3) */}
+      {/* Difficulty Level Tabs Filter */}
       <div className="mt-6 flex flex-wrap items-center gap-2 border-b border-slate-200 dark:border-[#1E3E62] pb-4">
-        <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400 mr-1">
+        <span className="text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mr-1">
           Difficulty:
         </span>
         {difficultyTabs.map((tab) => (
@@ -125,25 +127,6 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
             {tab.label}
           </button>
         ))}
-
-        {/* Topic Filter */}
-        {topics.length > 1 && (
-          <div className="ml-auto flex items-center space-x-2 text-xs text-slate-600 dark:text-slate-300">
-            <span className="font-bold text-slate-500 dark:text-slate-400">Topic:</span>
-            <select
-              value={selectedTopic}
-              onChange={(e) => setSelectedTopic(e.target.value)}
-              className="rounded-xl border border-slate-300 bg-white px-3 py-1.5 text-xs font-semibold text-slate-800 shadow-sm focus:border-[#FF6500] focus:outline-none dark:border-[#2D5B8D] dark:bg-[#132B45] dark:text-slate-200"
-            >
-              <option value="all">All Topics ({topics.length})</option>
-              {topics.map((t) => (
-                <option key={t} value={t}>
-                  {t.replace(/_/g, ' ')}
-                </option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
       {/* Scenario Grid */}
@@ -171,13 +154,20 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                   <span className="rounded-md bg-slate-100 dark:bg-[#0B192C] border border-slate-300 dark:border-[#1E3E62] px-2.5 py-0.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                     {scen.topic.replace(/_/g, ' ')}
                   </span>
-                  <DifficultyBadge difficulty={scen.difficulty} size="sm" />
+                  <DifficultyBadge difficulty={scen.difficulty} difficultyLevel={scen.difficulty_level} size="sm" />
                 </div>
 
                 {/* Scenario Title */}
                 <h3 className="mt-4 text-xl font-black text-slate-900 dark:text-white font-heading group-hover:text-[#FF6500] transition-colors leading-snug">
                   {scen.title}
                 </h3>
+
+                {/* Primary Target Capability Highlight */}
+                <div className="mt-2.5">
+                  <span className="inline-flex items-center rounded-md bg-[#FF6500]/15 px-2.5 py-1 text-xs font-bold text-[#FF6500] border border-[#FF6500]/30">
+                    🎯 Target Skill: {scen.primary_capability || scen.target_capabilities?.[0] || 'Leadership Capability'}
+                  </span>
+                </div>
 
                 {/* Tactical Coaching Clue Teaser (High Contrast) */}
                 {scen.tactical_coaching_clue && (
@@ -190,36 +180,17 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                 )}
 
                 {/* Duration Benchmark */}
-                <div className="mt-3 flex items-center space-x-2 text-xs text-slate-600 dark:text-slate-300 font-semibold">
+                <div className="mt-3.5 flex items-center space-x-2 text-xs text-slate-600 dark:text-slate-300 font-semibold">
                   <Clock className="h-3.5 w-3.5 text-[#FF6500]" />
                   <span>Est. {Math.round(scen.duration_limit_seconds / 60)} minutes</span>
                 </div>
-
-                {/* Target Capabilities Pills */}
-                {scen.target_capabilities && scen.target_capabilities.length > 0 && (
-                  <div className="mt-3.5 flex flex-wrap gap-1.5">
-                    {scen.target_capabilities.slice(0, 2).map((cap, idx) => (
-                      <span
-                        key={idx}
-                        className="rounded-md bg-[#FF6500]/10 text-[#FF6500] border border-[#FF6500]/25 px-2 py-0.5 text-[10px] font-bold"
-                      >
-                        {cap}
-                      </span>
-                    ))}
-                    {scen.target_capabilities.length > 2 && (
-                      <span className="text-[10px] text-slate-500 dark:text-slate-400 font-bold self-center">
-                        +{scen.target_capabilities.length - 2} more
-                      </span>
-                    )}
-                  </div>
-                )}
               </div>
 
               {/* Action Button */}
               <div className="mt-6 border-t border-slate-200 dark:border-[#1E3E62] pt-4 flex items-center justify-between">
                 <span className="text-xs text-slate-600 dark:text-slate-300 font-bold">Briefing Dossier</span>
                 <span className="rounded-xl bg-[#FF6500] group-hover:bg-[#E05A00] px-4 py-1.5 text-xs font-bold text-white shadow-sm transition">
-                  Start Simulation
+                  Start Practice
                 </span>
               </div>
             </div>

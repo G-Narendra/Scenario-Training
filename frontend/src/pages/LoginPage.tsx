@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
-import { AlertCircle, ArrowRight, KeyRound, Moon, Shield, Sparkles, Sun, User as UserIcon } from 'lucide-react';
+import { AlertCircle, ArrowRight, KeyRound, Moon, Sun, User as UserIcon } from 'lucide-react';
 import { ThreeHSolutionsLogo } from '../components/ThreeHSolutionsLogo';
 
 export const LoginPage: React.FC = () => {
@@ -13,13 +13,8 @@ export const LoginPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const formatPasscode = (val: string) => {
-    // Keep uppercase alphanumeric and hyphens, up to 20 chars
-    const clean = val.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase().slice(0, 20);
-    // If user entered raw 8-character code without hyphen, format as XXXX-XXXX
-    if (!clean.includes('-') && clean.length > 4) {
-      return `${clean.slice(0, 4)}-${clean.slice(4, 8)}`;
-    }
-    return clean;
+    // Keep uppercase alphanumeric and hyphens, up to 25 chars
+    return val.replace(/[^a-zA-Z0-9-]/g, '').toUpperCase().slice(0, 25);
   };
 
   const handlePasscodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -30,21 +25,24 @@ export const LoginPage: React.FC = () => {
     e.preventDefault();
     setError(null);
 
-    if (!passcode || passcode.trim().length < 4) {
-      setError('Please provide a valid cohort passcode (e.g. DEMO-PASS or K7QM-4PXD).');
+    const cleanCode = passcode.trim();
+    const cleanName = displayName.trim();
+
+    if (!cleanCode || cleanCode.length < 4) {
+      setError('Please provide your cohort passcode (e.g. UZAIR-2026 or NARENDRA-2026).');
       return;
     }
 
-    if (!displayName.trim()) {
-      setError('Please enter your full name.');
+    if (!cleanName) {
+      setError('Please enter your enrolled student or administrator name.');
       return;
     }
 
     setIsSubmitting(true);
     try {
-      await login(passcode, displayName.trim());
+      await login(cleanCode, cleanName);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Invalid or expired passcode. Please verify with your training administrator.';
+      const msg = err instanceof Error ? err.message : 'Invalid credentials. Please verify with your training administrator.';
       setError(msg);
     } finally {
       setIsSubmitting(false);
@@ -78,10 +76,10 @@ export const LoginPage: React.FC = () => {
             Executive Scenario Training
           </h1>
           <p className="mt-2 text-sm text-slate-600 dark:text-slate-200 font-medium max-w-sm">
-            High-Impact Corporate Training & Behavioral Roleplay Simulations
+            High-Impact Corporate Training & Scenario Practice
           </p>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            50 Curated Leadership & Sales Scenarios across Difficulty Levels 1 to 5
+            Uzair / 3H Solutions Executive Simulation Platform
           </p>
         </div>
 
@@ -108,7 +106,7 @@ export const LoginPage: React.FC = () => {
                   name="passcode"
                   type="text"
                   autoComplete="off"
-                  placeholder="DEMO-PASS"
+                  placeholder="Enter Cohort Passcode"
                   value={passcode}
                   onChange={handlePasscodeChange}
                   className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-4 font-mono text-base font-bold tracking-wider text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-[#FF6500] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6500]/30 dark:border-[#2D5B8D] dark:bg-[#0B192C] dark:text-white dark:placeholder-slate-500"
@@ -116,13 +114,13 @@ export const LoginPage: React.FC = () => {
                 />
               </div>
               <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
-                Passcodes are issued by your 3H Solutions administrator.
+                Official passcode issued by your training administrator.
               </p>
             </div>
 
             <div>
               <label htmlFor="display-name-input" className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Your Full Name & Title
+                Enrolled Student / Administrator Name
               </label>
               <div className="relative mt-2">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">
@@ -132,13 +130,16 @@ export const LoginPage: React.FC = () => {
                   id="display-name-input"
                   name="displayName"
                   type="text"
-                  placeholder="e.g. Uzair - Director of Operations"
+                  placeholder="Enter your name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-[#FF6500] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6500]/30 dark:border-[#2D5B8D] dark:bg-[#0B192C] dark:text-white dark:placeholder-slate-500"
                   required
                 />
               </div>
+              <p className="mt-1.5 text-[11px] text-slate-500 dark:text-slate-400">
+                Must match your enrolled name on the cohort roster.
+              </p>
             </div>
 
             <button
@@ -147,42 +148,10 @@ export const LoginPage: React.FC = () => {
               disabled={isSubmitting}
               className="mt-2 flex w-full items-center justify-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] py-3.5 px-4 text-base font-bold text-white shadow-md shadow-[#FF6500]/30 transition focus:outline-none focus:ring-2 focus:ring-[#FF6500] focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50"
             >
-              <span>{isSubmitting ? 'Entering Simulation...' : 'Enter 3H Training Platform'}</span>
+              <span>{isSubmitting ? 'Verifying & Entering...' : 'Enter Training Platform'}</span>
               <ArrowRight className="h-5 w-5" />
             </button>
           </form>
-
-          {/* Quick Demo Credentials */}
-          <div className="mt-6 border-t border-slate-200 dark:border-slate-800/80 pt-4">
-            <div className="text-[11px] font-semibold text-slate-500 dark:text-slate-400 text-center mb-2">
-              Instant Demo Access:
-            </div>
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              <button
-                type="button"
-                onClick={() => {
-                  setPasscode('DEMO-PASS');
-                  setDisplayName('Alex Trainee');
-                }}
-                className="inline-flex items-center space-x-1.5 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 hover:border-indigo-500/50 hover:text-indigo-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:border-indigo-500/50 dark:hover:text-white transition"
-              >
-                <Sparkles className="h-3 w-3 text-indigo-500 dark:text-indigo-400" />
-                <span>Trainee Demo</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setPasscode('ADMIN-PASS');
-                  setDisplayName('Sarah Admin');
-                }}
-                className="inline-flex items-center space-x-1.5 rounded-lg border border-slate-200 bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-700 hover:border-emerald-500/50 hover:text-emerald-600 dark:border-slate-700 dark:bg-slate-800/60 dark:text-slate-300 dark:hover:border-emerald-500/50 dark:hover:text-white transition"
-              >
-                <Shield className="h-3 w-3 text-emerald-500 dark:text-emerald-400" />
-                <span>Admin Console</span>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

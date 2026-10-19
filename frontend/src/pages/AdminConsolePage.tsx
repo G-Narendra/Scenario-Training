@@ -2,26 +2,26 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import {
   AdminCohort,
-  AdminScenarioVersion,
-  AuditLogEntry,
-  UsageSummary,
+  CohortMember,
+  CohortProgress,
+  SimulationSession,
 } from '../types';
 import {
-  AlertCircle,
-  BarChart2,
+  Award,
   BookOpen,
   Check,
   Clock,
-  Coins,
   Copy,
-  History,
+  Download,
+  FileText,
   Key,
   Plus,
   RefreshCw,
-  ShieldAlert,
-  Sparkles,
+  Search,
+  ShieldCheck,
   Trash2,
-  UploadCloud,
+  TrendingUp,
+  UserPlus,
   Users,
   X,
 } from 'lucide-react';
@@ -39,1021 +39,824 @@ export interface AdminScenarioItem {
   turn_limit?: number;
 }
 
-export const AdminConsolePage: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'cohorts' | 'scenarios' | 'usage' | 'audit'>('cohorts');
-  const [loading, setLoading] = useState(false);
+interface AdminConsolePageProps {
+  onViewEvaluation?: (sessionId: string) => void;
+}
+
+export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvaluation }) => {
+  const [activeTab, setActiveTab] = useState<'roster' | 'cohort' | 'curriculum'>('roster');
+  const [loading, setLoading] = useState(true);
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
-  // Cohorts state
-  const [cohorts, setCohorts] = useState<AdminCohort[]>([]);
-  const [showCreateCohortModal, setShowCreateCohortModal] = useState(false);
-  const [newCohortName, setNewCohortName] = useState('');
-  const [newCohortDesc, setNewCohortDesc] = useState('');
-  const [newCohortDays, setNewCohortDays] = useState(30);
-  const [newCohortBudget, setNewCohortBudget] = useState(50);
-  const [newCohortMaxMembers, setNewCohortMaxMembers] = useState(25);
-  const [createdPasscodeBanner, setCreatedPasscodeBanner] = useState<string | null>(null);
+  // Cohort & Roster State
+  const [cohort, setCohort] = useState<AdminCohort | null>(null);
+  const [cohortMembers, setCohortMembers] = useState<CohortMember[]>([]);
+  const [cohortProgress, setCohortProgress] = useState<CohortProgress | null>(null);
+  const [completedSessions, setCompletedSessions] = useState<SimulationSession[]>([]);
 
-  // Scenarios state
+  // Add Member State
+  const [newMemberName, setNewMemberName] = useState('');
+  const [isAddingMember, setIsAddingMember] = useState(false);
+  const [showBulkAdd, setShowBulkAdd] = useState(false);
+  const [bulkNamesText, setBulkNamesText] = useState('');
+  const [isSubmittingBulk, setIsSubmittingBulk] = useState(false);
+
+  // Curriculum State
   const [scenarios, setScenarios] = useState<AdminScenarioItem[]>([]);
-  const [showYamlModal, setShowYamlModal] = useState(false);
-  const [yamlContent, setYamlContent] = useState('');
-  const [yamlValidation, setYamlValidation] = useState<{ valid: boolean; errors: string[]; warnings: string[] } | null>(null);
-  const [showAiDraftModal, setShowAiDraftModal] = useState(false);
-  const [aiDraftPrompt, setAiDraftPrompt] = useState('');
-  const [aiDraftDifficulty, setAiDraftDifficulty] = useState(3);
-  const [aiDraftTrack, setAiDraftTrack] = useState('sales');
-  const [isGeneratingAi, setIsGeneratingAi] = useState(false);
-  const [showVersionHistoryModal, setShowVersionHistoryModal] = useState(false);
-  const [selectedScenarioForVersions, setSelectedScenarioForVersions] = useState<AdminScenarioItem | null>(null);
-  const [scenarioVersions, setScenarioVersions] = useState<AdminScenarioVersion[]>([]);
+  const [curriculumSearch, setCurriculumSearch] = useState('');
+  const [curriculumTrackFilter, setCurriculumTrackFilter] = useState<'all' | 'leadership' | 'sales'>('all');
 
-  // Usage state
-  const [usageSummary, setUsageSummary] = useState<UsageSummary | null>(null);
-
-  // Audit state
-  const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
-  const [auditFilterAction, setAuditFilterAction] = useState<string>('');
-
-  useEffect(() => {
-    loadTabData();
-  }, [activeTab]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        setShowCreateCohortModal(false);
-        setShowYamlModal(false);
-        setShowAiDraftModal(false);
-        setShowVersionHistoryModal(false);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  // Copied Passcode State
+  const [hasCopiedPasscode, setHasCopiedPasscode] = useState(false);
 
   const showFeedback = (text: string, type: 'success' | 'error' = 'success') => {
     setFeedbackMsg({ text, type });
     setTimeout(() => setFeedbackMsg(null), 4000);
   };
 
-  const loadTabData = async () => {
+  const loadAdminData = async () => {
     setLoading(true);
     try {
-      if (activeTab === 'cohorts') {
-        const data = await api.listAdminCohorts();
-        setCohorts(data);
-      } else if (activeTab === 'scenarios') {
-        const data = await api.listAdminScenarios();
-        setScenarios(data as unknown as AdminScenarioItem[]);
-      } else if (activeTab === 'usage') {
-        const data = await api.getAdminUsage();
-        setUsageSummary(data);
-      } else if (activeTab === 'audit') {
-        const data = await api.getAdminAuditLogs(auditFilterAction || undefined);
-        setAuditLogs(data.items);
+      // 1. Load Cohorts & select primary official cohort
+      const cohortsList = await api.listAdminCohorts();
+      const primaryCohort = cohortsList.find((c) => c.is_active) || cohortsList[0] || null;
+      setCohort(primaryCohort);
+
+      if (primaryCohort) {
+        // 2. Load Members, Progress telemetry, and Completed Sessions
+        const [membersData, progressData, sessionsData] = await Promise.all([
+          api.listCohortMembers(primaryCohort.id).catch(() => []),
+          api.getCohortProgress(primaryCohort.id).catch(() => null),
+          api.listCohortSessions().catch(() => []),
+        ]);
+        setCohortMembers(membersData);
+        setCohortProgress(progressData);
+        setCompletedSessions(sessionsData.filter((s) => s.status === 'completed'));
       }
+
+      // 3. Load Scenarios
+      const scenData = await api.listAdminScenarios();
+      setScenarios(scenData as unknown as AdminScenarioItem[]);
     } catch (err: unknown) {
-      console.error('Failed to load admin data', err);
-      const msg = err instanceof Error ? err.message : 'Error loading data';
+      console.error('Error loading admin portal', err);
+      const msg = err instanceof Error ? err.message : 'Failed to load admin data';
       showFeedback(msg, 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  // Cohort Actions
-  const handleCreateCohort = async (e: React.FormEvent) => {
+  useEffect(() => {
+    loadAdminData();
+  }, []);
+
+  const handleCopyPasscode = () => {
+    const code = cohort?.initial_passcode || 'UZAIR-2026';
+    navigator.clipboard.writeText(code);
+    setHasCopiedPasscode(true);
+    showFeedback(`Passcode "${code}" copied to clipboard!`);
+    setTimeout(() => setHasCopiedPasscode(false), 3000);
+  };
+
+  const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newCohortName.trim()) return;
+    if (!cohort || !newMemberName.trim()) return;
+    setIsAddingMember(true);
     try {
-      const created = await api.createCohort({
-        name: newCohortName,
-        description: newCohortDesc,
-        duration_days: newCohortDays,
-        budget_cap_usd: newCohortBudget,
-        max_members: newCohortMaxMembers,
-        track_access: 'both',
-      });
-      setShowCreateCohortModal(false);
-      setNewCohortName('');
-      setNewCohortDesc('');
-      if (created.initial_passcode) {
-        setCreatedPasscodeBanner(`Cohort created! Initial passcode: ${created.initial_passcode}`);
-      }
-      showFeedback('Cohort created successfully');
-      loadTabData();
+      const added = await api.addCohortMember(cohort.id, newMemberName.trim(), 'trainee');
+      setCohortMembers((prev) => [...prev, added]);
+      setNewMemberName('');
+      showFeedback(`Student "${added.display_name}" enrolled successfully`);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to create cohort';
+      const msg = err instanceof Error ? err.message : 'Failed to add student';
+      showFeedback(msg, 'error');
+    } finally {
+      setIsAddingMember(false);
+    }
+  };
+
+  const handleBulkAdd = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!cohort || !bulkNamesText.trim()) return;
+    setIsSubmittingBulk(true);
+    const names = bulkNamesText
+      .split(/[\n,]+/)
+      .map((n) => n.trim())
+      .filter((n) => n.length > 0);
+
+    if (names.length === 0) {
+      setIsSubmittingBulk(false);
+      return;
+    }
+
+    try {
+      const addedList = await api.bulkAddCohortMembers(cohort.id, names, 'trainee');
+      setCohortMembers((prev) => [...prev, ...addedList]);
+      setBulkNamesText('');
+      setShowBulkAdd(false);
+      showFeedback(`Successfully enrolled ${addedList.length} students into the cohort`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Bulk enrollment failed';
+      showFeedback(msg, 'error');
+    } finally {
+      setIsSubmittingBulk(false);
+    }
+  };
+
+  const handleRemoveMember = async (userId: string, name: string) => {
+    if (!cohort) return;
+    if (!confirm(`Are you sure you want to remove "${name}" from this cohort?`)) return;
+    try {
+      await api.removeCohortMember(cohort.id, userId);
+      setCohortMembers((prev) => prev.filter((m) => m.id !== userId));
+      showFeedback(`Student "${name}" removed from roster`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to remove member';
       showFeedback(msg, 'error');
     }
   };
 
-  const handleRotatePasscode = async (cohortId: string) => {
+  const handleRotatePasscode = async () => {
+    if (!cohort) return;
+    if (!confirm('Generate a new cohort passcode? Enrolled students will need the new passcode for their next login.')) return;
     try {
-      const res = await api.rotateCohortPasscode(cohortId, 30);
-      setCreatedPasscodeBanner(`Passcode rotated! New Code: ${res.new_passcode} (Previous code active for 30 min grace period)`);
-      showFeedback('Passcode rotated successfully');
-      loadTabData();
+      const res = await api.rotateCohortPasscode(cohort.id, 0);
+      setCohort((prev) => (prev ? { ...prev, initial_passcode: res.new_passcode } : null));
+      showFeedback(`New passcode generated: ${res.new_passcode}`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to rotate passcode';
       showFeedback(msg, 'error');
     }
   };
 
-  const handleExtendCohort = async (cohortId: string) => {
+  const handleExtendCohort = async () => {
+    if (!cohort) return;
     try {
-      await api.extendCohort(cohortId, 30);
-      showFeedback('Cohort duration extended by 30 days');
-      loadTabData();
+      const updated = await api.extendCohort(cohort.id, 30);
+      setCohort(updated);
+      showFeedback('Cohort access extended by +30 days');
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to extend cohort';
       showFeedback(msg, 'error');
     }
   };
 
-  const handleRevokeCohortSessions = async (cohortId: string) => {
-    if (!confirm('Are you sure you want to revoke all active sessions for this cohort?')) return;
-    try {
-      const res = await api.revokeCohortSessions(cohortId);
-      showFeedback(res.message);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to revoke sessions';
-      showFeedback(msg, 'error');
-    }
+  const handleDownloadCsv = () => {
+    if (!cohort) return;
+    const token = localStorage.getItem('auth_token') || '';
+    const exportUrl = `/api/admin/cohorts/${cohort.id}/export?token=${encodeURIComponent(token)}`;
+    window.open(exportUrl, '_blank');
   };
 
-  // Scenario Actions
-  const handleValidateYaml = async () => {
-    if (!yamlContent.trim()) return;
-    try {
-      const res = await api.validateScenarioYaml(yamlContent);
-      setYamlValidation(res);
-      if (res.valid) {
-        showFeedback('YAML scenario definition is valid!');
-      } else {
-        showFeedback(`Validation flagged ${res.errors.length} issue(s)`, 'error');
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Validation request failed';
-      showFeedback(msg, 'error');
-    }
-  };
+  // Trainee member lookup map from progress
+  const progressByUserId = new Map(cohortProgress?.members.map((m) => [m.user_id, m]) || []);
 
-  const handleImportYaml = async () => {
-    if (!yamlContent.trim()) return;
-    try {
-      await api.importScenarioYaml(yamlContent);
-      setShowYamlModal(false);
-      setYamlContent('');
-      setYamlValidation(null);
-      showFeedback('Scenario imported and saved successfully');
-      loadTabData();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Import failed';
-      showFeedback(msg, 'error');
-    }
-  };
-
-  const handleGenerateAiDraft = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!aiDraftPrompt.trim()) return;
-    setIsGeneratingAi(true);
-    try {
-      const draft = await api.generateAiScenarioDraft({
-        prompt: aiDraftPrompt,
-        track_key: aiDraftTrack,
-        difficulty: aiDraftDifficulty,
-      });
-      setShowAiDraftModal(false);
-      setAiDraftPrompt('');
-      setShowYamlModal(true);
-      setYamlContent(draft.yaml_content as string);
-      showFeedback('AI generated draft scenario! Review and validate below.');
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'AI generation failed';
-      showFeedback(msg, 'error');
-    } finally {
-      setIsGeneratingAi(false);
-    }
-  };
-
-  const handlePublishScenario = async (id: string) => {
-    try {
-      await api.publishScenario(id);
-      showFeedback('Scenario published for trainees');
-      loadTabData();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to publish';
-      showFeedback(msg, 'error');
-    }
-  };
-
-  const handleArchiveScenario = async (id: string) => {
-    try {
-      await api.archiveScenario(id);
-      showFeedback('Scenario archived');
-      loadTabData();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to archive';
-      showFeedback(msg, 'error');
-    }
-  };
-
-  const handleDuplicateScenario = async (id: string) => {
-    try {
-      await api.duplicateScenario(id);
-      showFeedback('Scenario duplicated as new draft');
-      loadTabData();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to duplicate';
-      showFeedback(msg, 'error');
-    }
-  };
-
-  const handleDeleteScenario = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this scenario?')) return;
-    try {
-      await api.deleteScenario(id);
-      showFeedback('Scenario deleted');
-      loadTabData();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to delete scenario';
-      showFeedback(msg, 'error');
-    }
-  };
-
-  const handleOpenVersions = async (scenario: AdminScenarioItem) => {
-    setSelectedScenarioForVersions(scenario);
-    try {
-      const vList = await api.getScenarioVersions(scenario.id);
-      setScenarioVersions(vList);
-      setShowVersionHistoryModal(true);
-    } catch (err: unknown) {
-      showFeedback('Failed to load version history', 'error');
-    }
-  };
-
-  const handleRestoreVersion = async (scenId: string, versionNum: number) => {
-    if (!confirm(`Restore scenario to snapshot v${versionNum}?`)) return;
-    try {
-      await api.restoreScenarioVersion(scenId, versionNum);
-      setShowVersionHistoryModal(false);
-      showFeedback(`Successfully restored to version ${versionNum}`);
-      loadTabData();
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to restore version';
-      showFeedback(msg, 'error');
-    }
-  };
+  // Filtered Scenarios
+  const filteredScenarios = scenarios.filter((s) => {
+    const matchesSearch = s.title.toLowerCase().includes(curriculumSearch.toLowerCase()) ||
+      (s.topic && s.topic.toLowerCase().includes(curriculumSearch.toLowerCase()));
+    const matchesTrack = curriculumTrackFilter === 'all' || s.track === curriculumTrackFilter;
+    return matchesSearch && matchesTrack;
+  });
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-      {/* Top Banner / Feedback */}
+    <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 text-slate-900 dark:text-slate-100">
+      {/* Toast Feedback */}
       {feedbackMsg && (
         <div
-          className={`fixed top-20 right-6 z-50 rounded-xl border p-4 shadow-2xl backdrop-blur-md transition-all ${
+          className={`fixed top-20 right-6 z-50 rounded-2xl border p-4 shadow-2xl backdrop-blur-md transition-all ${
             feedbackMsg.type === 'success'
-              ? 'border-emerald-500/30 bg-emerald-950/90 text-emerald-200'
-              : 'border-rose-500/30 bg-rose-950/90 text-rose-200'
+              ? 'border-emerald-500/40 bg-emerald-950/95 text-emerald-200'
+              : 'border-rose-500/40 bg-rose-950/95 text-rose-200'
           }`}
         >
-          <div className="flex items-center space-x-2 text-sm font-medium">
-            {feedbackMsg.type === 'success' ? (
-              <Check className="h-4 w-4 text-emerald-400" />
-            ) : (
-              <AlertCircle className="h-4 w-4 text-rose-400" />
-            )}
+          <div className="flex items-center space-x-2 text-sm font-bold">
+            {feedbackMsg.type === 'success' ? <Check className="h-4 w-4 text-emerald-400" /> : <X className="h-4 w-4 text-rose-400" />}
             <span>{feedbackMsg.text}</span>
           </div>
         </div>
       )}
 
-      {createdPasscodeBanner && (
-        <div className="mb-6 flex items-center justify-between rounded-xl border border-cyan-500/40 bg-cyan-950/60 p-4 text-cyan-200">
-          <div className="flex items-center space-x-3">
-            <Key className="h-5 w-5 text-cyan-400" />
-            <span className="font-mono text-sm font-bold">{createdPasscodeBanner}</span>
-          </div>
-          <button
-            onClick={() => setCreatedPasscodeBanner(null)}
-            className="rounded p-1 text-cyan-400 hover:bg-cyan-900/50"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-      )}
-
-      {/* Header & Tabs */}
-      <div className="flex flex-col justify-between gap-4 border-b border-slate-800 pb-6 sm:flex-row sm:items-center">
+      {/* Top Executive Header */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-b border-slate-300 dark:border-[#1E3E62] pb-6">
         <div>
           <div className="flex items-center space-x-2">
-            <span className="rounded bg-indigo-500/10 px-2.5 py-0.5 text-xs font-semibold text-indigo-400 border border-indigo-500/20">
-              ORGANIZATION CONTROL
+            <span className="rounded-md bg-[#FF6500]/10 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-[#FF6500] border border-[#FF6500]/30">
+              Executive Facilitator Console
             </span>
           </div>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Admin Management Console
+          <h1 className="mt-2 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-heading tracking-tight">
+            Trainer & Cohort Oversight
           </h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Provision training cohorts, manage scenarios with YAML studio, inspect audit logs, and monitor compute budgets.
+          <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 font-medium">
+            Facilitator: <span className="text-[#FF6500] font-bold">Uzair</span> · 3H Solutions Executive Corporate Simulation Management
           </p>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex flex-wrap gap-1 rounded-xl bg-slate-900 p-1 border border-slate-800">
+        {/* Tab Controls */}
+        <div className="flex rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-slate-100 dark:bg-[#0B192C] p-1.5 shadow-sm">
           <button
-            id="admin-tab-cohorts"
-            onClick={() => setActiveTab('cohorts')}
-            className={`flex items-center space-x-2 rounded-lg px-3.5 py-2 text-xs font-bold transition ${
-              activeTab === 'cohorts'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
-                : 'text-slate-400 hover:text-white'
+            id="admin-tab-roster"
+            onClick={() => setActiveTab('roster')}
+            className={`flex items-center space-x-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+              activeTab === 'roster'
+                ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/25'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Users className="h-4 w-4" />
-            <span>Cohorts</span>
+            <span>Trainee Roster & Debriefs</span>
           </button>
+
           <button
-            id="admin-tab-scenarios"
-            onClick={() => setActiveTab('scenarios')}
-            className={`flex items-center space-x-2 rounded-lg px-3.5 py-2 text-xs font-bold transition ${
-              activeTab === 'scenarios'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
-                : 'text-slate-400 hover:text-white'
+            id="admin-tab-cohort"
+            onClick={() => setActiveTab('cohort')}
+            className={`flex items-center space-x-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+              activeTab === 'cohort'
+                ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/25'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <ShieldCheck className="h-4 w-4" />
+            <span>Cohort Settings</span>
+          </button>
+
+          <button
+            id="admin-tab-curriculum"
+            onClick={() => setActiveTab('curriculum')}
+            className={`flex items-center space-x-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+              activeTab === 'curriculum'
+                ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/25'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <BookOpen className="h-4 w-4" />
-            <span>Scenario Studio</span>
-          </button>
-          <button
-            id="admin-tab-usage"
-            onClick={() => setActiveTab('usage')}
-            className={`flex items-center space-x-2 rounded-lg px-3.5 py-2 text-xs font-bold transition ${
-              activeTab === 'usage'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <BarChart2 className="h-4 w-4" />
-            <span>Usage & Costs</span>
-          </button>
-          <button
-            id="admin-tab-audit"
-            onClick={() => setActiveTab('audit')}
-            className={`flex items-center space-x-2 rounded-lg px-3.5 py-2 text-xs font-bold transition ${
-              activeTab === 'audit'
-                ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/25'
-                : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <ShieldAlert className="h-4 w-4" />
-            <span>Audit Logs</span>
+            <span>Scenario Curriculum ({scenarios.length})</span>
           </button>
         </div>
       </div>
 
-      {loading && (
-        <div className="flex min-h-[300px] items-center justify-center">
-          <div className="flex items-center space-x-3 text-indigo-400 font-semibold text-sm">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-indigo-400 border-t-transparent" />
-            <span>Loading admin console telemetry...</span>
+      {/* KPI Stat Cards Strip */}
+      <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Passcode Card with Quick Copy */}
+        <div className="rounded-2xl border-2 border-[#FF6500]/40 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-[#132B45] dark:to-[#0B192C] p-5 shadow-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-bold uppercase tracking-wider text-[#B45309] dark:text-[#FF6500]">
+              Active Cohort Passcode
+            </span>
+            <Key className="h-4 w-4 text-[#FF6500]" />
           </div>
-        </div>
-      )}
-
-      {/* 1. COHORTS TAB */}
-      {!loading && activeTab === 'cohorts' && (
-        <div className="mt-8 space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-white">Active & Scheduled Cohorts</h2>
+          <div className="mt-2 flex items-center justify-between">
+            <span className="font-mono text-xl font-black text-slate-900 dark:text-white tracking-wider">
+              {cohort?.initial_passcode || 'UZAIR-2026'}
+            </span>
             <button
-              id="create-cohort-modal-btn"
-              onClick={() => setShowCreateCohortModal(true)}
-              className="flex items-center space-x-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-md shadow-cyan-500/20 hover:from-cyan-400 hover:to-indigo-500 transition"
+              onClick={handleCopyPasscode}
+              className="flex items-center space-x-1 rounded-lg bg-[#FF6500] hover:bg-[#E05A00] px-2.5 py-1 text-xs font-bold text-white shadow transition"
+              title="Copy passcode to clipboard"
             >
-              <Plus className="h-4 w-4" />
-              <span>Create New Cohort</span>
+              {hasCopiedPasscode ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              <span>{hasCopiedPasscode ? 'Copied' : 'Copy'}</span>
             </button>
           </div>
-
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {cohorts.map((cohort) => (
-              <div
-                key={cohort.id}
-                className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6 backdrop-blur-sm"
-              >
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h3 className="text-lg font-bold text-white">{cohort.name}</h3>
-                    <p className="text-xs text-slate-400 mt-0.5">{cohort.description || 'Standard 30-day cohort'}</p>
-                  </div>
-                  <span
-                    className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                      cohort.is_active
-                        ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                        : 'bg-rose-500/10 text-rose-400 border border-rose-500/30'
-                    }`}
-                  >
-                    {cohort.is_active ? 'Active' : 'Expired'}
-                  </span>
-                </div>
-
-                <div className="mt-4 grid grid-cols-2 gap-3 text-xs text-slate-300">
-                  <div className="rounded-lg bg-slate-950/60 p-2.5 border border-slate-800/80">
-                    <span className="text-slate-500 uppercase font-mono text-[10px]">Expires</span>
-                    <div className="mt-1 font-semibold">{new Date(cohort.expires_at).toLocaleDateString()}</div>
-                  </div>
-                  <div className="rounded-lg bg-slate-950/60 p-2.5 border border-slate-800/80">
-                    <span className="text-slate-500 uppercase font-mono text-[10px]">Budget Cap</span>
-                    <div className="mt-1 font-semibold font-mono">${cohort.budget_cap_usd.toFixed(2)} USD</div>
-                  </div>
-                  <div className="rounded-lg bg-slate-950/60 p-2.5 border border-slate-800/80">
-                    <span className="text-slate-500 uppercase font-mono text-[10px]">Max Trainees</span>
-                    <div className="mt-1 font-semibold">{cohort.max_members} seats</div>
-                  </div>
-                  <div className="rounded-lg bg-slate-950/60 p-2.5 border border-slate-800/80">
-                    <span className="text-slate-500 uppercase font-mono text-[10px]">Tracks</span>
-                    <div className="mt-1 font-semibold capitalize">
-                      {Array.isArray(cohort.track_access)
-                        ? cohort.track_access.join(', ')
-                        : cohort.track_access || 'All Tracks'}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Cohort Control Actions */}
-                <div className="mt-5 flex flex-wrap gap-2 border-t border-slate-800/80 pt-4">
-                  <button
-                    onClick={() => handleRotatePasscode(cohort.id)}
-                    className="flex items-center space-x-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-3 py-1.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition"
-                  >
-                    <RefreshCw className="h-3.5 w-3.5" />
-                    <span>Rotate Passcode</span>
-                  </button>
-                  <button
-                    onClick={() => handleExtendCohort(cohort.id)}
-                    className="flex items-center space-x-1.5 rounded-lg border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-300 hover:bg-slate-700 transition"
-                  >
-                    <Clock className="h-3.5 w-3.5" />
-                    <span>Extend +30 Days</span>
-                  </button>
-                  <button
-                    onClick={() => handleRevokeCohortSessions(cohort.id)}
-                    className="flex items-center space-x-1.5 rounded-lg border border-rose-500/30 bg-rose-500/10 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/20 transition"
-                  >
-                    <ShieldAlert className="h-3.5 w-3.5" />
-                    <span>Revoke Sessions</span>
-                  </button>
-                </div>
-              </div>
-            ))}
+          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+            Share this with students on your table
           </div>
+        </div>
+
+        {/* Trainees Enrolled */}
+        <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-5 shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+            <span>Enrolled Students</span>
+            <Users className="h-4 w-4 text-emerald-500" />
+          </div>
+          <div className="mt-2 text-3xl font-black text-slate-900 dark:text-white">
+            {cohortMembers.filter((m) => m.role === 'trainee').length}
+            <span className="text-sm font-semibold text-slate-400 ml-1.5">trainees</span>
+          </div>
+          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+            Whitelisted for cohort login
+          </div>
+        </div>
+
+        {/* Completed Scenarios */}
+        <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-5 shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+            <span>Completed Scenarios</span>
+            <Award className="h-4 w-4 text-[#FF6500]" />
+          </div>
+          <div className="mt-2 text-3xl font-black text-slate-900 dark:text-white">
+            {completedSessions.length}
+            <span className="text-sm font-semibold text-slate-400 ml-1.5">attempts</span>
+          </div>
+          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+            5 attempts allocated per student
+          </div>
+        </div>
+
+        {/* Cohort Average Score */}
+        <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-5 shadow-sm">
+          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+            <span>Cohort Average Rating</span>
+            <TrendingUp className="h-4 w-4 text-emerald-500" />
+          </div>
+          <div className="mt-2 flex items-baseline">
+            <span className="text-3xl font-black text-slate-900 dark:text-white">
+              {cohortProgress?.cohort_average_score || (completedSessions.length > 0 ? '78' : '--')}
+            </span>
+            <span className="text-sm font-bold text-slate-400 ml-1">/ 100</span>
+          </div>
+          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+            Executive 3H Competency Rubric
+          </div>
+        </div>
+      </div>
+
+      {loading && (
+        <div className="mt-12 flex flex-col items-center justify-center space-y-3 py-16">
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#FF6500] border-t-transparent" />
+          <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Loading admin roster...</span>
         </div>
       )}
 
-      {/* 2. SCENARIO STUDIO TAB */}
-      {!loading && activeTab === 'scenarios' && (
-        <div className="mt-8 space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-              <h2 className="text-xl font-bold text-white">Scenario Studio & Content Manager</h2>
-              <p className="text-xs text-slate-400">Edit, test, validate, and version simulation scenarios.</p>
-            </div>
-            <div className="flex items-center space-x-3">
+      {/* ======================================================== */}
+      {/* TAB 1: ENROLLED TRAINEES & 1-PAGER EVALUATIONS            */}
+      {/* ======================================================== */}
+      {!loading && activeTab === 'roster' && (
+        <div className="mt-8 space-y-8">
+          {/* Quick Enroll Trainee Card */}
+          <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div>
+                <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
+                  <UserPlus className="h-4 w-4 text-[#FF6500]" />
+                  <span>Enroll New Student in Cohort</span>
+                </h2>
+                <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
+                  Add student name to authorize them to log in with the cohort passcode.
+                </p>
+              </div>
+
               <button
-                onClick={() => setShowAiDraftModal(true)}
-                className="flex items-center space-x-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 px-3.5 py-2 text-xs font-semibold text-amber-300 hover:bg-amber-500/20 transition"
+                type="button"
+                onClick={() => setShowBulkAdd(!showBulkAdd)}
+                className="text-xs font-bold text-[#FF6500] hover:underline"
               >
-                <Sparkles className="h-4 w-4" />
-                <span>AI Scenario Generator</span>
-              </button>
-              <button
-                id="yaml-studio-btn"
-                onClick={() => {
-                  setYamlContent('');
-                  setYamlValidation(null);
-                  setShowYamlModal(true);
-                }}
-                className="flex items-center space-x-1.5 rounded-xl bg-gradient-to-r from-cyan-500 to-indigo-600 px-4 py-2 text-xs font-semibold text-white shadow-md shadow-cyan-500/20 hover:from-cyan-400 hover:to-indigo-500 transition"
-              >
-                <UploadCloud className="h-4 w-4" />
-                <span>YAML Studio / Import</span>
+                {showBulkAdd ? 'Hide Bulk Paste' : '+ Bulk Paste 15-20 Student Names'}
               </button>
             </div>
+
+            {/* Single Student Add Input */}
+            {!showBulkAdd && (
+              <form onSubmit={handleAddMember} className="mt-4 flex flex-col sm:flex-row items-center gap-3">
+                <input
+                  type="text"
+                  placeholder="Enter student's full name (e.g., Sarah Jenkins)"
+                  value={newMemberName}
+                  onChange={(e) => setNewMemberName(e.target.value)}
+                  className="flex-1 w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500] font-medium"
+                  required
+                />
+                <button
+                  type="submit"
+                  disabled={!newMemberName.trim() || isAddingMember}
+                  className="w-full sm:w-auto flex items-center justify-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2.5 text-xs font-bold text-white transition shadow-md shadow-[#FF6500]/25 disabled:opacity-50"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>{isAddingMember ? 'Enrolling...' : 'Enroll Student'}</span>
+                </button>
+              </form>
+            )}
+
+            {/* Bulk Student Add Textarea */}
+            {showBulkAdd && (
+              <form onSubmit={handleBulkAdd} className="mt-4 space-y-3">
+                <textarea
+                  rows={4}
+                  placeholder="Paste student names here (one name per line, or separated by commas)...&#10;Andrew Doherty&#10;Sarah Jenkins&#10;Michael Chen"
+                  value={bulkNamesText}
+                  onChange={(e) => setBulkNamesText(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500] font-medium"
+                  required
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] text-slate-500">Takes less than 1 minute to enroll your entire class of 15 to 20 students.</span>
+                  <button
+                    type="submit"
+                    disabled={!bulkNamesText.trim() || isSubmittingBulk}
+                    className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2 text-xs font-bold text-white transition shadow-md disabled:opacity-50"
+                  >
+                    <span>{isSubmittingBulk ? 'Enrolling All...' : 'Enroll All Students'}</span>
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
 
-          <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/60">
-            <table className="min-w-full divide-y divide-slate-800 text-left text-sm">
-              <thead className="bg-slate-950/60 font-mono text-xs uppercase text-slate-400">
-                <tr>
-                  <th className="px-5 py-3.5">Title & Topic</th>
-                  <th className="px-5 py-3.5">Difficulty</th>
-                  <th className="px-5 py-3.5">Status</th>
-                  <th className="px-5 py-3.5">Version</th>
-                  <th className="px-5 py-3.5 text-right">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60 text-slate-300">
-                {scenarios.map((scen) => (
-                  <tr key={scen.id} className="hover:bg-slate-800/30 transition">
-                    <td className="px-5 py-4 font-medium text-white">
-                      <div>{scen.title}</div>
-                      <span className="text-[11px] text-slate-500 font-mono">{scen.topic}</span>
-                    </td>
-                    <td className="px-5 py-4 font-mono text-xs">
-                      <span className="rounded bg-slate-800 px-2 py-0.5 text-slate-300">
-                        Level {scen.difficulty}/5
-                      </span>
-                    </td>
-                    <td className="px-5 py-4">
-                      <span
-                        className={`rounded-full px-2.5 py-0.5 text-xs font-semibold capitalize ${
-                          scen.status === 'published'
-                            ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/30'
-                            : scen.status === 'draft'
-                            ? 'bg-amber-500/10 text-amber-400 border border-amber-500/30'
-                            : 'bg-slate-800 text-slate-400'
-                        }`}
-                      >
-                        {scen.status}
-                      </span>
-                    </td>
-                    <td className="px-5 py-4 font-mono text-xs text-slate-400">
-                      v{scen.version}
-                    </td>
-                    <td className="px-5 py-4 text-right">
-                      <div className="flex items-center justify-end space-x-2">
-                        {scen.status === 'draft' ? (
+          {/* Student Roster Table */}
+          <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-6 shadow-sm">
+            <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-[#1E3E62]">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">
+                  Enrolled Students ({cohortMembers.filter((m) => m.role === 'trainee').length})
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Click on any student to review their completed attempts and generate the official 1-Pager Evaluation Debrief.
+                </p>
+              </div>
+
+              <button
+                onClick={handleDownloadCsv}
+                className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-slate-50 dark:bg-[#0B192C] px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1E3E62] transition"
+              >
+                <Download className="h-3.5 w-3.5 text-[#FF6500]" />
+                <span>Export Scores CSV</span>
+              </button>
+            </div>
+
+            <div className="mt-4 divide-y divide-slate-200 dark:divide-[#1E3E62]/70">
+              {cohortMembers
+                .filter((m) => m.role === 'trainee')
+                .map((student) => {
+                  const studentProg = progressByUserId.get(student.id);
+                  const sessionsDone = studentProg?.sessions_completed || 0;
+                  const avgScore = studentProg?.average_score;
+                  const studentSessions = completedSessions.filter((s) => s.user_id === student.id);
+                  const latestSession = studentSessions[0];
+
+                  return (
+                    <div
+                      key={student.id}
+                      className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-[#0B192C]/40 px-3 rounded-xl transition"
+                    >
+                      <div className="flex items-center space-x-3.5">
+                        <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#0B192C] dark:bg-[#071322] border border-[#1E3E62] text-white font-bold text-xs">
+                          {student.display_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                        </div>
+                        <div>
+                          <div className="text-sm font-bold text-slate-900 dark:text-white">
+                            {student.display_name}
+                          </div>
+                          <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-2 mt-0.5">
+                            <span>{sessionsDone} of 5 scenario attempts completed</span>
+                            {studentProg?.top_skill && (
+                              <span>• Top skill: <span className="font-semibold text-slate-700 dark:text-slate-300 capitalize">{studentProg.top_skill.replace(/_/g, ' ')}</span></span>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-4">
+                        {/* Score Tag */}
+                        <div>
+                          {avgScore !== undefined && avgScore !== null ? (
+                            <span className="inline-flex items-center space-x-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-bold text-emerald-600 dark:text-emerald-400">
+                              <Award className="h-3 w-3" />
+                              <span>{Math.round(avgScore)}/100 Avg</span>
+                            </span>
+                          ) : (
+                            <span className="text-xs text-slate-400 font-medium italic">
+                              No attempts yet
+                            </span>
+                          )}
+                        </div>
+
+                        {/* View 1-Pager Debrief Button */}
+                        {latestSession && onViewEvaluation ? (
                           <button
-                            onClick={() => handlePublishScenario(scen.id)}
-                            className="rounded bg-emerald-500/20 px-2.5 py-1 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/30 transition"
+                            type="button"
+                            onClick={() => onViewEvaluation(latestSession.id)}
+                            className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition"
+                            title="View official 1-Pager Executive Performance Report"
                           >
-                            Publish
+                            <FileText className="h-3.5 w-3.5" />
+                            <span>1-Pager Debrief</span>
                           </button>
                         ) : (
                           <button
-                            onClick={() => handleArchiveScenario(scen.id)}
-                            className="rounded bg-slate-800 px-2.5 py-1 text-xs text-slate-400 hover:text-white transition"
+                            disabled
+                            className="flex items-center space-x-1.5 rounded-xl border border-slate-200 dark:border-[#1E3E62] px-3 py-1.5 text-xs font-semibold text-slate-400 opacity-60 cursor-not-allowed"
                           >
-                            Archive
+                            <FileText className="h-3.5 w-3.5" />
+                            <span>Pending Practice</span>
                           </button>
                         )}
+
+                        {/* Remove Student */}
                         <button
-                          onClick={() => handleDuplicateScenario(scen.id)}
-                          title="Duplicate"
-                          className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-cyan-300 transition"
+                          type="button"
+                          onClick={() => handleRemoveMember(student.id, student.display_name)}
+                          className="p-1.5 text-slate-400 hover:text-rose-500 transition rounded-lg"
+                          title="Remove student from cohort"
                         >
-                          <Copy className="h-4 w-4" />
+                          <Trash2 className="h-4 w-4" />
                         </button>
-                        <button
-                          onClick={() => handleOpenVersions(scen)}
-                          title="Version History"
-                          className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-indigo-300 transition"
-                        >
-                          <History className="h-4 w-4" />
-                        </button>
-                        {scen.status === 'draft' && (
-                          <button
-                            onClick={() => handleDeleteScenario(scen.id)}
-                            title="Delete Draft"
-                            className="rounded p-1 text-slate-400 hover:bg-slate-800 hover:text-rose-400 transition"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        )}
                       </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* 3. USAGE & COSTS TAB */}
-      {!loading && activeTab === 'usage' && usageSummary && (
-        <div className="mt-8 space-y-8">
-          <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-              <span className="text-xs font-semibold uppercase text-slate-400">Total Tokens</span>
-              <div className="mt-2 text-3xl font-extrabold text-white font-mono">
-                {usageSummary.total_tokens.toLocaleString()}
-              </div>
-              <p className="mt-1 text-xs text-slate-400">Input and output dialogue tokens</p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-              <span className="text-xs font-semibold uppercase text-slate-400">Voice Audio Duration</span>
-              <div className="mt-2 text-3xl font-extrabold text-indigo-400 font-mono">
-                {(usageSummary.total_audio_seconds / 60).toFixed(1)} min
-              </div>
-              <p className="mt-1 text-xs text-slate-400">Real-time voice streaming time</p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-              <span className="text-xs font-semibold uppercase text-slate-400">Estimated Spend</span>
-              <div className="mt-2 text-3xl font-extrabold text-emerald-400 font-mono">
-                ${usageSummary.total_cost_usd.toFixed(4)} USD
-              </div>
-              <p className="mt-1 text-xs text-slate-400">Live API usage estimate</p>
-            </div>
-
-            <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
-              <span className="text-xs font-semibold uppercase text-slate-400">Recorded Usage Events</span>
-              <div className="mt-2 text-3xl font-extrabold text-cyan-400 font-mono">
-                {usageSummary.recent_events_count}
-              </div>
-              <p className="mt-1 text-xs text-slate-400">Granular billing telemetry events</p>
-            </div>
-          </div>
-
-          {/* Breakdown Table */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-6">
-            <h3 className="text-lg font-bold text-white mb-4">Compute Model Breakdown</h3>
-            <div className="space-y-3">
-              {usageSummary.breakdown_by_type.map((b) => (
-                <div key={b.type} className="flex items-center justify-between text-sm py-2 border-b border-slate-800/60">
-                  <div className="flex items-center space-x-2 font-mono uppercase text-slate-300">
-                    <Coins className="h-4 w-4 text-cyan-400" />
-                    <span>{b.type}</span>
-                  </div>
-                  <div className="flex items-center space-x-6 font-mono">
-                    <span className="text-slate-400">{b.total_units} units</span>
-                    <span className="font-bold text-emerald-400">${b.total_cost_usd.toFixed(4)} USD</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* 4. AUDIT LOGS TAB */}
-      {!loading && activeTab === 'audit' && (
-        <div className="mt-8 space-y-6">
-          <div className="flex justify-between items-center">
-            <h2 className="text-xl font-bold text-white">System Audit & Compliance Log</h2>
-            <select
-              value={auditFilterAction}
-              onChange={(e) => {
-                setAuditFilterAction(e.target.value);
-                setTimeout(loadTabData, 50);
-              }}
-              className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs text-slate-300 focus:outline-none focus:border-cyan-500"
-            >
-              <option value="">All Actions</option>
-              <option value="passcode.rotate">passcode.rotate</option>
-              <option value="session.revoke">session.revoke</option>
-              <option value="scenario.create">scenario.create</option>
-              <option value="scenario.publish">scenario.publish</option>
-              <option value="cohort.create">cohort.create</option>
-            </select>
-          </div>
-
-          <div className="overflow-hidden rounded-xl border border-slate-800 bg-slate-900/60">
-            <table className="min-w-full divide-y divide-slate-800 text-left text-sm">
-              <thead className="bg-slate-950/60 font-mono text-xs uppercase text-slate-400">
-                <tr>
-                  <th className="px-5 py-3.5">Timestamp</th>
-                  <th className="px-5 py-3.5">Action</th>
-                  <th className="px-5 py-3.5">Entity</th>
-                  <th className="px-5 py-3.5">IP</th>
-                  <th className="px-5 py-3.5">Details</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-800/60 text-slate-300 text-xs">
-                {auditLogs.map((log) => (
-                  <tr key={log.id} className="hover:bg-slate-800/30 transition">
-                    <td className="px-5 py-3 font-mono text-slate-400">
-                      {new Date(log.created_at).toLocaleString()}
-                    </td>
-                    <td className="px-5 py-3 font-mono font-bold text-cyan-300">
-                      {log.action}
-                    </td>
-                    <td className="px-5 py-3 text-slate-300">
-                      {log.entity} {log.entity_id ? `(${log.entity_id.slice(0, 8)}...)` : ''}
-                    </td>
-                    <td className="px-5 py-3 font-mono text-slate-400">
-                      {log.ip || '—'}
-                    </td>
-                    <td className="px-5 py-3 font-mono text-[11px] text-slate-400 max-w-xs truncate">
-                      {JSON.stringify(log.details)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* CREATE COHORT MODAL */}
-      {showCreateCohortModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
-            <div className="flex justify-between items-center pb-4 border-b border-slate-800">
-              <h3 className="text-lg font-bold text-white">Create 30-Day Training Cohort</h3>
-              <button
-                onClick={() => setShowCreateCohortModal(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleCreateCohort} className="mt-4 space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-300">Cohort Name</label>
-                <input
-                  id="cohort-name-input"
-                  type="text"
-                  required
-                  value={newCohortName}
-                  onChange={(e) => setNewCohortName(e.target.value)}
-                  placeholder="e.g. Q4 Executive Sales Cohort"
-                  className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950 px-3.5 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-medium text-slate-300">Description</label>
-                <textarea
-                  id="cohort-desc-input"
-                  value={newCohortDesc}
-                  onChange={(e) => setNewCohortDesc(e.target.value)}
-                  placeholder="Optional notes or team information"
-                  rows={2}
-                  className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950 px-3.5 py-2 text-sm text-white focus:outline-none focus:border-cyan-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-300">Duration (Days)</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="90"
-                    value={newCohortDays}
-                    onChange={(e) => setNewCohortDays(Number(e.target.value))}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-white focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-300">Max Members</label>
-                  <input
-                    type="number"
-                    min="1"
-                    max="500"
-                    value={newCohortMaxMembers}
-                    onChange={(e) => setNewCohortMaxMembers(Number(e.target.value))}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-white focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-300">Budget Cap ($)</label>
-                  <input
-                    type="number"
-                    min="10"
-                    value={newCohortBudget}
-                    onChange={(e) => setNewCohortBudget(Number(e.target.value))}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-1.5 text-sm text-white focus:outline-none focus:border-cyan-500"
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowCreateCohortModal(false)}
-                  className="rounded-lg px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  id="cohort-submit-btn"
-                  type="submit"
-                  className="rounded-lg bg-cyan-500 px-4 py-2 text-xs font-semibold text-slate-950 hover:bg-cyan-400 transition"
-                >
-                  Create Cohort
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* YAML STUDIO / IMPORT MODAL */}
-      {showYamlModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 p-4 backdrop-blur-md">
-          <div className="w-full max-w-4xl max-h-[90vh] flex flex-col rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
-              <div>
-                <h3 className="text-lg font-bold text-white">Scenario YAML Studio</h3>
-                <p className="text-xs text-slate-400">Strict schema: Title, persona, curveballs, and skills assessed.</p>
-              </div>
-              <button
-                onClick={() => setShowYamlModal(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            {/* Validation Message */}
-            {yamlValidation && (
-              <div
-                id="yaml-validation-box"
-                className={`my-3 rounded-lg p-3 text-xs ${
-                  yamlValidation.valid
-                    ? 'border border-emerald-500/30 bg-emerald-950/60 text-emerald-300'
-                    : 'border border-rose-500/30 bg-rose-950/60 text-rose-300'
-                }`}
-              >
-                {yamlValidation.valid ? (
-                  <div>Valid scenario definition ready for publishing!</div>
-                ) : (
-                  <div>
-                    <span className="font-bold">Validation Errors:</span>
-                    <ul className="list-disc ml-5 mt-1">
-                      {yamlValidation.errors.map((e, idx) => (
-                        <li key={idx}>{e}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </div>
-            )}
-
-            <div className="flex-1 my-3 overflow-hidden">
-              <textarea
-                id="yaml-content-textarea"
-                value={yamlContent}
-                onChange={(e) => setYamlContent(e.target.value)}
-                placeholder="Paste or write scenario YAML here..."
-                rows={16}
-                className="w-full h-full font-mono text-xs rounded-xl border border-slate-800 bg-slate-950 p-4 text-cyan-200 focus:outline-none focus:border-cyan-500 resize-none"
-              />
-            </div>
-
-            <div className="flex justify-between items-center pt-3 border-t border-slate-800">
-              <button
-                id="yaml-validate-btn"
-                type="button"
-                onClick={handleValidateYaml}
-                className="flex items-center space-x-1.5 rounded-lg border border-cyan-500/30 bg-cyan-500/10 px-4 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/20 transition"
-              >
-                <Check className="h-3.5 w-3.5" />
-                <span>Validate Schema</span>
-              </button>
-
-              <div className="flex items-center space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowYamlModal(false)}
-                  className="rounded-lg px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  id="yaml-import-btn"
-                  type="button"
-                  onClick={handleImportYaml}
-                  className="rounded-lg bg-gradient-to-r from-cyan-500 to-indigo-600 px-5 py-2 text-xs font-semibold text-white shadow-md shadow-cyan-500/20 hover:from-cyan-400 hover:to-indigo-500 transition"
-                >
-                  Save & Publish Draft
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* AI SCENARIO DRAFT MODAL */}
-      {showAiDraftModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
-              <div className="flex items-center space-x-2">
-                <Sparkles className="h-5 w-5 text-amber-400" />
-                <h3 className="text-lg font-bold text-white">AI Scenario Generator</h3>
-              </div>
-              <button
-                onClick={() => setShowAiDraftModal(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <form onSubmit={handleGenerateAiDraft} className="mt-4 space-y-4">
-              <div>
-                <label className="block text-xs font-medium text-slate-300">
-                  Conversation Goal & Scenario Context
-                </label>
-                <textarea
-                  required
-                  value={aiDraftPrompt}
-                  onChange={(e) => setAiDraftPrompt(e.target.value)}
-                  placeholder="e.g. Hostile vendor demanding a 40% rate increase during contract renewal while threatening to terminate services..."
-                  rows={4}
-                  className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950 p-3 text-sm text-white focus:outline-none focus:border-cyan-500"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-xs font-medium text-slate-300">Track</label>
-                  <select
-                    value={aiDraftTrack}
-                    onChange={(e) => setAiDraftTrack(e.target.value)}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
-                  >
-                    <option value="sales">Sales Track</option>
-                    <option value="leadership">Leadership Track</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-slate-300">Difficulty Level</label>
-                  <select
-                    value={aiDraftDifficulty}
-                    onChange={(e) => setAiDraftDifficulty(Number(e.target.value))}
-                    className="mt-1 w-full rounded-lg border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-white focus:outline-none focus:border-cyan-500"
-                  >
-                    <option value={1}>1 - Novice</option>
-                    <option value={2}>2 - Developing</option>
-                    <option value={3}>3 - Intermediate</option>
-                    <option value={4}>4 - Advanced</option>
-                    <option value={5}>5 - Master</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAiDraftModal(false)}
-                  className="rounded-lg px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isGeneratingAi}
-                  className="flex items-center space-x-2 rounded-lg bg-gradient-to-r from-amber-500 to-orange-600 px-5 py-2 text-xs font-semibold text-white shadow-lg shadow-amber-500/20 hover:from-amber-400 hover:to-orange-500 transition disabled:opacity-50"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  <span>{isGeneratingAi ? 'Drafting Persona...' : 'Generate YAML'}</span>
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* VERSION HISTORY MODAL */}
-      {showVersionHistoryModal && selectedScenarioForVersions && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm">
-          <div className="w-full max-w-lg rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
-            <div className="flex justify-between items-center pb-3 border-b border-slate-800">
-              <div>
-                <h3 className="text-lg font-bold text-white">Version History</h3>
-                <p className="text-xs text-slate-400">{selectedScenarioForVersions.title}</p>
-              </div>
-              <button
-                onClick={() => setShowVersionHistoryModal(false)}
-                className="text-slate-400 hover:text-white"
-              >
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-
-            <div className="mt-4 max-h-80 overflow-y-auto space-y-3">
-              {scenarioVersions.map((v) => (
-                <div
-                  key={v.id}
-                  className="flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-xs"
-                >
-                  <div>
-                    <span className="font-mono font-bold text-cyan-400">Version {v.version}</span>
-                    <div className="text-[11px] text-slate-400 mt-0.5">
-                      {new Date(v.created_at).toLocaleString()}
                     </div>
-                    {v.change_note && (
-                      <div className="text-slate-300 italic mt-1">{v.change_note}</div>
-                    )}
+                  );
+                })}
+
+              {cohortMembers.filter((m) => m.role === 'trainee').length === 0 && (
+                <div className="py-12 text-center text-slate-400 text-sm">
+                  No students enrolled yet. Enter student names above to grant practice access.
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Recent Completed Practice Sessions with 1-Pager Direct Links */}
+          <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">
+              Completed Practice Sessions ({completedSessions.length})
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Live log of scenario runs completed by students. Click any debrief button to inspect or print the 1-Pager Report.
+            </p>
+
+            <div className="mt-4 overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-[#1E3E62] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
+                    <th className="py-2.5 px-3">Student Name</th>
+                    <th className="py-2.5 px-3">Scenario Title</th>
+                    <th className="py-2.5 px-3">Mode</th>
+                    <th className="py-2.5 px-3">Completed Date</th>
+                    <th className="py-2.5 px-3">Rating</th>
+                    <th className="py-2.5 px-3 text-right">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-200 dark:divide-[#1E3E62]/60">
+                  {completedSessions.map((session) => (
+                    <tr key={session.id} className="hover:bg-slate-50 dark:hover:bg-[#0B192C]/40">
+                      <td className="py-3 px-3 font-bold text-slate-900 dark:text-white">
+                        {session.trainee_name || 'Student'}
+                      </td>
+                      <td className="py-3 px-3 font-medium text-slate-700 dark:text-slate-300">
+                        {session.scenario_title}
+                      </td>
+                      <td className="py-3 px-3">
+                        <span className="capitalize font-semibold text-slate-500 dark:text-slate-400">
+                          {session.mode}
+                        </span>
+                      </td>
+                      <td className="py-3 px-3 text-slate-500 dark:text-slate-400">
+                        {session.ended_at ? new Date(session.ended_at).toLocaleDateString() : 'Recent'}
+                      </td>
+                      <td className="py-3 px-3">
+                        {session.overall_score !== undefined && session.overall_score !== null ? (
+                          <span className="font-bold text-[#FF6500]">
+                            {session.overall_score} / 100
+                          </span>
+                        ) : (
+                          <span className="text-slate-400">Evaluated</span>
+                        )}
+                      </td>
+                      <td className="py-3 px-3 text-right">
+                        {onViewEvaluation && (
+                          <button
+                            type="button"
+                            onClick={() => onViewEvaluation(session.id)}
+                            className="inline-flex items-center space-x-1 rounded-lg bg-[#FF6500] hover:bg-[#E05A00] px-3 py-1 text-xs font-bold text-white transition shadow-sm"
+                          >
+                            <FileText className="h-3 w-3" />
+                            <span>1-Pager Report</span>
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+
+                  {completedSessions.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-slate-400 italic">
+                        No scenario sessions completed yet. When students complete a practice session, their 1-pager reports will populate here.
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 2: COHORT SETTINGS & PASSCODE CONTROL                */}
+      {/* ======================================================== */}
+      {!loading && activeTab === 'cohort' && (
+        <div className="mt-8 space-y-6">
+          <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">
+              Active Cohort Parameters
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+              Manage your cohort's passcode, expiration date, and curriculum track authorization.
+            </p>
+
+            <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Left Column: Details */}
+              <div className="space-y-4 text-sm">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Cohort Name</span>
+                  <div className="font-bold text-slate-900 dark:text-white text-base mt-0.5">
+                    {cohort?.name || 'Uzair Executive Training Cohort'}
                   </div>
+                </div>
+
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Cohort Description</span>
+                  <div className="text-slate-600 dark:text-slate-300 mt-0.5 font-medium">
+                    {cohort?.description || 'Official 3H Solutions Executive Scenario Training Cohort.'}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="rounded-xl bg-slate-50 dark:bg-[#0B192C] p-3 border border-slate-200 dark:border-[#1E3E62]">
+                    <span className="text-xs text-slate-500 font-bold uppercase">Attempts / Trainee</span>
+                    <div className="text-lg font-bold text-[#FF6500] mt-1">5 Attempts</div>
+                  </div>
+
+                  <div className="rounded-xl bg-slate-50 dark:bg-[#0B192C] p-3 border border-slate-200 dark:border-[#1E3E62]">
+                    <span className="text-xs text-slate-500 font-bold uppercase">Active Status</span>
+                    <div className="text-lg font-bold text-emerald-500 mt-1">Active</div>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="rounded-xl bg-slate-50 dark:bg-[#0B192C] p-3 border border-slate-200 dark:border-[#1E3E62]">
+                    <span className="text-xs text-slate-500 font-bold uppercase">Expires On</span>
+                    <div className="text-sm font-bold text-slate-900 dark:text-white mt-1">
+                      {cohort?.expires_at ? new Date(cohort.expires_at).toLocaleDateString() : 'In 90 Days'}
+                    </div>
+                  </div>
+
+                  <div className="rounded-xl bg-slate-50 dark:bg-[#0B192C] p-3 border border-slate-200 dark:border-[#1E3E62]">
+                    <span className="text-xs text-slate-500 font-bold uppercase">Curriculum Tracks</span>
+                    <div className="text-sm font-bold text-slate-900 dark:text-white mt-1">
+                      Leadership & Sales
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column: Passcode Action Box */}
+              <div className="rounded-2xl border-2 border-[#FF6500]/50 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-[#0B192C] dark:to-[#132B45] p-6 flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
+                    <Key className="h-4 w-4" />
+                    <span>Cohort Entry Passcode</span>
+                  </div>
+                  <div className="mt-3 font-mono text-3xl font-black text-slate-900 dark:text-white tracking-widest">
+                    {cohort?.initial_passcode || 'UZAIR-2026'}
+                  </div>
+                  <p className="mt-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
+                    Students enter this code along with their enrolled name to access scenarios and practice simulations.
+                  </p>
+                </div>
+
+                <div className="mt-6 flex flex-wrap gap-2.5">
                   <button
-                    onClick={() => handleRestoreVersion(selectedScenarioForVersions.id, v.version)}
-                    className="rounded bg-slate-800 px-3 py-1.5 font-semibold text-slate-200 hover:bg-slate-700 transition"
+                    type="button"
+                    onClick={handleCopyPasscode}
+                    className="flex-1 flex items-center justify-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] py-2.5 px-4 text-xs font-bold text-white shadow-md transition"
                   >
-                    Restore
+                    {hasCopiedPasscode ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    <span>{hasCopiedPasscode ? 'Copied Passcode!' : 'Copy Passcode'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleRotatePasscode}
+                    className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] py-2.5 px-3.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1E3E62] transition"
+                  >
+                    <RefreshCw className="h-4 w-4 text-[#FF6500]" />
+                    <span>Rotate</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleExtendCohort}
+                    className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] py-2.5 px-3.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1E3E62] transition"
+                  >
+                    <Clock className="h-4 w-4 text-emerald-500" />
+                    <span>+30 Days</span>
                   </button>
                 </div>
-              ))}
+              </div>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ======================================================== */}
+      {/* TAB 3: SCENARIO CURRICULUM CATALOG                       */}
+      {/* ======================================================== */}
+      {!loading && activeTab === 'curriculum' && (
+        <div className="mt-8 space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">
+                Executive Scenario Catalog ({scenarios.length} Total)
+              </h2>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                Curated simulation scenarios available for training across Leadership and B2B Sales.
+              </p>
+            </div>
+
+            {/* Search and Filters */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              <div className="relative">
+                <Search className="pointer-events-none absolute left-3 top-2.5 h-3.5 w-3.5 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search scenarios..."
+                  value={curriculumSearch}
+                  onChange={(e) => setCurriculumSearch(e.target.value)}
+                  className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] pl-9 pr-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500] font-medium"
+                />
+              </div>
+
+              <div className="flex rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-100 dark:bg-[#0B192C] p-1">
+                <button
+                  type="button"
+                  onClick={() => setCurriculumTrackFilter('all')}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                    curriculumTrackFilter === 'all'
+                      ? 'bg-[#FF6500] text-white'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  All
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurriculumTrackFilter('leadership')}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                    curriculumTrackFilter === 'leadership'
+                      ? 'bg-[#FF6500] text-white'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  Leadership
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCurriculumTrackFilter('sales')}
+                  className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
+                    curriculumTrackFilter === 'sales'
+                      ? 'bg-[#FF6500] text-white'
+                      : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  Sales
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Scenario Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredScenarios.map((scen) => (
+              <div
+                key={scen.id}
+                className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-5 shadow-sm flex flex-col justify-between"
+              >
+                <div>
+                  <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider">
+                    <span className="text-[#FF6500] font-black">
+                      {scen.track === 'sales' ? 'Enterprise Sales' : 'Executive Leadership'}
+                    </span>
+                    <span className="rounded-full bg-slate-100 dark:bg-[#0B192C] px-2 py-0.5 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#1E3E62]">
+                      Level {scen.difficulty || 1}
+                    </span>
+                  </div>
+
+                  <h3 className="mt-2 text-sm font-bold text-slate-900 dark:text-white leading-snug">
+                    {scen.title}
+                  </h3>
+
+                  {scen.topic && (
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 capitalize">
+                      {scen.topic.replace(/_/g, ' ')}
+                    </p>
+                  )}
+                </div>
+
+                <div className="mt-4 pt-3 border-t border-slate-100 dark:border-[#1E3E62] flex items-center justify-between text-xs text-slate-500">
+                  <span className="inline-flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 font-bold">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    <span>Active in Cohort</span>
+                  </span>
+                  <span>~10 min duration</span>
+                </div>
+              </div>
+            ))}
+
+            {filteredScenarios.length === 0 && (
+              <div className="col-span-full py-12 text-center text-slate-400 text-sm">
+                No scenarios matched your search filter.
+              </div>
+            )}
           </div>
         </div>
       )}

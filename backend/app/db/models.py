@@ -320,3 +320,25 @@ class UsageEvent(Base, TimestampMixin):
     )  # llm, stt, tts, realtime
     units: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     cost_estimate: Mapped[float] = mapped_column(Float, default=0.0, nullable=False)
+
+
+class AttemptLedger(Base, TimestampMixin):
+    __tablename__ = "attempt_ledger"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=generate_uuid)
+    cohort_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("cohorts.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    scenario_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("scenarios.id", ondelete="CASCADE"), nullable=False, index=True
+    )
+    device_fingerprint: Mapped[str] = mapped_column(String(64), nullable=False, index=True)
+    user_id: Mapped[Optional[str]] = mapped_column(
+        String(36), ForeignKey("users.id", ondelete="SET NULL"), nullable=True, index=True
+    )
+    student_name: Mapped[str] = mapped_column(String(100), nullable=False, index=True)
+    attempt_count: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    last_attempt_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), default=utc_now, nullable=False
+    )
+

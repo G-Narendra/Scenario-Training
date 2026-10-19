@@ -34,6 +34,13 @@ services:
       SECRET_KEY: docker-production-secret-key-min-32chars-must-be-secure
       PORT: 8000
       HOST: 0.0.0.0
+      WEB_CONCURRENCY: 4
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://127.0.0.1:8000/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
     ports:
       - "8000:8000"
 
@@ -44,8 +51,15 @@ services:
     container_name: scenario_training_frontend
     restart: unless-stopped
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://127.0.0.1/lb-health"]
+      interval: 10s
+      timeout: 3s
+      retries: 3
     ports:
+      - "80:80"
       - "3000:80"
 
 volumes:

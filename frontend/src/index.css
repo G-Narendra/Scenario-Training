@@ -182,27 +182,17 @@ html:not(.dark) .border-slate-700 {
   border-color: #E2E8F0 !important;
 }
 
-html:not(.dark) h1.text-white,
-html:not(.dark) h2.text-white,
-html:not(.dark) h3.text-white,
-html:not(.dark) h4.text-white {
-  color: #0F172A !important;
+/* Specific dark elements that must always have crisp white text regardless of theme */
+.avatar-counterpart,
+.avatar-counterpart *,
+.avatar-user,
+.avatar-user *,
+.force-text-white,
+.force-text-white * {
+  color: #FFFFFF !important;
 }
 
-html:not(.dark) span.text-white:not([class*="bg-indigo"]):not([class*="bg-violet"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-cyan"]):not([class*="bg-amber"]),
-html:not(.dark) div.text-white:not([class*="bg-indigo"]):not([class*="bg-violet"]):not([class*="bg-emerald"]):not([class*="bg-rose"]):not([class*="bg-cyan"]):not([class*="bg-amber"]),
-html:not(.dark) p.text-white {
-  color: #0F172A !important;
-}
-
-html:not(.dark) .text-slate-300:not(button):not([class*="bg-indigo"]):not([class*="bg-violet"]) {
-  color: #334155 !important;
-}
-
-html:not(.dark) .text-slate-400:not(button):not([class*="bg-indigo"]):not([class*="bg-violet"]) {
-  color: #64748B !important;
-}
-
+/* Ensure inputs, textareas, selects adapt crisply in light theme */
 html:not(.dark) input:not([type="checkbox"]):not([type="radio"]),
 html:not(.dark) textarea,
 html:not(.dark) select {
@@ -214,12 +204,6 @@ html:not(.dark) select {
 html:not(.dark) input::placeholder,
 html:not(.dark) textarea::placeholder {
   color: #94A3B8 !important;
-}
-
-html:not(.dark) [role="dialog"] {
-  background-color: #FFFFFF !important;
-  border-color: #E2E8F0 !important;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15) !important;
 }
 
 /* ========================================================================= */
