@@ -108,24 +108,58 @@ async def seed_official_cohort(db):
         narendra.role = "super_admin"
         narendra.is_active = True
 
-    # Andrew Doherty (official enrolled trainee)
-    andrew_stmt = select(User).where(
-        and_(User.cohort_id == cohort.id, func.lower(User.display_name) == "andrew doherty")
-    )
-    andrew = (await db.execute(andrew_stmt)).scalar_one_or_none()
-    if not andrew:
-        andrew = User(
-            cohort_id=cohort.id,
-            display_name="Andrew Doherty",
-            role="trainee",
-            is_active=True,
+    # 30 Enrolled Corporate Students for Uzair Executive Training Cohort
+    student_roster = [
+        "Sarah Jenkins",
+        "Marcus Vance",
+        "Priya Sharma",
+        "David Chen",
+        "Elena Rostova",
+        "James Wilson",
+        "Aaliyah Patel",
+        "Carlos Mendez",
+        "Rachel Green",
+        "Vikram Malhotra",
+        "Chloe Bennett",
+        "Tariq Al-Mansoor",
+        "Stephanie Wong",
+        "Michael Chang",
+        "Fatima Zahra",
+        "Liam O'Connor",
+        "Ananya Iyer",
+        "Jonathan Brooks",
+        "Mei-Ling Zhou",
+        "Omar Farooq",
+        "Jessica Taylor",
+        "Rohan Gupta",
+        "Natalie Dubois",
+        "Kevin Park",
+        "Zainab Abdi",
+        "Alexander Wright",
+        "Sunita Rao",
+        "Daniel Morales",
+        "Leila Khoury",
+        "Andrew Doherty",
+    ]
+
+    for student_name in student_roster:
+        st_stmt = select(User).where(
+            and_(User.cohort_id == cohort.id, func.lower(User.display_name) == student_name.lower())
         )
-        db.add(andrew)
-    else:
-        andrew.is_active = True
+        student_user = (await db.execute(st_stmt)).scalar_one_or_none()
+        if not student_user:
+            student_user = User(
+                cohort_id=cohort.id,
+                display_name=student_name,
+                role="trainee",
+                is_active=True,
+            )
+            db.add(student_user)
+        else:
+            student_user.is_active = True
 
     await db.commit()
-    print("Uzair Executive Training Cohort, passcodes (UZAIR-2026, NARENDRA-2026), and roster (Narendra, Andrew Doherty) seeded successfully.")
+    print(f"Uzair Executive Training Cohort, passcodes (UZAIR-2026, NARENDRA-2026), and all 30 corporate students seeded successfully.")
 
 
 
