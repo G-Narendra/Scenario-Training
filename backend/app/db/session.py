@@ -16,6 +16,10 @@ if "asyncpg" in db_url:
     db_url = db_url.replace("channel_binding=require&", "")
     db_url = db_url.replace("&channel_binding=require", "")
     db_url = db_url.replace("?channel_binding=require", "?")
+    # Automatically route Neon database connections to high-concurrency PgBouncer pooler
+    if ".neon.tech" in db_url and "-pooler." not in db_url:
+        import re
+        db_url = re.sub(r"(ep-[a-zA-Z0-9-]+)(\.c-[a-zA-Z0-9-]+\.[a-zA-Z0-9-]+\.neon\.tech)", r"\1-pooler\2", db_url)
 
 # Engine configuration
 engine_kwargs: dict[str, Any] = {
@@ -28,13 +32,17 @@ if "sqlite" in db_url:
         "timeout": 60,
     }
 else:
-    # Production connection pool tuned for concurrency, failover resilience & zero stale socket drops
+    # High-concurrency production connection pool with PgBouncer compatibility
     engine_kwargs.update({
-        "pool_size": 20,
-        "max_overflow": 10,
-        "pool_timeout": 30,
-        "pool_recycle": 1800,
+        "pool_size": 30,
+        "max_overflow": 40,
+        "pool_timeout": 15.0,
+        "pool_recycle": 300,
         "pool_pre_ping": True,
+        "connect_args": {
+            "statement_cache_size": 0,
+            "prepared_statement_cache_size": 0,
+        },
     })
 
 engine = create_async_engine(db_url, **engine_kwargs)

@@ -141,6 +141,8 @@ class ScenarioService:
         await db.refresh(scenario)
         return scenario
 
+    _scenarios_cache: dict = {}
+
     @staticmethod
     async def list_public_scenarios(
         db: AsyncSession,
@@ -148,7 +150,14 @@ class ScenarioService:
         topic: Optional[str] = None,
         difficulty: Optional[int] = None,
     ) -> List[PublicScenarioListItem]:
-        """List published scenarios for trainees with zero hidden field leakage."""
+        """List published scenarios for trainees with fast in-memory cache."""
+        import time
+        cache_key = f"{track_key or '*'}:{topic or '*'}:{difficulty or '*'}"
+        now_ts = time.time()
+        cached = ScenarioService._scenarios_cache.get(cache_key)
+        if cached and (now_ts - cached[0] < 45.0):
+            return cached[1]
+
         stmt = (
             select(Scenario, Track)
             .join(Track, Scenario.track_id == Track.id)
@@ -190,6 +199,8 @@ class ScenarioService:
                     target_capabilities=scen.target_capabilities or [],
                 )
             )
+
+        ScenarioService._scenarios_cache[cache_key] = (now_ts, items)
         return items
 
     @staticmethod

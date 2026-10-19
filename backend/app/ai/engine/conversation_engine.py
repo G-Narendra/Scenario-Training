@@ -240,16 +240,17 @@ class ConversationEngine:
 
         # 7. Prepare conversation messages (windowed for safety)
         llm_messages: List[LLMMessage] = []
-        # Keep opening message + recent 14 turns to stay within token limits
+        # Keep recent 6 turns for lightning-fast TTFT and low token latency
         all_msgs = session.messages + [t_msg]
-        for m in all_msgs[-16:]:
+        recent_history = all_msgs[-6:] if len(all_msgs) > 6 else all_msgs
+        for m in recent_history:
             role = "user" if m.role == "trainee" else "assistant"
             llm_messages.append(LLMMessage(role=role, content=m.content))
 
-        # 8. Stream counterpart reply
+        # 8. Stream counterpart reply (max 100 tokens = 1-2 crisp executive sentences in ~400-800ms)
         start_time = time.perf_counter()
         full_reply_parts = []
-        async for chunk in self.llm_provider.stream_chat(llm_messages, system_prompt):
+        async for chunk in self.llm_provider.stream_chat(llm_messages, system_prompt, max_tokens=100):
             full_reply_parts.append(chunk)
             yield chunk
 

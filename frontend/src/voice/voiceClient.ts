@@ -414,7 +414,16 @@ export class VoiceClient {
     return this.isMuted;
   }
 
+  public activeAudio: HTMLAudioElement | null = null;
+
   stopSpeaking(): void {
+    if (this.activeAudio) {
+      try {
+        this.activeAudio.pause();
+        this.activeAudio.src = '';
+      } catch {}
+      this.activeAudio = null;
+    }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
@@ -425,11 +434,11 @@ export class VoiceClient {
     this.callbacks.onAssistantSpeaking?.(false);
   }
 
-  speakText(text: string): void {
-    if (!text || typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+  speakText(text: string, personaName: string = ''): void {
+    if (!text || typeof window === 'undefined') return;
     this.stopSpeaking();
 
-    // Clean any markdown formatting, asterisks, bullet points for natural human speech flow
+    // Clean any markdown formatting for natural human speech flow
     const clean = text
       .replace(/\*\*([^*]+)\*\*/g, '$1')
       .replace(/\*([^*]+)\*/g, '$1')
@@ -441,26 +450,72 @@ export class VoiceClient {
 
     if (!clean) return;
 
+    // Detect persona voice gender
+    const nameLower = (personaName || '').toLowerCase();
+    const isMale = /marcus|david|james|carlos|vikram|tariq|michael|liam|jonathan|omar|rohan|kevin|alexander|daniel|andrew|guy|chris/.test(nameLower);
+    const voiceParam = isMale ? 'male' : 'female';
+
+    // Primary: High-fidelity Edge-TTS Neural Audio via backend API
+    const audioUrl = `/api/voice/tts?text=${encodeURIComponent(clean.slice(0, 450))}&voice=${voiceParam}`;
+    const audio = new Audio(audioUrl);
+    this.activeAudio = audio;
+
+    let hasStartedAudio = false;
+
+    audio.onplay = () => {
+      hasStartedAudio = true;
+      this.isSpeaking = true;
+      this.callbacks.onAssistantSpeaking?.(true);
+    };
+
+    audio.onended = () => {
+      this.isSpeaking = false;
+      this.callbacks.onAssistantSpeaking?.(false);
+      this.activeAudio = null;
+
+      if (this.isContinuousCall && !this.isMuted && this.isConnected) {
+        setTimeout(() => {
+          this.startAudioCapture().catch(() => {});
+        }, 300);
+      }
+    };
+
+    audio.onerror = () => {
+      // Fast fallback to browser neural speech synthesis if audio endpoint is unreachable
+      if (!hasStartedAudio) {
+        this.fallbackWebSpeech(clean, isMale);
+      }
+    };
+
+    audio.play().catch(() => {
+      // Autoplay restriction or network error: fallback to Web Speech
+      if (!hasStartedAudio) {
+        this.fallbackWebSpeech(clean, isMale);
+      }
+    });
+  }
+
+  private fallbackWebSpeech(clean: string, isMale: boolean): void {
+    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
+
     const utterance = new SpeechSynthesisUtterance(clean);
-    utterance.rate = 1.0; // Natural executive pacing
-    utterance.pitch = 1.0;
+    utterance.rate = 1.02;
+    utterance.pitch = isMale ? 0.95 : 1.05;
     utterance.lang = 'en-US';
 
-    // Prioritize natural neural voices (e.g. Microsoft Natural, Google US English, Apple Samantha)
     const voices = window.speechSynthesis.getVoices();
     const naturalVoice =
       voices.find(
         (v) =>
           v.lang.startsWith('en') &&
-          (v.name.includes('Natural') ||
-            v.name.includes('Online') ||
-            v.name.includes('Jenny') ||
-            v.name.includes('Guy') ||
-            v.name.includes('Aria') ||
-            v.name.includes('Neural'))
+          (isMale ? v.name.includes('Guy') || v.name.includes('David') || v.name.includes('Male') : v.name.includes('Jenny') || v.name.includes('Aria') || v.name.includes('Female')) &&
+          (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Online'))
       ) ||
-      voices.find((v) => v.lang.startsWith('en') && v.name.includes('Google')) ||
-      voices.find((v) => v.lang.startsWith('en') && (v.name.includes('Samantha') || v.name.includes('Daniel'))) ||
+      voices.find(
+        (v) =>
+          v.lang.startsWith('en') &&
+          (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Neural') || v.name.includes('Google'))
+      ) ||
       voices.find((v) => v.lang.startsWith('en')) ||
       voices[0];
 
@@ -478,7 +533,6 @@ export class VoiceClient {
       this.callbacks.onAssistantSpeaking?.(false);
       this.activeUtterance = null;
 
-      // In continuous call mode: auto-rearm microphone as soon as counterpart finishes speaking!
       if (this.isContinuousCall && !this.isMuted && this.isConnected) {
         setTimeout(() => {
           this.startAudioCapture().catch(() => {});
@@ -486,15 +540,10 @@ export class VoiceClient {
       }
     };
 
-    utterance.onerror = (e) => {
-      console.warn('SpeechSynthesis error:', e);
+    utterance.onerror = () => {
       this.isSpeaking = false;
       this.callbacks.onAssistantSpeaking?.(false);
       this.activeUtterance = null;
-
-      if (this.isContinuousCall && !this.isMuted && this.isConnected) {
-        this.startAudioCapture().catch(() => {});
-      }
     };
 
     this.activeUtterance = utterance;

@@ -30,13 +30,20 @@ def hash_passcode(code: str) -> str:
     return ph.hash(normalized)
 
 
-def verify_passcode(plain_code: str, hashed_code: str) -> bool:
-    """Verify plaintext passcode against Argon2 hash in constant time."""
-    normalized = normalize_passcode(code=plain_code)
+from functools import lru_cache
+
+@lru_cache(maxsize=512)
+def _cached_verify(normalized: str, hashed_code: str) -> bool:
     try:
         return ph.verify(hashed_code, normalized)
     except (VerifyMismatchError, VerificationError, Exception):
         return False
+
+
+def verify_passcode(plain_code: str, hashed_code: str) -> bool:
+    """Verify plaintext passcode against Argon2 hash with fast-path memory cache."""
+    normalized = normalize_passcode(code=plain_code)
+    return _cached_verify(normalized, hashed_code)
 
 
 def hash_token(token: str) -> str:

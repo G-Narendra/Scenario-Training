@@ -17,6 +17,7 @@ import {
   Sparkles,
   UserCheck,
   Volume2,
+  VolumeX,
 } from 'lucide-react';
 
 interface SimulationChatPageProps {
@@ -60,6 +61,23 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   const [voicePartial, setVoicePartial] = useState('');
   const [, setVoiceLatencyMs] = useState<number | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+
+  // Auto-Voice & Hands-free Dictation
+  const [autoVoice, setAutoVoice] = useState(true);
+  const [currentlySpeakingSeq, setCurrentlySpeakingSeq] = useState<number | null>(null);
+  const [isDictating, setIsDictating] = useState(false);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const dictationRecRef = useRef<any>(null);
+  const localVoiceClientRef = useRef<VoiceClient | null>(null);
+
+  if (!localVoiceClientRef.current) {
+    localVoiceClientRef.current = new VoiceClient({
+      onAssistantSpeaking: (speaking) => {
+        setIsAssistantSpeaking(speaking);
+        if (!speaking) setCurrentlySpeakingSeq(null);
+      },
+    });
+  }
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -177,6 +195,12 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     setIsStreaming(true);
     setStreamingReply('');
 
+    if (isDictating && dictationRecRef.current) {
+      try { dictationRecRef.current.stop(); } catch {}
+      dictationRecRef.current = null;
+      setIsDictating(false);
+    }
+
     let accumulatedReply = '';
 
     await api.sendSessionMessageStream(
@@ -196,6 +220,11 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         };
         setMessages((prev) => [...prev, counterpartMsg]);
         setStreamingReply('');
+
+        // Automatically speak counterpart reply aloud with natural voice
+        if (autoVoice && accumulatedReply) {
+          handlePlayMessageAudio(accumulatedReply, nextSeq + 1);
+        }
 
         try {
           const updated = await api.getSessionDetail(session.id);
@@ -220,38 +249,87 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     setIsMicMuted(muted);
   };
 
-  const handlePlayMessageAudio = (text: string) => {
-    if (voiceClient) {
-      voiceClient.speakText(text);
-    } else if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(
-        text
-          .replace(/\*\*([^*]+)\*\*/g, '$1')
-          .replace(/\*([^*]+)\*/g, '$1')
-          .replace(/#+\s/g, '')
-          .replace(/`/g, '')
-          .trim()
-      );
-      utterance.rate = 1.02;
-      utterance.pitch = 1.0;
-      utterance.lang = 'en-US';
-      const voices = window.speechSynthesis.getVoices();
-      const naturalVoice =
-        voices.find(
-          (v) =>
-            v.lang.startsWith('en') &&
-            (v.name.includes('Natural') ||
-              v.name.includes('Google') ||
-              v.name.includes('Online') ||
-              v.name.includes('Guy') ||
-              v.name.includes('Jenny') ||
-              v.name.includes('Samantha'))
-        ) ||
-        voices.find((v) => v.lang.startsWith('en')) ||
-        voices[0];
-      if (naturalVoice) utterance.voice = naturalVoice;
-      window.speechSynthesis.speak(utterance);
+  const handlePlayMessageAudio = (text: string, seq?: number) => {
+    if (!text) return;
+    if (seq !== undefined) {
+      setCurrentlySpeakingSeq(seq);
+    }
+    setIsAssistantSpeaking(true);
+
+    const client = voiceClient || localVoiceClientRef.current;
+    if (client) {
+      client.speakText(text, personaName);
+    }
+  };
+
+  const handleStopAudio = () => {
+    const client = voiceClient || localVoiceClientRef.current;
+    if (client) {
+      client.stopSpeaking();
+    }
+    setIsAssistantSpeaking(false);
+    setCurrentlySpeakingSeq(null);
+  };
+
+  const toggleAutoVoice = () => {
+    if (autoVoice) {
+      handleStopAudio();
+    }
+    setAutoVoice(!autoVoice);
+  };
+
+  const toggleDictation = () => {
+    if (isDictating) {
+      if (dictationRecRef.current) {
+        try { dictationRecRef.current.stop(); } catch {}
+        dictationRecRef.current = null;
+      }
+      setIsDictating(false);
+      return;
+    }
+
+    const windowWithSpeech = window as unknown as {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      SpeechRecognition?: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      webkitSpeechRecognition?: any;
+    };
+    const SpeechRec = windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
+
+    if (!SpeechRec) {
+      alert('Speech-to-text is not supported by your browser. Please use Chrome or Edge.');
+      return;
+    }
+
+    try {
+      const rec = new SpeechRec();
+      rec.continuous = true;
+      rec.interimResults = true;
+      rec.lang = 'en-US';
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      rec.onresult = (event: any) => {
+        let transcript = '';
+        for (let i = 0; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript + ' ';
+        }
+        setInputText(transcript.trim());
+      };
+
+      rec.onerror = () => {
+        setIsDictating(false);
+      };
+
+      rec.onend = () => {
+        setIsDictating(false);
+      };
+
+      rec.start();
+      dictationRecRef.current = rec;
+      setIsDictating(true);
+    } catch (err) {
+      console.warn('Speech recognition start error', err);
+      setIsDictating(false);
     }
   };
 
@@ -320,8 +398,31 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
           </div>
         </div>
 
-        {/* Controls: Timer & End Practice Button */}
-        <div className="flex items-center space-x-3">
+        {/* Controls: Voice Toggle, Timer & End Practice Button */}
+        <div className="flex items-center space-x-2 sm:space-x-3">
+          <button
+            type="button"
+            onClick={toggleAutoVoice}
+            title={autoVoice ? "Mute automatic counterpart voice" : "Turn ON automatic counterpart voice"}
+            className={`flex items-center space-x-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-sm ${
+              autoVoice
+                ? 'border-[#FF6500]/40 bg-[#FF6500]/15 text-[#FF6500] dark:bg-[#FF6500]/20'
+                : 'border-slate-300 bg-slate-100 text-slate-500 dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-400'
+            }`}
+          >
+            {autoVoice ? (
+              <>
+                <Volume2 className="h-3.5 w-3.5 text-[#FF6500] animate-pulse" />
+                <span>Voice: ON</span>
+              </>
+            ) : (
+              <>
+                <VolumeX className="h-3.5 w-3.5" />
+                <span>Voice: OFF</span>
+              </>
+            )}
+          </button>
+
           <div className="flex items-center space-x-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3 py-1 font-mono text-xs font-bold text-slate-700 shadow-sm dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-200">
             <Clock className="h-3.5 w-3.5 text-[#FF6500]" />
             <span>{formatTimer(elapsedSeconds)}</span>
@@ -576,16 +677,34 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                 {/* Header inside bubble — counterpart only to prevent duplicate 'You' on user messages */}
                 {!isUser && (
                   <div className="flex items-center justify-between text-[11px] font-bold mb-1.5 uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                    <span>
-                      {personaName} · {personaRole}
+                    <span className="flex items-center space-x-2">
+                      <span>
+                        {personaName} · {personaRole}
+                      </span>
+                      {currentlySpeakingSeq === m.seq && (
+                        <span className="flex items-center space-x-1 text-[#FF6500] font-bold normal-case text-[10px] bg-[#FF6500]/10 px-2 py-0.5 rounded-full border border-[#FF6500]/25 animate-pulse">
+                          <Volume2 className="h-3 w-3 animate-bounce" />
+                          <span>Talking...</span>
+                        </span>
+                      )}
                     </span>
                     <button
                       type="button"
-                      onClick={() => handlePlayMessageAudio(m.content)}
-                      title="Listen out loud"
-                      className="p-1 rounded hover:bg-slate-200 dark:hover:bg-[#1E3E62] text-slate-500 hover:text-[#FF6500] dark:text-slate-400 dark:hover:text-[#FF6500] transition"
+                      onClick={() => {
+                        if (currentlySpeakingSeq === m.seq) {
+                          handleStopAudio();
+                        } else {
+                          handlePlayMessageAudio(m.content, m.seq);
+                        }
+                      }}
+                      title={currentlySpeakingSeq === m.seq ? 'Stop speaking' : 'Listen out loud'}
+                      className={`p-1 rounded transition ${
+                        currentlySpeakingSeq === m.seq
+                          ? 'bg-[#FF6500] text-white shadow-sm'
+                          : 'hover:bg-slate-200 dark:hover:bg-[#1E3E62] text-slate-500 hover:text-[#FF6500] dark:text-slate-400 dark:hover:text-[#FF6500]'
+                      }`}
                     >
-                      <Volume2 className="h-3.5 w-3.5" />
+                      {currentlySpeakingSeq === m.seq ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
                     </button>
                   </div>
                 )}
@@ -655,19 +774,42 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
               />
 
               <div className="flex items-center justify-between border-t border-slate-200 dark:border-[#1E3E62] pt-2 px-1">
-                <div className="text-xs text-slate-500 dark:text-slate-400">
-                  Press Enter to send
+                <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400">
+                  <span>Press Enter to send</span>
+                  {isDictating && (
+                    <span className="flex items-center space-x-1 text-rose-500 font-bold animate-pulse">
+                      <span className="h-2 w-2 rounded-full bg-rose-500" />
+                      <span>Recording voice...</span>
+                    </span>
+                  )}
                 </div>
 
-                <button
-                  id="send-message-btn"
-                  type="submit"
-                  disabled={!inputText.trim() || isStreaming || isSessionClosed}
-                  className="flex items-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2 text-sm font-bold text-white shadow-md shadow-[#FF6500]/25 transition disabled:opacity-40"
-                >
-                  <span>Send</span>
-                  <Send className="h-4 w-4" />
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={toggleDictation}
+                    disabled={isStreaming || isSessionClosed}
+                    title={isDictating ? 'Stop microphone recording' : 'Speak into microphone'}
+                    className={`flex items-center space-x-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition border shadow-sm ${
+                      isDictating
+                        ? 'bg-rose-600 text-white border-rose-700 animate-pulse ring-2 ring-rose-400/50'
+                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#0B192C] dark:hover:bg-[#1E3E62] dark:text-slate-300 border-slate-300 dark:border-[#1E3E62]'
+                    }`}
+                  >
+                    <Mic className={`h-3.5 w-3.5 ${isDictating ? 'text-white animate-bounce' : 'text-[#FF6500]'}`} />
+                    <span>{isDictating ? 'Listening...' : 'Speak'}</span>
+                  </button>
+
+                  <button
+                    id="send-message-btn"
+                    type="submit"
+                    disabled={!inputText.trim() || isStreaming || isSessionClosed}
+                    className="flex items-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2 text-sm font-bold text-white shadow-md shadow-[#FF6500]/25 transition disabled:opacity-40"
+                  >
+                    <span>Send</span>
+                    <Send className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
             </div>
           </form>

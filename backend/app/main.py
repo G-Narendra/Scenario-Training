@@ -17,6 +17,7 @@ from backend.app.api.auth import router as auth_router
 from backend.app.api.progress import router as progress_router
 from backend.app.api.scenarios import router as scenarios_router
 from backend.app.api.sessions import router as sessions_router
+from backend.app.api.voice_tts import router as voice_tts_router
 from backend.app.config import settings
 from backend.app.db.session import engine
 from backend.app.voice.ws_handler import router as voice_router
@@ -59,6 +60,7 @@ app.include_router(scenarios_router)
 app.include_router(admin_scenarios_router)
 app.include_router(sessions_router)
 app.include_router(voice_router)
+app.include_router(voice_tts_router)
 app.include_router(progress_router)
 app.include_router(admin_analytics_router)
 

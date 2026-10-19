@@ -4,7 +4,7 @@ services:
     name: scenariolab-api
     runtime: python
     buildCommand: "pip install --upgrade pip && pip install -r backend/requirements.txt && python scripts/seed.py"
-    startCommand: "uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --workers 4 --proxy-headers --forwarded-allow-ips='*'"
+    startCommand: "uvicorn backend.app.main:app --host 0.0.0.0 --port $PORT --workers 2 --proxy-headers --forwarded-allow-ips='*'"
     healthCheckPath: /health/ready
     autoDeploy: true
     envVars:
@@ -17,10 +17,12 @@ services:
       - key: CORS_ORIGINS
         value: '["*"]'
       - key: DATABASE_URL
-        value: "postgresql://neondb_owner:npg_U8h9BPzHxnOR@ep-wispy-surf-aern98ft.c-2.us-east-2.aws.neon.tech/neondb?ssl=require"
+        value: "postgresql://neondb_owner:npg_U8h9BPzHxnOR@ep-wispy-surf-aern98ft-pooler.c-2.us-east-2.aws.neon.tech/neondb?ssl=require"
       - key: DEFAULT_LLM_PROVIDER
         value: "nvidia"
       - key: NVIDIA_API_KEY
         value: "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"
       - key: NVIDIA_MODEL
         value: "meta/llama-3.2-11b-vision-instruct"
+      - key: DEFAULT_VOICE_PROVIDER
+        value: "edge_tts"
