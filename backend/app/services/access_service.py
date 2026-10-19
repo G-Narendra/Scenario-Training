@@ -20,6 +20,7 @@ from backend.app.security.tokens import create_access_token
 
 _cached_passcodes: Optional[List[Dict[str, Any]]] = None
 _cached_passcodes_time: float = 0.0
+_verified_code_map: Dict[str, str] = {}
 
 
 async def _get_cached_passcodes(db: AsyncSession) -> List[Dict[str, Any]]:
@@ -54,9 +55,10 @@ async def _get_cached_passcodes(db: AsyncSession) -> List[Dict[str, Any]]:
 
 
 def invalidate_passcode_cache():
-    global _cached_passcodes, _cached_passcodes_time
+    global _cached_passcodes, _cached_passcodes_time, _verified_code_map
     _cached_passcodes = None
     _cached_passcodes_time = 0.0
+    _verified_code_map.clear()
 
 
 class AccessService:
@@ -239,7 +241,6 @@ class AccessService:
         return result.rowcount
 
     @staticmethod
-    @staticmethod
     async def authenticate_passcode(
         db: AsyncSession,
         passcode_plain: str,
@@ -264,11 +265,23 @@ class AccessService:
         # Retrieve active passcodes from in-memory cache (0.001ms, avoids 30 concurrent Neon DB hits)
         candidates = await _get_cached_passcodes(db)
 
+        # Instant fast-path lookup if clean_code was already verified (0.0001ms, avoids 100ms Argon2 CPU cost)
         matched_item: Optional[Dict[str, Any]] = None
-        for item in candidates:
-            if verify_passcode(clean_code, item["code_hash"]):
-                matched_item = item
-                break
+        cached_pid = _verified_code_map.get(clean_code)
+        if cached_pid:
+            for item in candidates:
+                if item["passcode_id"] == cached_pid:
+                    matched_item = item
+                    break
+
+        if not matched_item:
+            # Sort candidates by usage count so frequently used passcodes (e.g. UZAIR-2026) are checked first
+            sorted_candidates = sorted(candidates, key=lambda x: x.get("uses_count", 0), reverse=True)
+            for item in sorted_candidates:
+                if verify_passcode(clean_code, item["code_hash"]):
+                    matched_item = item
+                    _verified_code_map[clean_code] = item["passcode_id"]
+                    break
 
         auth_failure_error = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired passcode."
