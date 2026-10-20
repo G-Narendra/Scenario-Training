@@ -18,6 +18,20 @@ import { getDeviceFingerprint } from '../utils/fingerprint';
 
 const API_BASE = '/api';
 
+// Configurable Multi-Cloud Backend Fallback Pool
+export const BACKEND_FALLBACK_URLS: string[] = [
+  API_BASE,
+  ((import.meta as any).env?.VITE_HF_BACKEND_URL || '').replace(/\/+$/, ''),
+  ((import.meta as any).env?.VITE_KOYEB_BACKEND_URL || '').replace(/\/+$/, ''),
+  ((import.meta as any).env?.VITE_ORACLE_BACKEND_URL || '').replace(/\/+$/, ''),
+  'https://scenariolab-api.onrender.com/api',
+].filter(Boolean);
+
+function resolveUrl(endpoint: string, attempt: number): string {
+  const base = attempt === 0 ? API_BASE : (BACKEND_FALLBACK_URLS[attempt % BACKEND_FALLBACK_URLS.length] || API_BASE);
+  return `${base}${endpoint}`;
+}
+
 export class ApiError extends Error {
   status: number;
   code: string;
@@ -55,7 +69,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      response = await fetch(`${API_BASE}${endpoint}`, {
+      const targetUrl = resolveUrl(endpoint, attempt);
+      response = await fetch(targetUrl, {
         ...options,
         headers: {
           ...headers,
@@ -377,7 +392,8 @@ export const api = {
     try {
       let response: Response | null = null;
       for (let attempt = 0; attempt <= 2; attempt++) {
-        response = await fetch(`${API_BASE}/sessions/${sessionId}/messages`, {
+        const streamUrl = resolveUrl(`/sessions/${sessionId}/messages`, attempt);
+        response = await fetch(streamUrl, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
