@@ -83,7 +83,7 @@ async def get_current_user(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Cohort access window has expired."
             )
 
-    _token_cache[t_hash] = (user, now_m + 60.0)
+    _token_cache[t_hash] = (user, now_m + 1800.0)
     return user
 
 

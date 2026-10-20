@@ -64,7 +64,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       });
 
       // Break if successful or not a transient gateway/proxy error
-      if (response.ok || ![502, 503, 504].includes(response.status) || attempt === maxRetries) {
+      const isTransient = [502, 503, 504].includes(response.status) || (response.status === 401 && !endpoint.includes('/auth/login'));
+      if (response.ok || !isTransient || attempt === maxRetries) {
         break;
       }
     } catch (netErr) {

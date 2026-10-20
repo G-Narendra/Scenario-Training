@@ -439,6 +439,14 @@ class AccessService:
         )
         await db.commit()
 
+        # Warm in-memory token cache immediately upon login (30 min TTL)
+        try:
+            import time
+            from backend.app.security.deps import _token_cache
+            _token_cache[hash_token(token_str)] = (user, time.monotonic() + 1800.0)
+        except Exception:
+            pass
+
         return {
             "access_token": token_str,
             "token_type": "bearer",
