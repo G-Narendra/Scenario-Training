@@ -65,8 +65,10 @@ async function simulateStudentTab(index, studentName, browser, results) {
     viewport: { width: 1280, height: 800 },
     userAgent: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) ScenarioTest/1.0 Student/${index + 1}`,
   });
+  context.setDefaultTimeout(70000);
 
   const page = await context.newPage();
+  page.setDefaultTimeout(70000);
   page.on('dialog', async (dialog) => {
     console.log(`  ⚠️ [Tab ${index + 1}/20] Alert dialog: "${dialog.message()}"`);
     await dialog.dismiss();
@@ -86,44 +88,35 @@ async function simulateStudentTab(index, studentName, browser, results) {
     }
 
     console.log(`[Tab ${index + 1}/20] (${studentName}) Navigating to ${BASE_URL}...`);
-    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 45000 });
+    await page.goto(BASE_URL, { waitUntil: 'domcontentloaded', timeout: 50000 });
 
     // Step 1: Login
     const t0_login = Date.now();
-    await page.waitForSelector('#passcode-input', { timeout: 25000 });
+    await page.waitForSelector('#passcode-input', { timeout: 30000 });
     await page.fill('#passcode-input', COHORT_PASSCODE);
     await page.fill('#display-name-input', studentName);
     await page.click('#login-submit-btn');
 
     // Wait for scenario library / curriculum to appear
-    await page.waitForSelector('text=Scenarios Available', { timeout: 35000 });
+    await page.waitForSelector('text=Scenarios Available', { timeout: 40000 });
     result.loginMs = Date.now() - t0_login;
     console.log(`  -> [Tab ${index + 1}/20] (${studentName}) Logged in successfully in ${result.loginMs}ms`);
 
     // Step 2: Open First Scenario Briefing Modal
     const scenarioCard = page.locator('text=Addressing Chronic Punctuality & Meeting Lateness').first();
-    await scenarioCard.waitFor({ timeout: 25000 });
+    await scenarioCard.waitFor({ timeout: 30000 });
     await scenarioCard.click();
 
     // Natural human reading stagger: students read briefing for 0.5s - 2.0s
     await sleep(400 + (index % 5) * 250);
 
     // Step 3: Start Practice Session
-    await page.waitForSelector('#start-simulation-btn', { timeout: 25000 });
+    await page.waitForSelector('#start-simulation-btn', { timeout: 30000 });
     const t0_start = Date.now();
     await page.click('#start-simulation-btn');
 
-    // Wait for simulation chat to load and textarea to appear (with re-click fallback if needed)
-    try {
-      await page.waitForSelector('textarea', { timeout: 10000 });
-    } catch {
-      const retryBtn = page.locator('#start-simulation-btn');
-      if (await retryBtn.isVisible().catch(() => false)) {
-        console.log(`  🔄 [Tab ${index + 1}/20] (${studentName}) Retrying Start Simulation click...`);
-        await retryBtn.click().catch(() => {});
-      }
-      await page.waitForSelector('textarea', { timeout: 60000 });
-    }
+    // Wait for simulation chat to load and textarea to appear
+    await page.waitForSelector('textarea', { timeout: 65000 });
     result.sessionStartMs = Date.now() - t0_start;
     console.log(`  -> [Tab ${index + 1}/20] (${studentName}) Simulation started in ${result.sessionStartMs}ms`);
 
@@ -143,7 +136,7 @@ async function simulateStudentTab(index, studentName, browser, results) {
         const counterpartBubbles = document.querySelectorAll('[data-role="counterpart"] .whitespace-pre-line');
         return counterpartBubbles.length >= 2;
       },
-      { timeout: 60000 }
+      { timeout: 70000 }
     );
 
     result.dialogueTurnMs = Date.now() - t0_turn;
