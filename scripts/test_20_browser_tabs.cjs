@@ -82,9 +82,9 @@ async function simulateStudentTab(index, studentName, browser, results) {
   const journeyStart = Date.now();
 
   try {
-    // Realistic arrival stagger: students enter across 4-5 seconds
+    // Realistic arrival stagger: students enter across an 8-15 second classroom window
     if (index > 0) {
-      await sleep(index * 250);
+      await sleep(index * 750);
     }
 
     console.log(`[Tab ${index + 1}/20] (${studentName}) Navigating to ${BASE_URL}...`);
@@ -107,8 +107,8 @@ async function simulateStudentTab(index, studentName, browser, results) {
     await scenarioCard.waitFor({ timeout: 30000 });
     await scenarioCard.click();
 
-    // Natural human reading stagger: students read briefing for 0.5s - 2.0s
-    await sleep(400 + (index % 5) * 250);
+    // Natural human reading stagger: students review briefing for 1.0s - 2.5s
+    await sleep(800 + (index % 5) * 350);
 
     // Step 3: Start Practice Session
     await page.waitForSelector('#start-simulation-btn', { timeout: 30000 });
