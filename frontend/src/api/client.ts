@@ -49,7 +49,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...(options.headers || {}),
   };
 
-  let response: Response;
+  let response: Response | null = null;
   const maxRetries = 3;
   let lastError: any = null;
 
@@ -77,11 +77,12 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     await new Promise((r) => setTimeout(r, delay));
   }
 
-  // @ts-ignore
-  if (!response && lastError) throw lastError;
+  if (!response) {
+    throw lastError || new Error('Network request failed');
+  }
 
-  if (!response!.ok) {
-    if (response!.status === 401 && endpoint.includes('/auth/me')) {
+  if (!response.ok) {
+    if (response.status === 401 && endpoint.includes('/auth/me')) {
       localStorage.removeItem('auth_token');
     }
     let errorMsg = `Request failed (${response.status})`;
@@ -373,18 +374,26 @@ export const api = {
     onError: (err: Error) => void
   ): Promise<void> {
     try {
-      const response = await fetch(`${API_BASE}/sessions/${sessionId}/messages`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          Accept: 'text/event-stream',
-          ...getAuthHeader(),
-        },
-        body: JSON.stringify({ content }),
-      });
+      let response: Response | null = null;
+      for (let attempt = 0; attempt <= 2; attempt++) {
+        response = await fetch(`${API_BASE}/sessions/${sessionId}/messages`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Accept: 'text/event-stream',
+            ...getAuthHeader(),
+          },
+          body: JSON.stringify({ content }),
+        });
 
-      if (!response.ok) {
-        throw new Error(`Message delivery failed (${response.status})`);
+        if (response.ok || ![502, 503, 504].includes(response.status) || attempt === 2) {
+          break;
+        }
+        await new Promise((r) => setTimeout(r, 600 * Math.pow(1.5, attempt)));
+      }
+
+      if (!response || !response.ok) {
+        throw new Error(`Message delivery failed (${response?.status || 'Unknown'})`);
       }
 
       if (!response.body) {
