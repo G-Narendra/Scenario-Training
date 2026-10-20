@@ -1,3 +1,4 @@
+import time
 from datetime import datetime, timezone
 from typing import List
 
@@ -13,12 +14,27 @@ from backend.app.security.tokens import decode_access_token
 
 security = HTTPBearer(auto_error=True)
 
+_token_cache: dict[str, tuple[User, float]] = {}
+
+
+def invalidate_token_cache(t_hash: str):
+    _token_cache.pop(t_hash, None)
+
 
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db),
 ) -> User:
     token = credentials.credentials
+    t_hash = hash_token(token)
+    now_m = time.monotonic()
+
+    # Fast-path cache: avoids 3 sequential DB queries per request across concurrent tabs
+    if t_hash in _token_cache:
+        cached_user, expiry = _token_cache[t_hash]
+        if now_m < expiry:
+            return cached_user
+
     payload = decode_access_token(token)
 
     auth_error = HTTPException(
@@ -35,7 +51,6 @@ async def get_current_user(
         raise auth_error
 
     # Verify session token hash in DB and ensure not revoked
-    t_hash = hash_token(token)
     session_stmt = select(AuthSession).where(
         and_(AuthSession.token_hash == t_hash, AuthSession.revoked_at.is_(None))
     )
@@ -68,6 +83,7 @@ async def get_current_user(
                 status_code=status.HTTP_403_FORBIDDEN, detail="Cohort access window has expired."
             )
 
+    _token_cache[t_hash] = (user, now_m + 60.0)
     return user
 
 
