@@ -63,7 +63,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   const [voiceError, setVoiceError] = useState<string | null>(null);
 
   // Auto-Voice & Hands-free Dictation
-  const [autoVoice, setAutoVoice] = useState(true);
+  const [autoVoice, setAutoVoice] = useState(session.mode === 'voice');
   const [currentlySpeakingSeq, setCurrentlySpeakingSeq] = useState<number | null>(null);
   const [isDictating, setIsDictating] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -400,28 +400,30 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
         {/* Controls: Voice Toggle, Timer & End Practice Button */}
         <div className="flex items-center space-x-2 sm:space-x-3">
-          <button
-            type="button"
-            onClick={toggleAutoVoice}
-            title={autoVoice ? "Mute automatic counterpart voice" : "Turn ON automatic counterpart voice"}
-            className={`flex items-center space-x-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-sm ${
-              autoVoice
-                ? 'border-[#FF6500]/40 bg-[#FF6500]/15 text-[#FF6500] dark:bg-[#FF6500]/20'
-                : 'border-slate-300 bg-slate-100 text-slate-500 dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-400'
-            }`}
-          >
-            {autoVoice ? (
-              <>
-                <Volume2 className="h-3.5 w-3.5 text-[#FF6500] animate-pulse" />
-                <span>Voice: ON</span>
-              </>
-            ) : (
-              <>
-                <VolumeX className="h-3.5 w-3.5" />
-                <span>Voice: OFF</span>
-              </>
-            )}
-          </button>
+          {session.mode === 'voice' && (
+            <button
+              type="button"
+              onClick={toggleAutoVoice}
+              title={autoVoice ? "Mute automatic counterpart voice" : "Turn ON automatic counterpart voice"}
+              className={`flex items-center space-x-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-sm ${
+                autoVoice
+                  ? 'border-[#FF6500]/40 bg-[#FF6500]/15 text-[#FF6500] dark:bg-[#FF6500]/20'
+                  : 'border-slate-300 bg-slate-100 text-slate-500 dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-400'
+              }`}
+            >
+              {autoVoice ? (
+                <>
+                  <Volume2 className="h-3.5 w-3.5 text-[#FF6500] animate-pulse" />
+                  <span>Voice: ON</span>
+                </>
+              ) : (
+                <>
+                  <VolumeX className="h-3.5 w-3.5" />
+                  <span>Voice: OFF</span>
+                </>
+              )}
+            </button>
+          )}
 
           <div className="flex items-center space-x-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3 py-1 font-mono text-xs font-bold text-slate-700 shadow-sm dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-200">
             <Clock className="h-3.5 w-3.5 text-[#FF6500]" />
@@ -688,24 +690,26 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                         </span>
                       )}
                     </span>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (currentlySpeakingSeq === m.seq) {
-                          handleStopAudio();
-                        } else {
-                          handlePlayMessageAudio(m.content, m.seq);
-                        }
-                      }}
-                      title={currentlySpeakingSeq === m.seq ? 'Stop speaking' : 'Listen out loud'}
-                      className={`p-1 rounded transition ${
-                        currentlySpeakingSeq === m.seq
-                          ? 'bg-[#FF6500] text-white shadow-sm'
-                          : 'hover:bg-slate-200 dark:hover:bg-[#1E3E62] text-slate-500 hover:text-[#FF6500] dark:text-slate-400 dark:hover:text-[#FF6500]'
-                      }`}
-                    >
-                      {currentlySpeakingSeq === m.seq ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
-                    </button>
+                    {session.mode === 'voice' && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (currentlySpeakingSeq === m.seq) {
+                            handleStopAudio();
+                          } else {
+                            handlePlayMessageAudio(m.content, m.seq);
+                          }
+                        }}
+                        title={currentlySpeakingSeq === m.seq ? 'Stop speaking' : 'Listen out loud'}
+                        className={`p-1 rounded transition ${
+                          currentlySpeakingSeq === m.seq
+                            ? 'bg-[#FF6500] text-white shadow-sm'
+                            : 'hover:bg-slate-200 dark:hover:bg-[#1E3E62] text-slate-500 hover:text-[#FF6500] dark:text-slate-400 dark:hover:text-[#FF6500]'
+                        }`}
+                      >
+                        {currentlySpeakingSeq === m.seq ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                      </button>
+                    )}
                   </div>
                 )}
                 <div className={`whitespace-pre-line text-base leading-relaxed ${isUser ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
