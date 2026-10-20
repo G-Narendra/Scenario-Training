@@ -1,6 +1,7 @@
+import asyncio
 import json
 import logging
-from typing import AsyncIterator, List
+from typing import AsyncIterator, List, Optional, Union
 
 import httpx
 
@@ -10,21 +11,62 @@ logger = logging.getLogger(__name__)
 
 
 class NVIDIAProvider(LLMProvider):
-    """NVIDIA NIM LLM provider adapter using OpenAI-compatible chat completions."""
+    """
+    High-concurrency NVIDIA NIM LLM provider adapter with multi-key round-robin load balancing,
+    persistent HTTP connection pooling, and automatic 429 rate-limit failover across API keys.
+    """
 
     def __init__(
         self,
-        api_key: str,
+        api_key: Optional[str] = None,
+        api_keys: Optional[Union[str, List[str]]] = None,
         base_url: str = "https://integrate.api.nvidia.com/v1/chat/completions",
         model: str = "meta/llama-3.2-11b-vision-instruct",
-        timeout: float = 25.0,
+        timeout: float = 30.0,
     ):
-        self.api_key = api_key
+        # Resolve all provided API keys into a clean list
+        resolved_keys: List[str] = []
+        if api_keys:
+            if isinstance(api_keys, str):
+                resolved_keys.extend([k.strip() for k in api_keys.split(",") if k.strip()])
+            elif isinstance(api_keys, (list, tuple)):
+                resolved_keys.extend([str(k).strip() for k in api_keys if str(k).strip()])
+        if api_key and api_key not in resolved_keys:
+            resolved_keys.insert(0, api_key.strip())
+
+        # Eliminate duplicates preserving order
+        self.api_keys: List[str] = list(dict.fromkeys(resolved_keys))
+        if not self.api_keys:
+            raise LLMProviderError("No valid NVIDIA API keys configured", retryable=False)
+
         self.base_url = base_url
         self.model = model
         self.timeout = timeout
         self.input_cost_per_token = 0.0
         self.output_cost_per_token = 0.0
+
+        self._key_index = 0
+        self._key_lock = asyncio.Lock()
+        
+        # High-concurrency persistent HTTP client with connection pooling
+        self._client: Optional[httpx.AsyncClient] = None
+
+    def _get_client(self) -> httpx.AsyncClient:
+        """Retrieve or lazily initialize the shared persistent HTTP client with connection pooling."""
+        if self._client is None or self._client.is_closed:
+            self._client = httpx.AsyncClient(
+                timeout=httpx.Timeout(self.timeout, connect=10.0),
+                limits=httpx.Limits(max_keepalive_connections=60, max_connections=120, keepalive_expiry=60.0),
+            )
+        return self._client
+
+    async def _get_ordered_keys(self) -> List[str]:
+        """Atomically select the next round-robin key and return all keys ordered starting with it."""
+        async with self._key_lock:
+            start_idx = self._key_index
+            self._key_index = (self._key_index + 1) % len(self.api_keys)
+        # Rotate list so start_idx is first, followed by others as failover backups
+        return self.api_keys[start_idx:] + self.api_keys[:start_idx]
 
     def _format_messages(self, messages: List[LLMMessage], system_prompt: str) -> List[dict]:
         formatted = [{"role": "system", "content": system_prompt}]
@@ -46,10 +88,10 @@ class NVIDIAProvider(LLMProvider):
         max_tokens: int = 600,
         temperature: float = 0.7,
     ) -> AsyncIterator[str]:
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
+        """
+        Stream chat completion with round-robin multi-key balancing and instant 429 failover.
+        """
+        candidate_keys = await self._get_ordered_keys()
         payload = {
             "model": self.model,
             "max_tokens": max_tokens,
@@ -58,11 +100,31 @@ class NVIDIAProvider(LLMProvider):
             "stream": True,
         }
 
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        client = self._get_client()
+        last_error: Optional[Exception] = None
+
+        for attempt, key in enumerate(candidate_keys):
+            masked_key = f"...{key[-8:]}" if len(key) >= 8 else "key"
+            headers = {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+            }
+
             try:
-                async with client.stream(
-                    "POST", self.base_url, headers=headers, json=payload
-                ) as response:
+                logger.info(f"[NVIDIA Multi-Key Pool] Routing stream turn to key #{attempt + 1}/{len(candidate_keys)} ({masked_key})")
+                async with client.stream("POST", self.base_url, headers=headers, json=payload) as response:
+                    if response.status_code == 429 or response.status_code in (502, 503, 504):
+                        body = await response.aread()
+                        logger.warning(
+                            f"[NVIDIA Multi-Key Pool] Key {masked_key} throttled ({response.status_code}). Failing over to next key..."
+                        )
+                        last_error = LLMProviderError(
+                            f"NVIDIA NIM error {response.status_code}: {body.decode(errors='ignore')}",
+                            status_code=response.status_code,
+                            retryable=True,
+                        )
+                        continue  # Try next key in candidate list!
+
                     if response.status_code != 200:
                         body = await response.aread()
                         raise LLMProviderError(
@@ -71,6 +133,7 @@ class NVIDIAProvider(LLMProvider):
                             retryable=response.status_code in (429, 500, 502, 503, 504),
                         )
 
+                    # Successful connection: stream tokens
                     async for line in response.aiter_lines():
                         if not line or not line.startswith("data: "):
                             continue
@@ -87,12 +150,20 @@ class NVIDIAProvider(LLMProvider):
                                     yield content
                         except json.JSONDecodeError:
                             continue
-            except httpx.TimeoutException:
-                raise LLMProviderError(
-                    "NVIDIA NIM API request timed out", status_code=504, retryable=True
-                )
-            except httpx.RequestError as e:
-                raise LLMProviderError(f"NVIDIA NIM connection error: {str(e)}", retryable=True)
+                    return  # Streaming completed successfully!
+
+            except httpx.TimeoutException as te:
+                logger.warning(f"[NVIDIA Multi-Key Pool] Key {masked_key} timed out. Failing over to next key...")
+                last_error = te
+                continue
+            except httpx.RequestError as re:
+                logger.warning(f"[NVIDIA Multi-Key Pool] Key {masked_key} connection error: {re}. Failing over to next key...")
+                last_error = re
+                continue
+
+        # If all keys in the pool were exhausted
+        if last_error:
+            raise LLMProviderError(f"All {len(candidate_keys)} NVIDIA NIM keys failed: {str(last_error)}", retryable=True)
 
     async def complete(
         self,
@@ -101,10 +172,10 @@ class NVIDIAProvider(LLMProvider):
         max_tokens: int = 2500,
         temperature: float = 0.7,
     ) -> LLMResponse:
-        headers = {
-            "Authorization": f"Bearer {self.api_key}",
-            "Content-Type": "application/json",
-        }
+        """
+        Complete full chat response with multi-key round-robin rotation and failover.
+        """
+        candidate_keys = await self._get_ordered_keys()
         payload = {
             "model": self.model,
             "max_tokens": max_tokens,
@@ -112,9 +183,25 @@ class NVIDIAProvider(LLMProvider):
             "temperature": temperature,
         }
 
-        async with httpx.AsyncClient(timeout=self.timeout) as client:
+        client = self._get_client()
+        last_error: Optional[Exception] = None
+
+        for attempt, key in enumerate(candidate_keys):
+            masked_key = f"...{key[-8:]}" if len(key) >= 8 else "key"
+            headers = {
+                "Authorization": f"Bearer {key}",
+                "Content-Type": "application/json",
+            }
+
             try:
                 response = await client.post(self.base_url, headers=headers, json=payload)
+                if response.status_code in (429, 502, 503, 504):
+                    logger.warning(
+                        f"[NVIDIA Multi-Key Pool] Key {masked_key} throttled ({response.status_code}). Failing over..."
+                    )
+                    last_error = LLMProviderError(f"NVIDIA NIM error {response.status_code}", status_code=response.status_code, retryable=True)
+                    continue
+
                 if response.status_code != 200:
                     raise LLMProviderError(
                         f"NVIDIA NIM API error {response.status_code}: {response.text}",
@@ -137,9 +224,10 @@ class NVIDIAProvider(LLMProvider):
                     cost_estimate=0.0,
                     finish_reason=data["choices"][0].get("finish_reason", "stop"),
                 )
-            except httpx.TimeoutException:
-                raise LLMProviderError(
-                    "NVIDIA NIM API request timed out", status_code=504, retryable=True
-                )
-            except httpx.RequestError as e:
-                raise LLMProviderError(f"NVIDIA NIM connection error: {str(e)}", retryable=True)
+            except (httpx.TimeoutException, httpx.RequestError) as e:
+                logger.warning(f"[NVIDIA Multi-Key Pool] Key {masked_key} error: {e}. Failing over...")
+                last_error = e
+                continue
+
+        if last_error:
+            raise LLMProviderError(f"All {len(candidate_keys)} NVIDIA NIM keys failed: {str(last_error)}", retryable=True)

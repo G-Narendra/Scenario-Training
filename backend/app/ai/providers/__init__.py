@@ -19,10 +19,13 @@ def get_llm_provider(
     name = (provider_name or settings.DEFAULT_LLM_PROVIDER).lower()
 
     if name in ("nvidia", "nvidia_nim", "nim"):
-        if not settings.NVIDIA_API_KEY:
+        keys = getattr(settings, "NVIDIA_API_KEYS", [])
+        primary = settings.NVIDIA_API_KEY
+        if not keys and not primary:
             raise LLMProviderError("NVIDIA_API_KEY is not configured", retryable=False)
         return NVIDIAProvider(
-            api_key=settings.NVIDIA_API_KEY,
+            api_key=primary,
+            api_keys=keys,
             base_url=settings.NVIDIA_BASE_URL,
             model=settings.NVIDIA_MODEL,
         )
@@ -38,9 +41,10 @@ def get_llm_provider(
         return OpenAIProvider(api_key=settings.OPENAI_API_KEY)
 
     # Auto-detect: if NVIDIA key is available, use it instead of mock
-    if settings.NVIDIA_API_KEY:
+    if settings.NVIDIA_API_KEY or getattr(settings, "NVIDIA_API_KEYS", None):
         return NVIDIAProvider(
             api_key=settings.NVIDIA_API_KEY,
+            api_keys=getattr(settings, "NVIDIA_API_KEYS", []),
             base_url=settings.NVIDIA_BASE_URL,
             model=settings.NVIDIA_MODEL,
         )

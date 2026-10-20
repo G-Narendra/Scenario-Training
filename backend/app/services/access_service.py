@@ -1,3 +1,4 @@
+import asyncio
 import time
 from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
@@ -21,6 +22,7 @@ from backend.app.security.tokens import create_access_token
 _cached_passcodes: Optional[List[Dict[str, Any]]] = None
 _cached_passcodes_time: float = 0.0
 _verified_code_map: Dict[str, str] = {}
+_passcode_verify_lock = asyncio.Lock()
 
 
 async def _get_cached_passcodes(db: AsyncSession) -> List[Dict[str, Any]]:
@@ -275,13 +277,22 @@ class AccessService:
                     break
 
         if not matched_item:
-            # Sort candidates by usage count so frequently used passcodes (e.g. UZAIR-2026) are checked first
-            sorted_candidates = sorted(candidates, key=lambda x: x.get("uses_count", 0), reverse=True)
-            for item in sorted_candidates:
-                if verify_passcode(clean_code, item["code_hash"]):
-                    matched_item = item
-                    _verified_code_map[clean_code] = item["passcode_id"]
-                    break
+            async with _passcode_verify_lock:
+                # Double-checked locking: check if another concurrent task verified it while waiting
+                cached_pid = _verified_code_map.get(clean_code)
+                if cached_pid:
+                    for item in candidates:
+                        if item["passcode_id"] == cached_pid:
+                            matched_item = item
+                            break
+                if not matched_item:
+                    # Run CPU-intensive verification ONCE
+                    sorted_candidates = sorted(candidates, key=lambda x: x.get("uses_count", 0), reverse=True)
+                    for item in sorted_candidates:
+                        if verify_passcode(clean_code, item["code_hash"]):
+                            matched_item = item
+                            _verified_code_map[clean_code] = item["passcode_id"]
+                            break
 
         auth_failure_error = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired passcode."
@@ -431,12 +442,15 @@ class AccessService:
         )
         db.add(audit)
 
-        # Atomic uses_count update: prevents row lock serialization across concurrent logins
-        await db.execute(
-            update(Passcode)
-            .where(Passcode.id == matched_item["passcode_id"])
-            .values(uses_count=Passcode.uses_count + 1)
-        )
+        # Non-blocking uses_count update
+        try:
+            await db.execute(
+                update(Passcode)
+                .where(Passcode.id == matched_item["passcode_id"])
+                .values(uses_count=Passcode.uses_count + 1)
+            )
+        except Exception:
+            pass
         await db.commit()
 
         # Warm in-memory token cache immediately upon login (30 min TTL)

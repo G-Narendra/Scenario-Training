@@ -1,6 +1,6 @@
-from typing import List, Optional
+from typing import Any, List, Optional, Union
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -27,6 +27,30 @@ class Settings(BaseSettings):
     DEFAULT_LLM_PROVIDER: str = Field(default="nvidia")
     LLM_PROVIDER: str = Field(default="nvidia")
     NVIDIA_API_KEY: Optional[str] = Field(default="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")
+    NVIDIA_API_KEYS: Union[List[str], str] = Field(
+        default=[
+            "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",
+            "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",
+            "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",
+            "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",
+        ]
+    )
+
+    @field_validator("NVIDIA_API_KEYS", mode="before")
+    @classmethod
+    def parse_nvidia_api_keys(cls, v: Any) -> List[str]:
+        if isinstance(v, str):
+            if v.strip().startswith("[") and v.strip().endswith("]"):
+                try:
+                    import json
+                    return json.loads(v)
+                except Exception:
+                    pass
+            return [k.strip() for k in v.split(",") if k.strip()]
+        if isinstance(v, (list, tuple)):
+            return [str(k).strip() for k in v if str(k).strip()]
+        return []
+
     NVIDIA_BASE_URL: str = Field(default="https://integrate.api.nvidia.com/v1/chat/completions")
     NVIDIA_MODEL: str = Field(default="meta/llama-3.2-11b-vision-instruct")
     ANTHROPIC_API_KEY: Optional[str] = Field(default=None)
