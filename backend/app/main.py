@@ -94,13 +94,18 @@ async def request_context_middleware(request: Request, call_next):
 
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    import logging
     request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
+    logging.getLogger("uvicorn.error").error(
+        f"500 on {request.method} {request.url.path}: {exc.__class__.__name__}: {str(exc)}",
+        exc_info=True,
+    )
     return JSONResponse(
         status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         content={
             "error": {
                 "code": "INTERNAL_SERVER_ERROR",
-                "message": str(exc) if settings.DEBUG else "An unexpected error occurred.",
+                "message": f"{exc.__class__.__name__}: {str(exc)}",
                 "request_id": request_id,
             }
         },

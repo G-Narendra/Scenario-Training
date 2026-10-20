@@ -82,13 +82,16 @@ async def create_session(
             )
 
             if not is_developer_or_admin:
-                ledger_stmt = select(AttemptLedger).where(
-                    AttemptLedger.cohort_id == cohort.id,
-                    AttemptLedger.scenario_id == payload.scenario_id,
-                    AttemptLedger.user_id == current_user.id,
+                ledger_stmt = (
+                    select(AttemptLedger)
+                    .where(
+                        AttemptLedger.cohort_id == cohort.id,
+                        AttemptLedger.scenario_id == payload.scenario_id,
+                        AttemptLedger.user_id == current_user.id,
+                    )
+                    .order_by(AttemptLedger.last_attempt_at.desc())
                 )
-                ledger_res = await db.execute(ledger_stmt)
-                existing_attempt = ledger_res.scalar_one_or_none()
+                existing_attempt = (await db.execute(ledger_stmt)).scalars().first()
 
                 if existing_attempt and existing_attempt.attempt_count >= 10:
                     raise HTTPException(
