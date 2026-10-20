@@ -85,11 +85,7 @@ async def create_session(
                 ledger_stmt = select(AttemptLedger).where(
                     AttemptLedger.cohort_id == cohort.id,
                     AttemptLedger.scenario_id == payload.scenario_id,
-                    or_(
-                        AttemptLedger.user_id == current_user.id,
-                        AttemptLedger.device_fingerprint == device_fp,
-                        func.lower(AttemptLedger.student_name) == current_user.display_name.lower(),
-                    ),
+                    AttemptLedger.user_id == current_user.id,
                 )
                 ledger_res = await db.execute(ledger_stmt)
                 existing_attempt = ledger_res.scalar_one_or_none()

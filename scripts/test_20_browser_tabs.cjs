@@ -67,6 +67,16 @@ async function simulateStudentTab(index, studentName, browser, results) {
   });
 
   const page = await context.newPage();
+  page.on('dialog', async (dialog) => {
+    console.log(`  ⚠️ [Tab ${index + 1}/20] Alert dialog: "${dialog.message()}"`);
+    await dialog.dismiss();
+  });
+  page.on('console', (msg) => {
+    if (msg.type() === 'error') {
+      console.log(`  Console Error [Tab ${index + 1}/20]: ${msg.text()}`);
+    }
+  });
+
   const journeyStart = Date.now();
 
   try {
