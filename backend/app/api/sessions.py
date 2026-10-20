@@ -202,6 +202,7 @@ async def send_session_message(
             headers={
                 "Cache-Control": "no-cache",
                 "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
             },
         )
 

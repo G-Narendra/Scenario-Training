@@ -353,8 +353,8 @@ class AccessService:
                     User.cohort_id == matched_cohort_id,
                     func.lower(func.trim(User.display_name)) == clean_name.lower(),
                 )
-            )
-            user = (await db.execute(user_stmt)).scalar_one_or_none()
+            ).order_by(User.id.asc())
+            user = (await db.execute(user_stmt)).scalars().first()
             if not user:
                 user = User(
                     cohort_id=matched_cohort_id,
@@ -373,8 +373,8 @@ class AccessService:
                     User.cohort_id == matched_cohort_id,
                     func.lower(func.trim(User.display_name)) == clean_name.lower(),
                 )
-            )
-            user = (await db.execute(user_stmt)).scalar_one_or_none()
+            ).order_by(User.id.asc())
+            user = (await db.execute(user_stmt)).scalars().first()
 
             if not user:
                 roster_count_stmt = select(func.count(User.id)).where(
