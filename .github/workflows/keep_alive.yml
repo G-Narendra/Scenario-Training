@@ -1,40 +1,38 @@
-name: Keep Alive Deployments Heartbeat
+name: Multi-Cloud 24/7 Keep-Alive Heartbeat
 
 on:
+  schedule:
+    # Runs every 10 minutes to prevent Render/Koyeb/HuggingFace from ever idling or sleeping
+    - cron: '*/10 * * * *'
   push:
     branches: [ master ]
-  schedule:
-    # Runs every 14 minutes to prevent free-tier instances (Render, Railway, Koyeb, etc.) from sleeping
-    - cron: '*/14 * * * *'
-    # Also runs a guaranteed daily heartbeat at midnight UTC
-    - cron: '0 0 * * *'
-  workflow_dispatch: # Allows manual trigger anytime from GitHub Actions tab
+  workflow_dispatch:
 
 jobs:
-  heartbeat-ping:
-    name: Heartbeat Ping Services
+  keepalive-ping:
+    name: Ping All Backend & Frontend Nodes
     runs-on: ubuntu-latest
     steps:
-      - name: Ping Backend API Health
+      - name: Ping All Multi-Cloud Endpoints
         run: |
-          BACKEND_URL="${{ secrets.BACKEND_URL || 'https://scenariolab-api.onrender.com' }}"
-          echo "Pinging backend health: $BACKEND_URL/health"
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 30 "$BACKEND_URL/health" || echo "000")
-          echo "Backend Health HTTP Status: $HTTP_STATUS"
-          if [ "$HTTP_STATUS" = "200" ]; then
-            echo "Backend is alive and healthy."
-          else
-            echo "Wake-up ping delivered to backend (status: $HTTP_STATUS)."
-          fi
+          ENDPOINTS=(
+            "https://scenariolab-api.onrender.com/health/ready"
+            "${{ secrets.HF_BACKEND_URL || '' }}"
+            "${{ secrets.KOYEB_BACKEND_URL || '' }}"
+            "${{ secrets.ORACLE_BACKEND_URL || '' }}"
+            "https://scenariolab-alpha.vercel.app"
+          )
 
-      - name: Ping Frontend Service
-        run: |
-          FRONTEND_URL="${{ secrets.FRONTEND_URL || 'https://scenariolab-alpha.vercel.app' }}"
-          echo "Pinging frontend: $FRONTEND_URL"
-          HTTP_STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 30 "$FRONTEND_URL" || echo "000")
-          echo "Frontend HTTP Status: $HTTP_STATUS"
-          if [ "$HTTP_STATUS" = "200" ] || [ "$HTTP_STATUS" = "301" ] || [ "$HTTP_STATUS" = "308" ]; then
-            echo "Frontend is alive and responsive."
-          else
-            echo "Wake-up ping delivered to frontend (status: $HTTP_STATUS)."
-          fi
+          for url in "${ENDPOINTS[@]}"; do
+            if [ -n "$url" ]; then
+              echo "----------------------------------------"
+              echo "Pinging: $url"
+              STATUS=$(curl -s -o /dev/null -w "%{http_code}" -m 25 "$url" || echo "000")
+              echo "HTTP Status: $STATUS"
+              if [ "$STATUS" = "200" ] || [ "$STATUS" = "301" ] || [ "$STATUS" = "308" ]; then
+                echo "✅ Healthy & Awake"
+              else
+                echo "⚠️ Wake-up packet sent (code $STATUS)"
+              fi
+            fi
+          done
