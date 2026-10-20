@@ -80,9 +80,9 @@ async function simulateStudentTab(index, studentName, browser, results) {
   const journeyStart = Date.now();
 
   try {
-    // Realistic arrival stagger: students enter across 2-3 seconds
+    // Realistic arrival stagger: students enter across 4-5 seconds
     if (index > 0) {
-      await sleep(index * 150);
+      await sleep(index * 250);
     }
 
     console.log(`[Tab ${index + 1}/20] (${studentName}) Navigating to ${BASE_URL}...`);
