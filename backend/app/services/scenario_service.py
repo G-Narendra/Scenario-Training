@@ -142,6 +142,7 @@ class ScenarioService:
         return scenario
 
     _scenarios_cache: dict = {}
+    _scenario_detail_cache: dict = {}
 
     @staticmethod
     async def list_public_scenarios(
@@ -207,7 +208,13 @@ class ScenarioService:
     async def get_public_scenario_detail(
         db: AsyncSession, scenario_id_or_slug: str
     ) -> PublicScenarioDetail:
-        """Get scenario detail for trainee briefing. Strips all hidden data."""
+        """Get scenario detail for trainee briefing. Strips all hidden data with fast cache."""
+        import time
+        now_ts = time.time()
+        cached = ScenarioService._scenario_detail_cache.get(scenario_id_or_slug)
+        if cached and (now_ts - cached[0] < 60.0):
+            return cached[1]
+
         stmt = (
             select(Scenario, Track)
             .join(Track, Scenario.track_id == Track.id)
@@ -235,7 +242,7 @@ class ScenarioService:
         diff_level = "Normal" if scen.difficulty <= 1 else ("Challenging" if scen.difficulty == 2 else "Crisis")
         primary_cap = scen.target_capabilities[0] if (scen.target_capabilities and len(scen.target_capabilities) > 0) else scen.topic.replace("_", " ").title()
 
-        return PublicScenarioDetail(
+        detail = PublicScenarioDetail(
             id=scen.id,
             slug=scen.slug,
             track=trk.key,
@@ -254,6 +261,10 @@ class ScenarioService:
             tactical_coaching_clue=scen.tactical_coaching_clue,
             target_capabilities=scen.target_capabilities or [],
         )
+        ScenarioService._scenario_detail_cache[scenario_id_or_slug] = (now_ts, detail)
+        ScenarioService._scenario_detail_cache[scen.id] = (now_ts, detail)
+        ScenarioService._scenario_detail_cache[scen.slug] = (now_ts, detail)
+        return detail
 
     @staticmethod
     async def admin_restore_version(

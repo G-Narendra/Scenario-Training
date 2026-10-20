@@ -49,22 +49,39 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...(options.headers || {}),
   };
 
-  let response = await fetch(`${API_BASE}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  let response: Response;
+  const maxRetries = 3;
+  let lastError: any = null;
 
-  // Resilient retry for transient reverse-proxy 502/503 bursts in cloud deployments
-  if (!response.ok && [502, 503, 504].includes(response.status)) {
-    await new Promise((r) => setTimeout(r, 800));
-    response = await fetch(`${API_BASE}${endpoint}`, {
-      ...options,
-      headers,
-    });
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
+    try {
+      response = await fetch(`${API_BASE}${endpoint}`, {
+        ...options,
+        headers: {
+          ...headers,
+          ...getAuthHeader(),
+        },
+      });
+
+      // Break if successful or not a transient gateway/proxy error
+      if (response.ok || ![502, 503, 504].includes(response.status) || attempt === maxRetries) {
+        break;
+      }
+    } catch (netErr) {
+      lastError = netErr;
+      if (attempt === maxRetries) throw netErr;
+    }
+
+    // Exponential backoff: 600ms, 1200ms, 2000ms
+    const delay = 600 * Math.pow(1.8, attempt) + Math.random() * 300;
+    await new Promise((r) => setTimeout(r, delay));
   }
 
-  if (!response.ok) {
-    if (response.status === 401 || (response.status === 403 && !endpoint.startsWith('/admin'))) {
+  // @ts-ignore
+  if (!response && lastError) throw lastError;
+
+  if (!response!.ok) {
+    if (response!.status === 401 && endpoint.includes('/auth/me')) {
       localStorage.removeItem('auth_token');
     }
     let errorMsg = `Request failed (${response.status})`;

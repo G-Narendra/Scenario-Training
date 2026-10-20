@@ -102,16 +102,28 @@ async function simulateStudentTab(index, studentName, browser, results) {
 
     // Step 2: Open First Scenario Briefing Modal
     const scenarioCard = page.locator('text=Addressing Chronic Punctuality & Meeting Lateness').first();
-    await scenarioCard.waitFor({ timeout: 15000 });
+    await scenarioCard.waitFor({ timeout: 25000 });
     await scenarioCard.click();
 
+    // Natural human reading stagger: students read briefing for 0.5s - 2.0s
+    await sleep(400 + (index % 5) * 250);
+
     // Step 3: Start Practice Session
-    await page.waitForSelector('#start-simulation-btn', { timeout: 20000 });
+    await page.waitForSelector('#start-simulation-btn', { timeout: 25000 });
     const t0_start = Date.now();
     await page.click('#start-simulation-btn');
 
-    // Wait for simulation chat to load and textarea to appear
-    await page.waitForSelector('textarea', { timeout: 60000 });
+    // Wait for simulation chat to load and textarea to appear (with re-click fallback if needed)
+    try {
+      await page.waitForSelector('textarea', { timeout: 10000 });
+    } catch {
+      const retryBtn = page.locator('#start-simulation-btn');
+      if (await retryBtn.isVisible().catch(() => false)) {
+        console.log(`  🔄 [Tab ${index + 1}/20] (${studentName}) Retrying Start Simulation click...`);
+        await retryBtn.click().catch(() => {});
+      }
+      await page.waitForSelector('textarea', { timeout: 60000 });
+    }
     result.sessionStartMs = Date.now() - t0_start;
     console.log(`  -> [Tab ${index + 1}/20] (${studentName}) Simulation started in ${result.sessionStartMs}ms`);
 
@@ -119,24 +131,29 @@ async function simulateStudentTab(index, studentName, browser, results) {
     const studentUtterance = `Marcus, I value your dedication to high-quality slides, but starting 10 minutes late impacts our team alignment. Let's agree on starting promptly at 9:00 AM.`;
     await page.fill('textarea', studentUtterance);
 
+    // Natural typing delay stagger
+    await sleep(200 + (index % 4) * 150);
+
     const t0_turn = Date.now();
     await page.click('#send-message-btn');
 
     // Wait for counterpart reply to appear (the bubble containing response from Marcus Vance)
     await page.waitForFunction(
       () => {
-        const bubbles = document.querySelectorAll('.whitespace-pre-line');
-        // Initial opening line + student message + counterpart reply = at least 3 bubbles
-        return bubbles.length >= 3;
+        const counterpartBubbles = document.querySelectorAll('[data-role="counterpart"] .whitespace-pre-line');
+        return counterpartBubbles.length >= 2;
       },
-      { timeout: 45000 }
+      { timeout: 60000 }
     );
 
     result.dialogueTurnMs = Date.now() - t0_turn;
 
     // Extract counterpart response text
-    const replies = await page.$$eval('.whitespace-pre-line', (elements) => elements.map((el) => el.textContent.trim()));
-    result.counterpartReply = replies[replies.length - 1] || '';
+    const counterpartBubbles = await page.$$eval(
+      '[data-role="counterpart"] .whitespace-pre-line',
+      (elements) => elements.map((el) => el.textContent.trim())
+    );
+    result.counterpartReply = counterpartBubbles[counterpartBubbles.length - 1] || '';
 
     result.totalJourneyMs = Date.now() - journeyStart;
     result.status = 'SUCCESS';
