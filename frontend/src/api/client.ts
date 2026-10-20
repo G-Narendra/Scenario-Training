@@ -49,10 +49,19 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...(options.headers || {}),
   };
 
-  const response = await fetch(`${API_BASE}${endpoint}`, {
+  let response = await fetch(`${API_BASE}${endpoint}`, {
     ...options,
     headers,
   });
+
+  // Resilient retry for transient reverse-proxy 502/503 bursts in cloud deployments
+  if (!response.ok && [502, 503, 504].includes(response.status)) {
+    await new Promise((r) => setTimeout(r, 800));
+    response = await fetch(`${API_BASE}${endpoint}`, {
+      ...options,
+      headers,
+    });
+  }
 
   if (!response.ok) {
     if (response.status === 401 || (response.status === 403 && !endpoint.startsWith('/admin'))) {
