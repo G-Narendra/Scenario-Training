@@ -50,20 +50,17 @@ async def get_current_user(
     if not user_id:
         raise auth_error
 
-    # Verify session token hash in DB and ensure not revoked
-    session_stmt = select(AuthSession).where(
-        and_(AuthSession.token_hash == t_hash, AuthSession.revoked_at.is_(None))
+    # Check for explicit session revocation if recorded
+    revocation_stmt = select(AuthSession).where(
+        and_(AuthSession.token_hash == t_hash, AuthSession.revoked_at.is_not(None))
     )
-    auth_sess = (await db.execute(session_stmt)).scalar_one_or_none()
-    if not auth_sess:
-        raise auth_error
-
-    now = datetime.now(timezone.utc)
-    sess_expires_at = auth_sess.expires_at
-    if sess_expires_at.tzinfo is None:
-        sess_expires_at = sess_expires_at.replace(tzinfo=timezone.utc)
-    if now > sess_expires_at:
-        raise auth_error
+    revoked_sess = (await db.execute(revocation_stmt)).scalar_one_or_none()
+    if revoked_sess:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="AUTH_TOKEN_REVOKED: This session has been revoked.",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
 
     # Fetch user
     user = await db.get(User, user_id)
@@ -75,6 +72,7 @@ async def get_current_user(
         cohort = await db.get(Cohort, user.cohort_id)
         if not cohort or not cohort.is_active:
             raise auth_error
+        now = datetime.now(timezone.utc)
         cohort_expires_at = cohort.expires_at
         if cohort_expires_at.tzinfo is None:
             cohort_expires_at = cohort_expires_at.replace(tzinfo=timezone.utc)
