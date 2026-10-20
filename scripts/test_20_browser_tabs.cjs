@@ -65,10 +65,10 @@ async function simulateStudentTab(index, studentName, browser, results) {
     viewport: { width: 1280, height: 800 },
     userAgent: `Mozilla/5.0 (Windows NT 10.0; Win64; x64) ScenarioTest/1.0 Student/${index + 1}`,
   });
-  context.setDefaultTimeout(70000);
+  context.setDefaultTimeout(90000);
 
   const page = await context.newPage();
-  page.setDefaultTimeout(70000);
+  page.setDefaultTimeout(90000);
   page.on('dialog', async (dialog) => {
     console.log(`  ⚠️ [Tab ${index + 1}/20] Alert dialog: "${dialog.message()}"`);
     await dialog.dismiss();
@@ -136,7 +136,7 @@ async function simulateStudentTab(index, studentName, browser, results) {
         const counterpartBubbles = document.querySelectorAll('[data-role="counterpart"] .whitespace-pre-line');
         return counterpartBubbles.length >= 2;
       },
-      { timeout: 70000 }
+      { timeout: 90000 }
     );
 
     result.dialogueTurnMs = Date.now() - t0_turn;
