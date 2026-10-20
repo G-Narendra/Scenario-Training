@@ -78,8 +78,6 @@ class ConversationEngine:
         )
         self.db.add(opening_msg)
         await self.db.commit()
-        await self.db.refresh(sim_session)
-        await self.db.refresh(opening_msg)
 
         return sim_session, opening_msg
 

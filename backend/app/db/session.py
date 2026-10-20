@@ -35,8 +35,8 @@ else:
     # High-concurrency production connection pool with PgBouncer compatibility
     engine_kwargs.update({
         "pool_size": 30,
-        "max_overflow": 40,
-        "pool_timeout": 15.0,
+        "max_overflow": 50,
+        "pool_timeout": 45.0,
         "pool_recycle": 300,
         "pool_pre_ping": True,
         "connect_args": {
