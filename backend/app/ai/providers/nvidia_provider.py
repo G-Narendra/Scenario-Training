@@ -112,8 +112,8 @@ class NVIDIAProvider(LLMProvider):
 
             try:
                 logger.info(f"[NVIDIA Multi-Key Pool] Routing stream turn to key #{attempt + 1}/{len(candidate_keys)} ({masked_key})")
-                # Fast 5s per-key timeout to keep conversation snappy and prevent user stalls
-                async with client.stream("POST", self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(5.0, connect=2.5, read=5.0)) as response:
+                # Snappy 8s per-key streaming timeout with 3s connect gate to prevent stalls while giving ample headroom
+                async with client.stream("POST", self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(8.0, connect=3.0, read=8.0)) as response:
                     if response.status_code != 200:
                         body = await response.aread()
                         logger.warning(
@@ -167,8 +167,29 @@ class NVIDIAProvider(LLMProvider):
         temperature: float = 0.7,
     ) -> LLMResponse:
         """
-        Complete full chat response with multi-key round-robin rotation and failover.
+        Complete full chat response with streaming-accelerated accumulation and multi-key failover.
         """
+        # 1. Primary fast path: Stream tokens through the multi-key pool (sub-second TTFT, avoids serverless read timeouts)
+        try:
+            full_chunks: List[str] = []
+            async for chunk in self.stream_chat(messages, system_prompt, max_tokens=max_tokens, temperature=temperature):
+                full_chunks.append(chunk)
+
+            full_content = "".join(full_chunks).strip()
+            if full_content:
+                est_tokens = int(len(full_content.split()) * 1.3)
+                return LLMResponse(
+                    content=full_content,
+                    prompt_tokens=50,
+                    completion_tokens=est_tokens,
+                    total_tokens=50 + est_tokens,
+                    cost_estimate=0.0,
+                    finish_reason="stop",
+                )
+        except Exception as e:
+            logger.warning(f"[NVIDIA Multi-Key Pool] Streaming complete note ({e}), falling back to direct POST...")
+
+        # 2. Resilient fallback path: Standard POST across candidate keys
         candidate_keys = await self._get_ordered_keys()
         payload = {
             "model": self.model,
@@ -188,7 +209,7 @@ class NVIDIAProvider(LLMProvider):
             }
 
             try:
-                response = await client.post(self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(7.0, connect=2.5, read=7.0))
+                response = await client.post(self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(8.0, connect=3.0, read=8.0))
                 if response.status_code != 200:
                     logger.warning(
                         f"[NVIDIA Multi-Key Pool] Key #{attempt + 1} ({masked_key}) returned {response.status_code}. Failing over..."
