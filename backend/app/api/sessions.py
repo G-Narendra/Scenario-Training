@@ -93,10 +93,10 @@ async def create_session(
                 )
                 existing_attempt = (await db.execute(ledger_stmt)).scalars().first()
 
-                if existing_attempt and existing_attempt.attempt_count >= 10:
+                if existing_attempt and existing_attempt.attempt_count >= 20:
                     raise HTTPException(
                         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail="ATTEMPT_LIMIT_REACHED: You have completed your 10 assigned practice attempts for this scenario. Please wait for the trainer's instructions.",
+                        detail="ATTEMPT_LIMIT_REACHED: You have completed your 20 assigned practice attempts for this scenario. Please contact your instructor for additional attempts.",
                     )
 
                 # Check Cohort Budget Cap ($10 USD safety ceiling) with fast-path memory cache

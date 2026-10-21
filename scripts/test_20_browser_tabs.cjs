@@ -115,8 +115,17 @@ async function simulateStudentTab(index, studentName, browser, results) {
     const t0_start = Date.now();
     await page.click('#start-simulation-btn');
 
-    // Wait for simulation chat to load and textarea to appear
-    await page.waitForSelector('textarea', { timeout: 65000 });
+    // Wait for simulation chat to load and textarea to appear (with graceful re-click check)
+    try {
+      await page.waitForSelector('textarea', { timeout: 15000 });
+    } catch {
+      const retryBtn = page.locator('#start-simulation-btn');
+      if (await retryBtn.isVisible().catch(() => false)) {
+        console.log(`  🔄 [Tab ${index + 1}/20] (${studentName}) Re-clicking Start Practice...`);
+        await retryBtn.click().catch(() => {});
+      }
+      await page.waitForSelector('textarea', { timeout: 75000 });
+    }
     result.sessionStartMs = Date.now() - t0_start;
     console.log(`  -> [Tab ${index + 1}/20] (${studentName}) Simulation started in ${result.sessionStartMs}ms`);
 

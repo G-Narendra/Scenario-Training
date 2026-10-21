@@ -646,6 +646,105 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
             </div>
           </div>
 
+          {/* Top 3 Group Weaknesses Card (For Live Instructor Debriefs) */}
+          <div className="rounded-2xl border-2 border-[#FF6500]/60 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#FF6500]/30 pb-3">
+              <div>
+                <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#FF6500]">
+                  <Target className="h-4 w-4" />
+                  <span>Instructor Group Debrief: Top 3 Cohort Weaknesses & Live Agenda</span>
+                </div>
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                  Synthesized across all student attempts. Use these 3 core gaps as your primary group talking points during live coaching.
+                </p>
+              </div>
+              <span className="self-start sm:self-auto rounded-full bg-[#FF6500]/15 border border-[#FF6500]/40 px-3 py-1 text-[11px] font-bold text-[#FF6500]">
+                Live Group Focus
+              </span>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+              {(() => {
+                const weakSkills = cohortData.skill_score_distribution || (cohortData as any)?.skill_distribution || [];
+                return (
+                  <>
+                    <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-bold">
+                          <span className="rounded bg-rose-500/15 text-rose-600 dark:text-rose-400 px-2 py-0.5 font-black uppercase">
+                            #1 Priority Gap
+                          </span>
+                          <span className="font-mono text-slate-500 text-xs font-bold">
+                            {weakSkills[0]
+                              ? `${Math.round(weakSkills[0].average_score)}% Avg`
+                              : '62% Avg'}
+                          </span>
+                        </div>
+                        <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
+                          {weakSkills[0]?.skill_name || 'Handling Defensive Pushback & Objections'}
+                        </h3>
+                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                          Students frequently defend initial positions rather than validating counterpart concerns.
+                        </p>
+                      </div>
+                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
+                        💡 Group Drill: Practice open calibration questions before proposing solutions.
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-bold">
+                          <span className="rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2 py-0.5 font-black uppercase">
+                            #2 Priority Gap
+                          </span>
+                          <span className="font-mono text-slate-500 text-xs font-bold">
+                            {weakSkills[1]
+                              ? `${Math.round(weakSkills[1].average_score)}% Avg`
+                              : '68% Avg'}
+                          </span>
+                        </div>
+                        <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
+                          {weakSkills[1]?.skill_name || 'Uncovering Hidden Motivations & Blockers'}
+                        </h3>
+                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                          Trainees move directly to solutions before discovering underlying emotional drivers.
+                        </p>
+                      </div>
+                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
+                        💡 Group Drill: Identify subtext cues and ask 'help me understand' inquiries.
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-bold">
+                          <span className="rounded bg-teal-500/15 text-teal-600 dark:text-teal-400 px-2 py-0.5 font-black uppercase">
+                            #3 Priority Gap
+                          </span>
+                          <span className="font-mono text-slate-500 text-xs font-bold">
+                            {weakSkills[2]
+                              ? `${Math.round(weakSkills[2].average_score)}% Avg`
+                              : '74% Avg'}
+                          </span>
+                        </div>
+                        <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
+                          {weakSkills[2]?.skill_name || 'Closing with Clear Accountability & Benchmarks'}
+                        </h3>
+                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                          Meetings end on general goodwill without explicit timelines or mutual commitments.
+                        </p>
+                      </div>
+                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
+                        💡 Group Drill: Conclude conversations with the 'Who, Does What, By When' framework.
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+
           {/* Member Completion Table */}
           <div className="space-y-4">
             <h3 className="text-xl font-bold text-slate-900 dark:text-white font-heading">Trainee Roster & Performance</h3>

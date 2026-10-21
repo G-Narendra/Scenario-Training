@@ -169,7 +169,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
             className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 py-1.5 text-xs font-bold text-white shadow-md shadow-[#FF6500]/20 transition"
           >
             <Printer className="h-3.5 w-3.5" />
-            <span>Print / Save PDF</span>
+            <span>Print 1-Pager (PDF)</span>
           </button>
         </div>
       </div>
@@ -276,6 +276,49 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
             <p className="mt-2 text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-semibold">
               {report.key_moments?.[0]?.alternative_phrasing || report.what_didnt?.[0]?.why_it_missed || 'Lead with open discovery questions before proposing solutions.'}
             </p>
+          </div>
+        </div>
+
+        {/* Recommended Best Solutions: 2 Executive Model Options */}
+        <div className="print-card print-avoid-break mt-8 rounded-2xl border-2 border-[#FF6500]/60 bg-gradient-to-br from-[#FF6500]/10 via-amber-500/5 to-transparent p-6 shadow-sm">
+          <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#FF6500]">
+            <Award className="h-4 w-4" />
+            <span>Recommended Best Solutions (2 Executive Model Options)</span>
+          </div>
+          <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
+            Two proven executive response options demonstrating ideal framing and tactical de-escalation for this scenario.
+          </p>
+
+          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Option 1: Collaborative Discovery */}
+            <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <span className="text-[#FF6500] font-black">Option 1: Collaborative Discovery</span>
+                <span className="rounded bg-[#FF6500]/15 px-2 py-0.5 text-[10px] text-[#FF6500] font-black">Empathy-Led</span>
+              </div>
+              <blockquote className="mt-2 text-sm font-semibold text-slate-900 dark:text-white leading-relaxed font-serif italic border-l-2 border-[#FF6500] pl-3 py-0.5">
+                "{report.key_moments?.[0]?.alternative_phrasing || 'I hear your concern on this. Before we lock in next steps, can you walk me through the key operational friction you are seeing day-to-day?'}"
+              </blockquote>
+              <p className="mt-2.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                <strong className="text-slate-800 dark:text-slate-200">Why it works: </strong>
+                {report.key_moments?.[0]?.reasoning || 'Defuses defensiveness by validating the counterpart\'s perspective before proposing commitments.'}
+              </p>
+            </div>
+
+            {/* Option 2: Structured Alignment */}
+            <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm">
+              <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                <span className="text-teal-600 dark:text-teal-400 font-black">Option 2: Structured Alignment</span>
+                <span className="rounded bg-teal-500/15 px-2 py-0.5 text-[10px] text-teal-600 dark:text-teal-400 font-black">Framework-Led</span>
+              </div>
+              <blockquote className="mt-2 text-sm font-semibold text-slate-900 dark:text-white leading-relaxed font-serif italic border-l-2 border-teal-500 pl-3 py-0.5">
+                "{report.key_moments?.[1]?.alternative_phrasing || 'Let us anchor on our shared priority for Q4. If we address the bandwidth constraint first, what specific benchmark needs to be met for us to proceed?'}"
+              </blockquote>
+              <p className="mt-2.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                <strong className="text-slate-800 dark:text-slate-200">Why it works: </strong>
+                {report.key_moments?.[1]?.reasoning || 'Re-centers the conversation around objective business criteria rather than personal friction.'}
+              </p>
+            </div>
           </div>
         </div>
 
@@ -394,7 +437,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
       <div className="print-section mt-8 print-avoid-break">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center space-x-2 font-heading">
           <Sparkles className="h-5 w-5 text-[#FF6500]" />
-          <span>Pivotal Conversation Moments & Phrasing Refinements</span>
+          <span>Key Conversation Moments & Phrasing Refinements</span>
         </h2>
         <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
           Specific inflection points analyzed with concrete alternative phrasing and tactical reasoning.

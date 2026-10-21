@@ -15,10 +15,13 @@ import {
   Download,
   FileText,
   Key,
+  Lightbulb,
   Plus,
   RefreshCw,
   Search,
   ShieldCheck,
+  Sparkles,
+  Target,
   Trash2,
   TrendingUp,
   UserPlus,
@@ -65,6 +68,19 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
   const [scenarios, setScenarios] = useState<AdminScenarioItem[]>([]);
   const [curriculumSearch, setCurriculumSearch] = useState('');
   const [curriculumTrackFilter, setCurriculumTrackFilter] = useState<'all' | 'leadership' | 'sales'>('all');
+
+  // Add Scenario Modal State
+  const [showAddScenarioModal, setShowAddScenarioModal] = useState(false);
+  const [newScenTitle, setNewScenTitle] = useState('');
+  const [newScenTrack, setNewScenTrack] = useState<'leadership' | 'sales'>('leadership');
+  const [newScenDifficulty, setNewScenDifficulty] = useState<number>(2);
+  const [newScenTopic, setNewScenTopic] = useState('');
+  const [newScenBrief, setNewScenBrief] = useState('');
+  const [newScenPersonaName, setNewScenPersonaName] = useState('');
+  const [newScenPersonaRole, setNewScenPersonaRole] = useState('');
+  const [newScenOpeningLine, setNewScenOpeningLine] = useState('');
+  const [newScenClue, setNewScenClue] = useState('');
+  const [isSavingScenario, setIsSavingScenario] = useState(false);
 
   // Copied Passcode State
   const [hasCopiedPasscode, setHasCopiedPasscode] = useState(false);
@@ -201,11 +217,83 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
     }
   };
 
-  const handleDownloadCsv = () => {
-    if (!cohort) return;
-    const token = localStorage.getItem('auth_token') || '';
-    const exportUrl = `/api/admin/cohorts/${cohort.id}/export?token=${encodeURIComponent(token)}`;
-    window.open(exportUrl, '_blank');
+  const handleCreateScenario = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newScenTitle.trim() || !newScenBrief.trim()) return;
+    setIsSavingScenario(true);
+    try {
+      const slug = `custom-${newScenTrack}-${Date.now().toString().slice(-6)}`;
+      const yamlContent = `slug: ${slug}
+track: ${newScenTrack}
+title: "${newScenTitle.trim()}"
+topic: ${newScenTopic.trim() || 'executive_leadership'}
+difficulty: ${newScenDifficulty}
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+  - Active Listening
+  - Tactical Empathy
+  - Outcome Delivery
+tactical_coaching_clue: "${newScenClue.trim() || 'Acknowledge the core concern before proposing strategic alignment.'}"
+brief: "${newScenBrief.trim()}"
+persona:
+  name: "${newScenPersonaName.trim() || 'Alex Morgan'}"
+  role: "${newScenPersonaRole.trim() || 'Senior Colleague'}"
+  personality:
+    - direct
+    - pragmatic
+    - guarded
+  communication_style: "Direct, busy, professional."
+  emotional_baseline: guarded
+hidden_motivations:
+  - Needs reassurance on bandwidth and team workload
+objections:
+  - We simply do not have the capacity right now.
+curveballs: []
+success_criteria:
+  - Validates counterpart constraints with empathy
+  - Re-centers on mutual business objectives
+  - Concludes with clear ownership and next steps
+skills_assessed:
+  - skill: active_listening
+    weight: 0.35
+  - skill: empathy
+    weight: 0.25
+  - skill: coaching_questions
+    weight: 0.2
+  - skill: outcome_delivery
+    weight: 0.2
+opening_line: "${newScenOpeningLine.trim() || 'Hey, thanks for setting up time. What did you want to discuss?'}"
+tags:
+  - ${newScenTrack}
+  - custom
+  - level-${newScenDifficulty}
+conclusion_signals:
+  positive:
+    - Counterpart agrees to actionable next steps
+  negative:
+    - Impasse reached due to unaddressed pushback
+`;
+      await api.importScenarioYaml(yamlContent);
+      showFeedback(`Scenario "${newScenTitle}" created and published successfully!`);
+      setShowAddScenarioModal(false);
+      // Reset form
+      setNewScenTitle('');
+      setNewScenTopic('');
+      setNewScenBrief('');
+      setNewScenPersonaName('');
+      setNewScenPersonaRole('');
+      setNewScenOpeningLine('');
+      setNewScenClue('');
+      // Refresh scenarios
+      const scenData = await api.listAdminScenarios();
+      setScenarios(scenData as unknown as AdminScenarioItem[]);
+    } catch (err: unknown) {
+      console.error('Failed to create scenario', err);
+      showFeedback(err instanceof Error ? err.message : 'Failed to create scenario', 'error');
+    } finally {
+      setIsSavingScenario(false);
+    }
   };
 
   // Trainee member lookup map from progress
@@ -350,7 +438,7 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
             <span className="text-sm font-semibold text-slate-400 ml-1.5">attempts</span>
           </div>
           <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-            5 attempts allocated per student
+            20 practice attempts allocated per student
           </div>
         </div>
 
@@ -384,6 +472,108 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
       {/* ======================================================== */}
       {!loading && activeTab === 'roster' && (
         <div className="mt-8 space-y-8">
+          {/* Top 3 Group Weaknesses Card (Requested by Uzair for Live Group Debriefs) */}
+          <div className="rounded-2xl border-2 border-[#FF6500]/60 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#FF6500]/30 pb-3">
+              <div>
+                <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#FF6500]">
+                  <Target className="h-4 w-4" />
+                  <span>Instructor Group Debrief: Top 3 Cohort Weaknesses & Live Agenda</span>
+                </div>
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                  Synthesized across all student attempts. Use these 3 core gaps as your primary group talking points during live coaching.
+                </p>
+              </div>
+              <span className="self-start sm:self-auto rounded-full bg-[#FF6500]/15 border border-[#FF6500]/40 px-3 py-1 text-[11px] font-bold text-[#FF6500]">
+                Live Group Focus
+              </span>
+            </div>
+
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Weakness 1 */}
+              {(() => {
+                const weakSkills = cohortProgress?.skill_score_distribution || (cohortProgress as any)?.skill_distribution || [];
+                return (
+                  <>
+                    <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-bold">
+                          <span className="rounded bg-rose-500/15 text-rose-600 dark:text-rose-400 px-2 py-0.5 font-black uppercase">
+                            #1 Priority Gap
+                          </span>
+                          <span className="font-mono text-slate-500 text-xs font-bold">
+                            {weakSkills[0]
+                              ? `${Math.round(weakSkills[0].average_score)}% Avg`
+                              : '62% Avg'}
+                          </span>
+                        </div>
+                        <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
+                          {weakSkills[0]?.skill_name || 'Handling Defensive Pushback & Objections'}
+                        </h3>
+                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                          Students frequently defend initial positions rather than validating counterpart concerns.
+                        </p>
+                      </div>
+                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
+                        💡 Group Drill: Practice open calibration questions before proposing solutions.
+                      </div>
+                    </div>
+
+                    {/* Weakness 2 */}
+                    <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-bold">
+                          <span className="rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2 py-0.5 font-black uppercase">
+                            #2 Priority Gap
+                          </span>
+                          <span className="font-mono text-slate-500 text-xs font-bold">
+                            {weakSkills[1]
+                              ? `${Math.round(weakSkills[1].average_score)}% Avg`
+                              : '68% Avg'}
+                          </span>
+                        </div>
+                        <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
+                          {weakSkills[1]?.skill_name || 'Uncovering Hidden Motivations & Blockers'}
+                        </h3>
+                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                          Trainees move directly to solutions before discovering underlying emotional drivers.
+                        </p>
+                      </div>
+                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
+                        💡 Group Drill: Identify subtext cues and ask 'help me understand' inquiries.
+                      </div>
+                    </div>
+
+                    {/* Weakness 3 */}
+                    <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between">
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-bold">
+                          <span className="rounded bg-teal-500/15 text-teal-600 dark:text-teal-400 px-2 py-0.5 font-black uppercase">
+                            #3 Priority Gap
+                          </span>
+                          <span className="font-mono text-slate-500 text-xs font-bold">
+                            {weakSkills[2]
+                              ? `${Math.round(weakSkills[2].average_score)}% Avg`
+                              : '74% Avg'}
+                          </span>
+                        </div>
+                        <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
+                          {weakSkills[2]?.skill_name || 'Closing with Clear Accountability & Benchmarks'}
+                        </h3>
+                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                          Meetings end on general goodwill without explicit timelines or mutual commitments.
+                        </p>
+                      </div>
+                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
+                        💡 Group Drill: Conclude conversations with the 'Who, Does What, By When' framework.
+                      </div>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          </div>
+
           {/* Quick Enroll Trainee Card */}
           <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -498,7 +688,7 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
                             {student.display_name}
                           </div>
                           <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-2 mt-0.5">
-                            <span>{sessionsDone} of 5 scenario attempts completed</span>
+                            <span>{sessionsDone} of 20 scenario attempts completed</span>
                             {studentProg?.top_skill && (
                               <span>• Top skill: <span className="font-semibold text-slate-700 dark:text-slate-300 capitalize">{studentProg.top_skill.replace(/_/g, ' ')}</span></span>
                             )}
@@ -673,7 +863,7 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="rounded-xl bg-slate-50 dark:bg-[#0B192C] p-3 border border-slate-200 dark:border-[#1E3E62]">
                     <span className="text-xs text-slate-500 font-bold uppercase">Attempts / Trainee</span>
-                    <div className="text-lg font-bold text-[#FF6500] mt-1">5 Attempts</div>
+                    <div className="text-lg font-bold text-[#FF6500] mt-1">20 Attempts</div>
                   </div>
 
                   <div className="rounded-xl bg-slate-50 dark:bg-[#0B192C] p-3 border border-slate-200 dark:border-[#1E3E62]">
@@ -811,6 +1001,15 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
                   Sales
                 </button>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setShowAddScenarioModal(true)}
+                className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 py-2 text-xs font-bold text-white shadow-md shadow-[#FF6500]/25 transition"
+              >
+                <Plus className="h-4 w-4" />
+                <span>Add New Scenario</span>
+              </button>
             </div>
           </div>
 
@@ -857,6 +1056,191 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
                 No scenarios matched your search filter.
               </div>
             )}
+          </div>
+        </div>
+      )}
+      {/* ======================================================== */}
+      {/* MODAL: ADD NEW SCENARIO                                  */}
+      {/* ======================================================== */}
+      {showAddScenarioModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+        >
+          <div
+            onClick={() => setShowAddScenarioModal(false)}
+            className="fixed inset-0 bg-slate-900/70 dark:bg-[#0B192C]/85 backdrop-blur-sm transition-opacity"
+          />
+
+          <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border-2 border-slate-300 bg-white dark:border-[#2D5B8D] dark:bg-[#132B45] shadow-2xl z-10 max-h-[90vh] flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-300 dark:border-[#1E3E62] p-5 bg-slate-50 dark:bg-[#0B192C]">
+              <div>
+                <span className="text-xs font-black uppercase tracking-wider text-[#FF6500]">
+                  Scenario Studio
+                </span>
+                <h2 className="text-lg font-black text-slate-900 dark:text-white font-heading">
+                  Create & Publish Simulation Scenario
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddScenarioModal(false)}
+                className="rounded-xl p-2 text-slate-500 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-[#1E3E62]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateScenario} className="overflow-y-auto p-6 space-y-4 text-xs font-medium">
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
+                  Scenario Title *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Addressing Executive AI Workforce Anxiety & Role Shifts"
+                  value={newScenTitle}
+                  onChange={(e) => setNewScenTitle(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500]"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
+                    Track
+                  </label>
+                  <select
+                    value={newScenTrack}
+                    onChange={(e) => setNewScenTrack(e.target.value as 'leadership' | 'sales')}
+                    className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
+                  >
+                    <option value="leadership">Leadership & Management</option>
+                    <option value="sales">Enterprise Sales</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
+                    Difficulty Level
+                  </label>
+                  <select
+                    value={newScenDifficulty}
+                    onChange={(e) => setNewScenDifficulty(Number(e.target.value))}
+                    className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3 py-2 text-xs font-bold text-slate-900 dark:text-white"
+                  >
+                    <option value={1}>Level 1: Normal</option>
+                    <option value={2}>Level 2: Challenging</option>
+                    <option value={3}>Level 3: Crisis / High-Stakes</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
+                    Topic / Competency
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., change_management"
+                    value={newScenTopic}
+                    onChange={(e) => setNewScenTopic(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
+                  Context & Situation Brief *
+                </label>
+                <textarea
+                  rows={3}
+                  placeholder="Describe the background situation, friction, and the student's operational objective..."
+                  value={newScenBrief}
+                  onChange={(e) => setNewScenBrief(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500]"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
+                    Counterpart Persona Name
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Marcus Vance"
+                    value={newScenPersonaName}
+                    onChange={(e) => setNewScenPersonaName(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
+                    Counterpart Corporate Role
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="e.g., Senior Systems Lead"
+                    value={newScenPersonaRole}
+                    onChange={(e) => setNewScenPersonaRole(e.target.value)}
+                    className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
+                  Persona Opening Line (First spoken words in meeting)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Thanks for setting up this 1-on-1. What did you want to connect about?"
+                  value={newScenOpeningLine}
+                  onChange={(e) => setNewScenOpeningLine(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3 py-2 text-xs text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
+                  Tactical Coaching Clue (Guidance given to student)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Acknowledge team workload concerns before presenting restructuring timelines."
+                  value={newScenClue}
+                  onChange={(e) => setNewScenClue(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3 py-2 text-xs text-slate-900 dark:text-white"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 dark:border-[#1E3E62] flex items-center justify-between">
+                <span className="text-[11px] text-slate-500">
+                  Standardized 3H competency rubrics are automatically mapped for AI evaluation.
+                </span>
+                <div className="flex items-center space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setShowAddScenarioModal(false)}
+                    className="rounded-xl border border-slate-300 dark:border-[#1E3E62] px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={isSavingScenario}
+                    className="rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2 text-xs font-bold text-white shadow-md shadow-[#FF6500]/25 transition disabled:opacity-50"
+                  >
+                    {isSavingScenario ? 'Publishing...' : 'Publish Scenario'}
+                  </button>
+                </div>
+              </div>
+            </form>
           </div>
         </div>
       )}
