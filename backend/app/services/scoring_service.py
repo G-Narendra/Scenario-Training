@@ -1,3 +1,4 @@
+import asyncio
 import json
 import logging
 from datetime import datetime, timezone
@@ -351,11 +352,14 @@ class ScoringService:
             # 4. Generate Evaluator Prompt with fast single-pass execution & in-memory quote sanitization
             prompt_text = build_evaluator_prompt(scenario_dict, skills_data, transcript_data)
             try:
-                response = await llm_provider.complete(
-                    messages=[LLMMessage(role="user", content=prompt_text)],
-                    system_prompt=EVALUATOR_SYSTEM_PROMPT + "\nIMPORTANT: Return ONLY raw, valid JSON starting with '{' and ending with '}'. Never include markdown codeblocks or conversational preamble.",
-                    max_tokens=1200,
-                    temperature=0.2,
+                response = await asyncio.wait_for(
+                    llm_provider.complete(
+                        messages=[LLMMessage(role="user", content=prompt_text)],
+                        system_prompt=EVALUATOR_SYSTEM_PROMPT + "\nIMPORTANT: Return ONLY raw, valid JSON starting with '{' and ending with '}'. Never include markdown codeblocks or conversational preamble.",
+                        max_tokens=1000,
+                        temperature=0.2,
+                    ),
+                    timeout=6.0,
                 )
                 raw_text = response.content.strip()
                 # Robustly slice from first '{' to last '}' to handle any preamble

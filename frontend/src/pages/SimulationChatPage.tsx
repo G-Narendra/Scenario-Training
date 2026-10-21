@@ -70,6 +70,14 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   const dictationRecRef = useRef<any>(null);
   const localVoiceClientRef = useRef<VoiceClient | null>(null);
 
+  // Resolve Persona Name early with robust scenario fallbacks
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const rawScenario = (session as any).scenario;
+  const personaName =
+    scenarioDetail?.persona?.name ||
+    rawScenario?.persona?.name ||
+    (session.scenario_title?.toLowerCase().includes('marcus') || session.scenario_id?.toLowerCase().includes('marcus') ? 'Marcus Vance' : 'Marcus Vance');
+
   if (!localVoiceClientRef.current) {
     localVoiceClientRef.current = new VoiceClient({
       onAssistantSpeaking: (speaking) => {
@@ -77,6 +85,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         if (!speaking) setCurrentlySpeakingSeq(null);
       },
     });
+    localVoiceClientRef.current.setPersona(personaName);
   }
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -85,9 +94,15 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   useEffect(() => {
     if (!session.scenario_id) return;
     api.getScenarioDetail(session.scenario_id)
-      .then((detail) => setScenarioDetail(detail))
+      .then((detail) => {
+        setScenarioDetail(detail);
+        if (detail.persona?.name) {
+          localVoiceClientRef.current?.setPersona(detail.persona.name);
+          voiceClient?.setPersona(detail.persona.name);
+        }
+      })
       .catch((err) => console.error('Failed to load scenario details', err));
-  }, [session.scenario_id]);
+  }, [session.scenario_id, voiceClient, personaName]);
 
   // Timer Effect
   useEffect(() => {
@@ -167,7 +182,8 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
     const token = localStorage.getItem('auth_token') || '';
     const client = new VoiceClient({
-      onSessionReady: () => {
+      onSessionReady: (readyName) => {
+        if (readyName) client.setPersona(readyName);
         setIsVoiceConnected(true);
         setVoiceError(null);
       },
@@ -209,6 +225,8 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         setSession((prev) => ({ ...prev, status: 'completed' }));
       },
     });
+
+    client.setPersona(personaName);
 
     client
       .connect(session.id, token)
@@ -423,12 +441,11 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   };
 
   const isSessionClosed = session.status !== 'active';
-  const personaName = scenarioDetail?.persona?.name || 'Counterpart';
   const personaRole = scenarioDetail?.persona?.role || 'Executive';
   const counterpartInitials = personaName
     .split(' ')
     .filter(Boolean)
-    .map((n) => n[0])
+    .map((n: string) => n[0])
     .join('')
     .slice(0, 2)
     .toUpperCase();

@@ -175,7 +175,11 @@ async def voice_websocket_endpoint(websocket: WebSocket, session_id: str):
                         reply_text += chunk
 
                 await websocket.send_text(
-                    json.dumps({"type": "assistant.text", "text": reply_text})
+                    json.dumps({
+                        "type": "assistant.text",
+                        "text": reply_text,
+                        "persona_name": voice_config.counterpart_name,
+                    })
                 )
 
                 # Stream synthesized audio chunks

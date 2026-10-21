@@ -35,7 +35,21 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
   const [report, setReport] = useState<FeedbackReport | null>(null);
   const [session, setSession] = useState<SimulationSession | null>(null);
   const [loading, setLoading] = useState(true);
+  const [loadStep, setLoadStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!loading) {
+      setLoadStep(0);
+      return;
+    }
+    const t1 = setTimeout(() => setLoadStep(1), 1000);
+    const t2 = setTimeout(() => setLoadStep(2), 2400);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [loading]);
 
   const loadEvaluation = () => {
     setLoading(true);
@@ -66,12 +80,35 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
   };
 
   if (loading) {
+    const steps = [
+      'Ingesting session dialogue & turn exchanges...',
+      'Calibrating 3H Competency Rubrics (Head, Heart, Hands)...',
+      'Synthesizing verbatim quotes, strengths & model responses...',
+    ];
     return (
-      <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4 text-[#FF6500]">
-        <div className="h-10 w-10 animate-spin rounded-full border-3 border-[#FF6500] border-t-transparent" />
-        <p className="font-mono text-sm tracking-wider uppercase text-slate-700 dark:text-slate-300 font-bold">
-          Evaluating executive performance against 3H competency rubric...
-        </p>
+      <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-6 px-4">
+        <div className="relative flex h-16 w-16 items-center justify-center">
+          <div className="absolute inset-0 rounded-2xl bg-[#FF6500]/10 animate-ping" />
+          <div className="relative h-12 w-12 animate-spin rounded-full border-3 border-[#FF6500] border-t-transparent" />
+        </div>
+        <div className="text-center max-w-md space-y-2">
+          <h3 className="text-base font-bold text-slate-900 dark:text-white">
+            Generating Executive Diagnostic Report
+          </h3>
+          <p className="font-mono text-xs tracking-wider uppercase text-[#FF6500] font-semibold animate-pulse">
+            {steps[loadStep]}
+          </p>
+          <div className="flex justify-center gap-1.5 pt-2">
+            {[0, 1, 2].map((idx) => (
+              <div
+                key={idx}
+                className={`h-1.5 w-8 rounded-full transition-all duration-300 ${
+                  idx <= loadStep ? 'bg-[#FF6500]' : 'bg-slate-200 dark:bg-slate-700'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
       </div>
     );
   }

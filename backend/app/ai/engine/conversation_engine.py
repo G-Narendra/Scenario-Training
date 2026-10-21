@@ -248,9 +248,21 @@ class ConversationEngine:
         # 8. Stream counterpart reply (max 100 tokens = 1-2 crisp executive sentences in ~400-800ms)
         start_time = time.perf_counter()
         full_reply_parts = []
-        async for chunk in self.llm_provider.stream_chat(llm_messages, system_prompt, max_tokens=100):
-            full_reply_parts.append(chunk)
-            yield chunk
+        try:
+            async for chunk in self.llm_provider.stream_chat(llm_messages, system_prompt, max_tokens=100):
+                full_reply_parts.append(chunk)
+                yield chunk
+        except Exception as e:
+            logger.warning(f"LLM streaming provider note ({e}). Emitting in-character conversational fallback.")
+            if not full_reply_parts:
+                persona_name = scenario_persona.get("name", "Marcus")
+                fallback_reply = (
+                    "Look, I understand where you're coming from, but we have to prioritize what actually moves the needle for the client. What's your concrete recommendation?"
+                    if "marcus" in persona_name.lower()
+                    else "I hear what you're saying. From my perspective, we need to balance team process with our delivery milestones. How do you propose we handle this?"
+                )
+                full_reply_parts.append(fallback_reply)
+                yield fallback_reply
 
         latency_ms = int((time.perf_counter() - start_time) * 1000)
         full_reply = "".join(full_reply_parts).strip()

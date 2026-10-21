@@ -112,11 +112,12 @@ class NVIDIAProvider(LLMProvider):
 
             try:
                 logger.info(f"[NVIDIA Multi-Key Pool] Routing stream turn to key #{attempt + 1}/{len(candidate_keys)} ({masked_key})")
-                async with client.stream("POST", self.base_url, headers=headers, json=payload) as response:
-                    if response.status_code == 429 or response.status_code in (502, 503, 504):
+                # Fast 5s per-key timeout to keep conversation snappy and prevent user stalls
+                async with client.stream("POST", self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(5.0, connect=2.5, read=5.0)) as response:
+                    if response.status_code != 200:
                         body = await response.aread()
                         logger.warning(
-                            f"[NVIDIA Multi-Key Pool] Key {masked_key} throttled ({response.status_code}). Failing over to next key..."
+                            f"[NVIDIA Multi-Key Pool] Key #{attempt + 1} ({masked_key}) failed with status {response.status_code}. Failing over to next key..."
                         )
                         last_error = LLMProviderError(
                             f"NVIDIA NIM error {response.status_code}: {body.decode(errors='ignore')}",
@@ -125,15 +126,8 @@ class NVIDIAProvider(LLMProvider):
                         )
                         continue  # Try next key in candidate list!
 
-                    if response.status_code != 200:
-                        body = await response.aread()
-                        raise LLMProviderError(
-                            f"NVIDIA NIM streaming error {response.status_code}: {body.decode(errors='ignore')}",
-                            status_code=response.status_code,
-                            retryable=response.status_code in (429, 500, 502, 503, 504),
-                        )
-
                     # Successful connection: stream tokens
+                    received_tokens = False
                     async for line in response.aiter_lines():
                         if not line or not line.startswith("data: "):
                             continue
@@ -145,24 +139,24 @@ class NVIDIAProvider(LLMProvider):
                             choices = event.get("choices", [])
                             if choices:
                                 delta = choices[0].get("delta", {})
-                                content = delta.get("content", "")
+                                content = delta.get("content") or delta.get("reasoning_content") or ""
                                 if content:
+                                    received_tokens = True
                                     yield content
                         except json.JSONDecodeError:
                             continue
-                    return  # Streaming completed successfully!
 
-            except httpx.TimeoutException as te:
-                logger.warning(f"[NVIDIA Multi-Key Pool] Key {masked_key} timed out. Failing over to next key...")
+                    if received_tokens:
+                        return  # Streaming completed successfully!
+
+            except (httpx.TimeoutException, httpx.RequestError) as te:
+                logger.warning(f"[NVIDIA Multi-Key Pool] Key #{attempt + 1} ({masked_key}) network issue ({te}). Failing over to next key...")
                 last_error = te
-                continue
-            except httpx.RequestError as re:
-                logger.warning(f"[NVIDIA Multi-Key Pool] Key {masked_key} connection error: {re}. Failing over to next key...")
-                last_error = re
                 continue
 
         # If all keys in the pool were exhausted
         if last_error:
+            logger.error(f"[NVIDIA Multi-Key Pool] All {len(candidate_keys)} keys failed: {last_error}")
             raise LLMProviderError(f"All {len(candidate_keys)} NVIDIA NIM keys failed: {str(last_error)}", retryable=True)
 
     async def complete(
@@ -194,23 +188,17 @@ class NVIDIAProvider(LLMProvider):
             }
 
             try:
-                response = await client.post(self.base_url, headers=headers, json=payload)
-                if response.status_code in (429, 502, 503, 504):
+                response = await client.post(self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(7.0, connect=2.5, read=7.0))
+                if response.status_code != 200:
                     logger.warning(
-                        f"[NVIDIA Multi-Key Pool] Key {masked_key} throttled ({response.status_code}). Failing over..."
+                        f"[NVIDIA Multi-Key Pool] Key #{attempt + 1} ({masked_key}) returned {response.status_code}. Failing over..."
                     )
                     last_error = LLMProviderError(f"NVIDIA NIM error {response.status_code}", status_code=response.status_code, retryable=True)
                     continue
 
-                if response.status_code != 200:
-                    raise LLMProviderError(
-                        f"NVIDIA NIM API error {response.status_code}: {response.text}",
-                        status_code=response.status_code,
-                        retryable=response.status_code in (429, 500, 502, 503, 504),
-                    )
-
                 data = response.json()
-                content = data["choices"][0]["message"]["content"]
+                msg = data["choices"][0]["message"]
+                content = (msg.get("content") or msg.get("reasoning_content") or "").strip()
                 usage = data.get("usage", {})
                 prompt_tokens = usage.get("prompt_tokens", 0)
                 completion_tokens = usage.get("completion_tokens", 0)
@@ -225,9 +213,10 @@ class NVIDIAProvider(LLMProvider):
                     finish_reason=data["choices"][0].get("finish_reason", "stop"),
                 )
             except (httpx.TimeoutException, httpx.RequestError) as e:
-                logger.warning(f"[NVIDIA Multi-Key Pool] Key {masked_key} error: {e}. Failing over...")
+                logger.warning(f"[NVIDIA Multi-Key Pool] Key #{attempt + 1} ({masked_key}) network issue ({e}). Failing over...")
                 last_error = e
                 continue
 
         if last_error:
+            logger.error(f"[NVIDIA Multi-Key Pool] All {len(candidate_keys)} keys failed complete: {last_error}")
             raise LLMProviderError(f"All {len(candidate_keys)} NVIDIA NIM keys failed: {str(last_error)}", retryable=True)

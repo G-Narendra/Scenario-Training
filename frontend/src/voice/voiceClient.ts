@@ -38,11 +38,28 @@ export class VoiceClient {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private restartTimeout: any = null;
   public isContinuousCall = true;
+  public sessionPersonaName = '';
+  public sessionVoiceGender: 'male' | 'female' = 'male';
   private callbacks: VoiceClientCallbacks;
   private ttsAudioCache = new Map<string, AudioBuffer>();
 
   constructor(callbacks: VoiceClientCallbacks = {}) {
     this.callbacks = callbacks;
+  }
+
+  /**
+   * Lock the counterpart persona name and voice gender for the entire session.
+   * Guarantees consistent voice identity across all turns without mid-call switches.
+   */
+  public setPersona(name: string, gender?: 'male' | 'female'): void {
+    if (name) this.sessionPersonaName = name;
+    if (gender) {
+      this.sessionVoiceGender = gender;
+    } else if (name) {
+      const lower = name.toLowerCase();
+      const isFemale = /sarah|priya|elena|rachel|maya|jessica|emily|anna|claire|female/.test(lower);
+      this.sessionVoiceGender = isFemale ? 'female' : 'male';
+    }
   }
 
   /**
@@ -157,7 +174,10 @@ export class VoiceClient {
   private handleServerMessage(msg: VoiceServerMessage): void {
     switch (msg.type) {
       case 'session.ready':
-        this.callbacks.onSessionReady?.(msg.persona_name || '', msg.scenario_title || '');
+        if (msg.persona_name) {
+          this.setPersona(msg.persona_name);
+        }
+        this.callbacks.onSessionReady?.(msg.persona_name || this.sessionPersonaName || '', msg.scenario_title || '');
         if (this.isContinuousCall && !this.isRecording && !this.isMuted) {
           setTimeout(() => {
             this.startAudioCapture().catch(() => {});
@@ -173,7 +193,7 @@ export class VoiceClient {
       case 'assistant.text':
         this.callbacks.onAssistantText?.(msg.text || '');
         if (msg.text) {
-          this.speakText(msg.text, msg.persona_name || '');
+          this.speakText(msg.text, msg.persona_name || this.sessionPersonaName);
         }
         break;
       case 'turn.complete':
@@ -426,10 +446,11 @@ export class VoiceClient {
       return;
     }
 
-    // Determine voice gender based on persona name
-    const nameLower = (personaName || '').toLowerCase();
-    const isMale = /marcus|david|james|carlos|vikram|tariq|michael|liam|jonathan|omar|rohan|kevin|alexander|daniel|andrew|guy|chris/.test(nameLower);
-    const voiceParam = isMale ? 'male' : 'female';
+    // Determine voice gender based on persona name or locked session persona
+    const nameToTest = (personaName || this.sessionPersonaName || '').toLowerCase();
+    const isFemale = /sarah|priya|elena|rachel|maya|jessica|emily|anna|claire|female/.test(nameToTest);
+    const isMale = /marcus|david|james|carlos|vikram|tariq|michael|liam|jonathan|omar|rohan|kevin|alexander|daniel|andrew|guy|chris|male/.test(nameToTest);
+    const voiceParam = isFemale ? 'female' : isMale ? 'male' : this.sessionVoiceGender;
 
     const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
     const apiHost = isVercel ? 'https://scenariolab-api.onrender.com' : '';
