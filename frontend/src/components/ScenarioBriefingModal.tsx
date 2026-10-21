@@ -255,7 +255,7 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
         {/* Footer CTA */}
         <div className="border-t border-slate-300 dark:border-[#1E3E62] p-6 bg-slate-50 dark:bg-[#0B192C] flex items-center justify-between">
           <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
-            10 practice attempts allocated per scenario
+            20 practice attempts allocated per scenario
           </div>
 
           <button
