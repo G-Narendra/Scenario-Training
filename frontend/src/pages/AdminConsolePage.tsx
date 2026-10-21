@@ -15,12 +15,10 @@ import {
   Download,
   FileText,
   Key,
-  Lightbulb,
   Plus,
   RefreshCw,
   Search,
   ShieldCheck,
-  Sparkles,
   Target,
   Trash2,
   TrendingUp,
@@ -132,6 +130,25 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
     setHasCopiedPasscode(true);
     showFeedback(`Passcode "${code}" copied to clipboard!`);
     setTimeout(() => setHasCopiedPasscode(false), 3000);
+  };
+
+  const handleDownloadCsv = async () => {
+    if (!cohort?.id) return;
+    try {
+      const blob = await api.exportCohortCsv(cohort.id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cohort_${cohort.id}_scores.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      showFeedback('Scores exported successfully as CSV');
+    } catch (err) {
+      console.error('CSV export failed', err);
+      showFeedback('Failed to export CSV. Please try again.', 'error');
+    }
   };
 
   const handleAddMember = async (e: React.FormEvent) => {
