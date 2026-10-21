@@ -55,7 +55,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   // Voice Mode State
   const [voiceClient, setVoiceClient] = useState<VoiceClient | null>(null);
   const [, setIsVoiceConnected] = useState(false);
-  const [, setIsRecordingMic] = useState(false);
+  const [isRecordingMic, setIsRecordingMic] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
   const [isAssistantSpeaking, setIsAssistantSpeaking] = useState(false);
   const [voicePartial, setVoicePartial] = useState('');
@@ -98,6 +98,69 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     return () => clearInterval(interval);
   }, [session.status]);
 
+  // Unified Voice Turn Handler: streams reply via API and speaks with neural Edge-TTS
+  const handleVoiceTurnCommit = async (spokenText: string) => {
+    if (!spokenText.trim() || isStreaming || session.status !== 'active') return;
+
+    const traineeText = spokenText.trim();
+    const nextSeq = messages.length + 1;
+
+    const traineeMsg: SessionMessage = {
+      seq: nextSeq,
+      role: 'trainee',
+      content: traineeText,
+      created_at: new Date().toISOString(),
+    };
+    setMessages((prev) => [...prev, traineeMsg]);
+    setIsStreaming(true);
+    setStreamingReply('');
+
+    let accumulatedReply = '';
+
+    await api.sendSessionMessageStream(
+      session.id,
+      traineeText,
+      (chunk) => {
+        accumulatedReply += chunk;
+        setStreamingReply((prev) => prev + chunk);
+      },
+      async () => {
+        setIsStreaming(false);
+        const counterpartMsg: SessionMessage = {
+          seq: nextSeq + 1,
+          role: 'counterpart',
+          content: accumulatedReply,
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => [...prev, counterpartMsg]);
+        setStreamingReply('');
+
+        // Speak counterpart response aloud using neural human voice
+        if (accumulatedReply) {
+          const client = voiceClient || localVoiceClientRef.current;
+          if (client) {
+            await client.speakText(accumulatedReply, personaName);
+          }
+        }
+
+        try {
+          const updated = await api.getSessionDetail(session.id);
+          setSession(updated);
+          if (updated.status !== 'active') {
+            onSessionEnded(updated);
+          }
+        } catch (err) {
+          console.error('Error refreshing session', err);
+        }
+      },
+      (err) => {
+        console.error('Voice stream error', err);
+        setIsStreaming(false);
+        setVoiceError('Connection interrupted. Please speak again.');
+      }
+    );
+  };
+
   // Initialize Voice Client if in voice mode
   useEffect(() => {
     if (session.mode !== 'voice' || session.status !== 'active') return;
@@ -111,17 +174,11 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       onTranscriptPartial: (text) => {
         setVoicePartial(text);
       },
-      onTranscriptFinal: (text) => {
+      onTranscriptFinal: (_text) => {
         setVoicePartial('');
-        setMessages((prev) => [
-          ...prev,
-          {
-            seq: prev.length + 1,
-            role: 'trainee',
-            content: text,
-            created_at: new Date().toISOString(),
-          },
-        ]);
+      },
+      onFallbackHttpSend: async (spokenText) => {
+        await handleVoiceTurnCommit(spokenText);
       },
       onAssistantText: (text) => {
         setMessages((prev) => [
@@ -145,7 +202,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         setVoiceLatencyMs(latency);
       },
       onError: (err) => {
-        console.error('Voice notice:', err);
+        console.warn('Voice notice:', err);
         setVoiceError(err);
       },
       onSessionEnded: () => {
@@ -155,10 +212,14 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
     client
       .connect(session.id, token)
-      .then(() => setVoiceClient(client))
+      .then(() => {
+        setVoiceClient(client);
+        setIsVoiceConnected(true);
+      })
       .catch((err) => {
-        console.warn('Voice connection failed, enabling text mode fallback option', err);
-        setVoiceError('Real-time voice channel unavailable. Please use Text Mode.');
+        console.warn('Voice connection notice, continuing in HTTP audio mode', err);
+        setVoiceClient(client);
+        setIsVoiceConnected(true);
       });
 
     return () => {
@@ -553,8 +614,31 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
               </div>
             </div>
 
-            {/* Right: Actions (Mute, Interrupt, Text Switch, Conclude) */}
+            {/* Right: Actions (Mute, Interrupt, Done Speaking, Text Switch, Conclude) */}
             <div className="flex flex-wrap items-center gap-2">
+              {/* Immediate Send / Done Speaking Manual Action */}
+              {voicePartial ? (
+                <button
+                  id="voice-send-now-btn"
+                  type="button"
+                  onClick={() => voiceClient?.forceCommitTurn()}
+                  className="flex items-center space-x-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-600/30 transition animate-pulse"
+                >
+                  <Send className="h-3.5 w-3.5" />
+                  <span>Done Speaking • Send Now</span>
+                </button>
+              ) : !isRecordingMic && !isAssistantSpeaking && !isMicMuted ? (
+                <button
+                  id="voice-start-speaking-btn"
+                  type="button"
+                  onClick={() => voiceClient?.startAudioCapture()}
+                  className="flex items-center space-x-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-600/30 transition"
+                >
+                  <Mic className="h-3.5 w-3.5" />
+                  <span>Tap to Speak</span>
+                </button>
+              ) : null}
+
               <button
                 id="voice-mic-mute-btn"
                 type="button"
@@ -624,12 +708,22 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
             </div>
           </div>
 
-          {/* Live Speech Recognition Transcript Pill */}
+          {/* Live Speech Recognition Transcript Pill with Quick Send */}
           {voicePartial && (
-            <div className="max-w-4xl mx-auto mt-3 flex items-center space-x-2 text-xs bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/30 text-emerald-900 dark:text-emerald-200 px-4 py-2 rounded-xl">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-              <span className="font-semibold">Hearing You:</span>
-              <span className="italic">"{voicePartial}"</span>
+            <div className="max-w-4xl mx-auto mt-3 flex items-center justify-between text-xs bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/40 text-emerald-900 dark:text-emerald-200 px-4 py-2.5 rounded-xl shadow-sm">
+              <div className="flex items-center space-x-2">
+                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping flex-shrink-0" />
+                <span className="font-bold uppercase tracking-wider text-[11px] text-emerald-700 dark:text-emerald-300 flex-shrink-0">Hearing You:</span>
+                <span className="italic font-medium text-slate-800 dark:text-white">"{voicePartial}"</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => voiceClient?.forceCommitTurn()}
+                className="ml-3 flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg shadow-sm transition flex-shrink-0"
+              >
+                <span>Send Now</span>
+                <Send className="h-3 w-3" />
+              </button>
             </div>
           )}
 

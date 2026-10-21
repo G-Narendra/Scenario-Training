@@ -8,6 +8,7 @@ export interface VoiceClientCallbacks {
   onError?: (err: string) => void;
   onSessionEnded?: (status: string) => void;
   onMicStatusChange?: (isCapturing: boolean, isMuted: boolean) => void;
+  onFallbackHttpSend?: (spokenText: string) => Promise<void>;
 }
 
 export interface VoiceServerMessage {
@@ -23,27 +24,46 @@ export interface VoiceServerMessage {
 
 export class VoiceClient {
   private ws: WebSocket | null = null;
-  private mediaStream: MediaStream | null = null;
   private audioContext: AudioContext | null = null;
-  private processor: ScriptProcessorNode | null = null;
+  private currentBufferSource: AudioBufferSourceNode | null = null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private recognition: any = null;
-  private currentTurnTranscript = '';
-  public activeUtterance: SpeechSynthesisUtterance | null = null;
-  private isConnected = false;
+  private latestUtterance = '';
+  public isConnected = false;
   private isRecording = false;
   private isMuted = false;
   private isSpeaking = false;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private silenceTimer: any = null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private restartTimeout: any = null;
   public isContinuousCall = true;
   private callbacks: VoiceClientCallbacks;
+  private ttsAudioCache = new Map<string, AudioBuffer>();
 
   constructor(callbacks: VoiceClientCallbacks = {}) {
     this.callbacks = callbacks;
   }
 
+  /**
+   * Unlock and ensure browser AudioContext is running on user gesture.
+   */
+  public async ensureAudioContext(): Promise<AudioContext> {
+    if (!this.audioContext || this.audioContext.state === 'closed') {
+      const AudioCtx =
+        window.AudioContext ||
+        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+      this.audioContext = new AudioCtx({ sampleRate: 24000 });
+    }
+    if (this.audioContext.state === 'suspended') {
+      await this.audioContext.resume();
+    }
+    return this.audioContext;
+  }
+
   async connect(sessionId: string, token: string): Promise<void> {
+    await this.ensureAudioContext().catch(() => {});
+
     const isDevPort = window.location.port === '5173';
     const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -52,17 +72,17 @@ export class VoiceClient {
       ? 'wss://scenariolab-api.onrender.com'
       : `${protocol}//${window.location.host}`;
 
-    // When running under Vite dev server (port 5173), try direct connection to backend first
     const primaryUrl = isVercel
       ? `wss://scenariolab-api.onrender.com/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`
       : isDevPort
       ? `${hostDirect}/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`
       : `${hostProxy}/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`;
+
     const fallbackUrl = isDevPort
       ? `${hostProxy}/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`
       : `${hostDirect}/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`;
 
-    const tryConnect = (url: string, timeoutMs = 6000): Promise<void> => {
+    const tryConnect = (url: string, timeoutMs = 5000): Promise<void> => {
       return new Promise((resolve, reject) => {
         let settled = false;
         const timer = setTimeout(() => {
@@ -83,7 +103,6 @@ export class VoiceClient {
           clearTimeout(timer);
           this.ws = ws;
           this.isConnected = true;
-          // Send handshake frame with token
           try {
             ws.send(JSON.stringify({ type: 'session.start', token }));
           } catch (err) {
@@ -97,15 +116,11 @@ export class VoiceClient {
             settled = true;
             clearTimeout(timer);
             reject(new Error('WebSocket connection failed'));
-          } else {
-            this.callbacks.onError?.('Voice connection interrupted.');
           }
         };
 
         ws.onclose = () => {
           this.isConnected = false;
-          this.stopAudioCapture();
-          this.stopSpeaking();
         };
 
         ws.onmessage = (event) => {
@@ -125,9 +140,17 @@ export class VoiceClient {
       try {
         await tryConnect(fallbackUrl);
       } catch (err) {
-        this.callbacks.onError?.('Real-time voice service unavailable. You can continue in Text Mode.');
-        throw err;
+        console.warn('Real-time WebSocket unavailable; operating via instant HTTP audio stream.', err);
+        this.isConnected = false;
+        this.callbacks.onSessionReady?.('Counterpart', 'Voice Practice');
       }
+    }
+
+    // Always arm microphone capture on connect so trainee can speak immediately
+    if (this.isContinuousCall && !this.isMuted) {
+      setTimeout(() => {
+        this.startAudioCapture().catch((e) => console.warn('Mic auto-arm notice:', e));
+      }, 300);
     }
   }
 
@@ -135,11 +158,10 @@ export class VoiceClient {
     switch (msg.type) {
       case 'session.ready':
         this.callbacks.onSessionReady?.(msg.persona_name || '', msg.scenario_title || '');
-        // In continuous hands-free mode, arm mic immediately so student is in a live active conversation
         if (this.isContinuousCall && !this.isRecording && !this.isMuted) {
           setTimeout(() => {
             this.startAudioCapture().catch(() => {});
-          }, 400);
+          }, 300);
         }
         break;
       case 'transcript.partial':
@@ -151,13 +173,7 @@ export class VoiceClient {
       case 'assistant.text':
         this.callbacks.onAssistantText?.(msg.text || '');
         if (msg.text) {
-          this.speakText(msg.text);
-        }
-        break;
-      case 'assistant.audio':
-        this.callbacks.onAssistantSpeaking?.(true);
-        if (msg.is_final) {
-          this.callbacks.onAssistantSpeaking?.(false);
+          this.speakText(msg.text, msg.persona_name || '');
         }
         break;
       case 'turn.complete':
@@ -175,175 +191,121 @@ export class VoiceClient {
     }
   }
 
+  /**
+   * Start listening to the trainee's microphone via Web Speech API.
+   * Completely avoids opening conflicting getUserMedia streams.
+   */
   async startAudioCapture(): Promise<void> {
     if (this.isMuted) return;
 
-    // Barge-in: if counterpart was still speaking when trainee begins, stop immediately
     if (this.isSpeaking) {
       this.interrupt();
     }
 
-    if (this.isRecording) {
-      return; // Already capturing
+    if (this.isRecording && this.recognition) {
+      return;
+    }
+
+    const windowWithSpeech = window as unknown as {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      SpeechRecognition?: any;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      webkitSpeechRecognition?: any;
+    };
+    const SpeechRecognitionClass =
+      windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
+
+    if (!SpeechRecognitionClass) {
+      this.callbacks.onError?.(
+        'Speech recognition requires Google Chrome, Microsoft Edge, or a Web Speech API browser.'
+      );
+      return;
     }
 
     try {
-      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-        throw new Error('Microphone audio capture not supported in this browser environment.');
-      }
-
-      this.mediaStream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          channelCount: 1,
-          sampleRate: 16000,
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-        },
-      });
-
-      const AudioCtx =
-        window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      this.audioContext = new AudioCtx({
-        sampleRate: 16000,
-      });
-      await this.audioContext.resume();
-      const source = this.audioContext.createMediaStreamSource(this.mediaStream);
-      this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
-
-      this.processor.onaudioprocess = (e) => {
-        if (!this.isRecording || !this.isConnected || !this.ws || this.isMuted) return;
-        const inputData = e.inputBuffer.getChannelData(0);
-
-        // Convert Float32 to 16-bit PCM
-        const pcm16 = new Int16Array(inputData.length);
-        for (let i = 0; i < inputData.length; i++) {
-          const s = Math.max(-1, Math.min(1, inputData[i]));
-          pcm16[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
-        }
-
-        // Base64 encode
-        const bytes = new Uint8Array(pcm16.buffer);
-        let binary = '';
-        for (let i = 0; i < bytes.byteLength; i++) {
-          binary += String.fromCharCode(bytes[i]);
-        }
-        const b64 = window.btoa(binary);
-
-        this.ws.send(JSON.stringify({ type: 'audio.chunk', data: b64 }));
-      };
-
-      source.connect(this.processor);
-      this.processor.connect(this.audioContext.destination);
       this.isRecording = true;
       this.callbacks.onMicStatusChange?.(true, this.isMuted);
 
-      // Initialize Web Speech Recognition for accurate, real-time client-side STT & VAD
-      const windowWithSpeech = window as unknown as {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        SpeechRecognition?: any;
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        webkitSpeechRecognition?: any;
-      };
-      const SpeechRecognition =
-        windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
-
-      this.currentTurnTranscript = '';
-
-      if (SpeechRecognition) {
+      if (this.recognition) {
         try {
-          const recog = new SpeechRecognition();
-          recog.continuous = true;
-          recog.interimResults = true;
-          recog.lang = 'en-US';
-          recog.maxAlternatives = 1;
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          recog.onresult = (event: any) => {
-            if (this.isMuted) return;
-
-            // Barge-in: if the student speaks while assistant is speaking, interrupt assistant immediately
-            if (this.isSpeaking) {
-              this.interrupt();
-            }
-
-            let interim = '';
-            let finalized = '';
-
-            for (let i = event.resultIndex; i < event.results.length; ++i) {
-              const transcript = event.results[i][0].transcript;
-              if (event.results[i].isFinal) {
-                finalized += transcript + ' ';
-              } else {
-                interim += transcript;
-              }
-            }
-
-            if (finalized) {
-              this.currentTurnTranscript = (this.currentTurnTranscript + ' ' + finalized).trim();
-            }
-
-            const livePreview = (this.currentTurnTranscript + ' ' + interim).trim();
-            if (livePreview) {
-              this.callbacks.onTranscriptPartial?.(livePreview);
-
-              // Auto-VAD: Reset silence timer whenever words are heard
-              if (this.silenceTimer) {
-                clearTimeout(this.silenceTimer);
-                this.silenceTimer = null;
-              }
-
-              // In continuous hands-free mode: if speaker pauses for 1.3s after speaking a coherent thought, auto-commit
-              if (this.isContinuousCall && livePreview.length >= 3) {
-                this.silenceTimer = setTimeout(() => {
-                  this.handleAutoCommit();
-                }, 1300);
-              }
-            }
-          };
-
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          recog.onerror = (event: any) => {
-            if (event.error !== 'no-speech' && event.error !== 'aborted') {
-              console.warn('Speech recognition notice:', event.error);
-            }
-          };
-
-          recog.onend = () => {
-            // Keep speech recognition alive during active recording turn
-            if (this.isRecording && !this.isMuted && this.recognition) {
-              try {
-                recog.start();
-              } catch {}
-            }
-          };
-
-          recog.start();
-          this.recognition = recog;
-        } catch (e) {
-          console.warn('Web Speech Recognition initialization failed:', e);
-        }
+          this.recognition.abort();
+        } catch {}
+        this.recognition = null;
       }
+
+      const recog = new SpeechRecognitionClass();
+      recog.continuous = true;
+      recog.interimResults = true;
+      recog.lang = 'en-US';
+      recog.maxAlternatives = 1;
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recog.onresult = (event: any) => {
+        // If muted or assistant is actively speaking, ignore to avoid feedback loop
+        if (this.isMuted || this.isSpeaking) return;
+
+        // Extract transcript starting from the current result index to prevent duplicating past turns
+        let currentUtterance = '';
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const piece = event.results[i][0]?.transcript || '';
+          currentUtterance += piece + ' ';
+        }
+
+        const trimmed = currentUtterance.trim();
+        if (trimmed) {
+          this.latestUtterance = trimmed;
+          this.callbacks.onTranscriptPartial?.(trimmed);
+
+          // Clear any pending silence commit timer
+          if (this.silenceTimer) {
+            clearTimeout(this.silenceTimer);
+            this.silenceTimer = null;
+          }
+
+          // Natural human conversational silence detection:
+          // 1000ms pause after meaningful spoken thought auto-commits the turn
+          if (this.isContinuousCall && trimmed.length >= 2) {
+            this.silenceTimer = setTimeout(() => {
+              this.commitTurn(trimmed);
+            }, 1000);
+          }
+        }
+      };
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      recog.onerror = (event: any) => {
+        if (event.error === 'not-allowed') {
+          this.callbacks.onError?.('Microphone permission denied. Please allow microphone in your browser address bar.');
+          this.isRecording = false;
+          this.callbacks.onMicStatusChange?.(false, this.isMuted);
+        } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
+          console.warn('Speech recognition notice:', event.error);
+        }
+      };
+
+      recog.onend = () => {
+        // Auto-rearm speech recognition if continuous call is active and user didn't mute
+        if (this.isRecording && !this.isMuted && !this.isSpeaking) {
+          if (this.restartTimeout) clearTimeout(this.restartTimeout);
+          this.restartTimeout = setTimeout(() => {
+            if (this.isRecording && !this.isMuted && !this.isSpeaking) {
+              try {
+                this.recognition?.start();
+              } catch (e) {
+                console.warn('Recognition auto-restart notice:', e);
+              }
+            }
+          }, 200);
+        }
+      };
+
+      recog.start();
+      this.recognition = recog;
     } catch (err: unknown) {
-      console.warn('Microphone access denied or audio capture failed', err);
-      this.callbacks.onError?.(
-        'Microphone access required for voice mode. Please grant microphone permission.'
-      );
-      throw err;
-    }
-  }
-
-  private handleAutoCommit(): void {
-    if (this.silenceTimer) {
-      clearTimeout(this.silenceTimer);
-      this.silenceTimer = null;
-    }
-
-    const textToCommit = this.currentTurnTranscript.trim();
-    // Only commit if there is real meaningful speech (avoid empty strings or noise)
-    if (textToCommit && !textToCommit.match(/^(\.|\s|\.\.\.)+$/)) {
-      this.commitTurn();
+      console.warn('Speech recognition initialization error:', err);
+      this.isRecording = false;
+      this.callbacks.onMicStatusChange?.(false, this.isMuted);
+      this.callbacks.onError?.('Microphone initialization failed. Please click Unmute or Tap to Speak.');
     }
   }
 
@@ -351,6 +313,10 @@ export class VoiceClient {
     if (this.silenceTimer) {
       clearTimeout(this.silenceTimer);
       this.silenceTimer = null;
+    }
+    if (this.restartTimeout) {
+      clearTimeout(this.restartTimeout);
+      this.restartTimeout = null;
     }
 
     this.isRecording = false;
@@ -362,43 +328,51 @@ export class VoiceClient {
       } catch {}
       this.recognition = null;
     }
-
-    if (this.processor) {
-      this.processor.disconnect();
-      this.processor = null;
-    }
-    if (this.audioContext) {
-      this.audioContext.close();
-      this.audioContext = null;
-    }
-    if (this.mediaStream) {
-      this.mediaStream.getTracks().forEach((t) => t.stop());
-      this.mediaStream = null;
-    }
   }
 
-  commitTurn(): void {
+  /**
+   * Commit the trainee's spoken utterance and trigger the counterpart response.
+   */
+  commitTurn(text?: string): void {
     if (this.silenceTimer) {
       clearTimeout(this.silenceTimer);
       this.silenceTimer = null;
     }
 
-    const spokenText = this.currentTurnTranscript.trim();
-    this.currentTurnTranscript = '';
+    const spokenText = (text || this.latestUtterance).trim();
+    this.latestUtterance = '';
 
-    // Temporarily pause mic capture while counterpart processes and responds
-    this.stopAudioCapture();
+    if (!spokenText || spokenText.match(/^(\.|\s|\.\.\.)+$/)) {
+      return;
+    }
 
-    if (this.ws && this.isConnected) {
-      if (spokenText && !spokenText.match(/^(\.|\s|\.\.\.)+$/)) {
-        this.ws.send(
-          JSON.stringify({
-            type: 'audio.commit',
-            text: spokenText,
-          })
-        );
-        this.callbacks.onTranscriptFinal?.(spokenText);
-      }
+    // Set speaking flag immediately to ignore room echo while counterpart processes
+    this.isSpeaking = true;
+    this.callbacks.onTranscriptFinal?.(spokenText);
+
+    // Primary: Send over WebSocket if open
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(
+        JSON.stringify({
+          type: 'audio.commit',
+          text: spokenText,
+        })
+      );
+    } else if (this.callbacks.onFallbackHttpSend) {
+      // Bulletproof Fallback: Send over streaming HTTP API
+      this.callbacks.onFallbackHttpSend(spokenText);
+    } else {
+      console.error('No turn dispatch route available (WS closed and onFallbackHttpSend missing)');
+      this.isSpeaking = false;
+    }
+  }
+
+  /**
+   * Manual override: User taps "Done Speaking • Send Now" to send turn with 0ms delay.
+   */
+  forceCommitTurn(): void {
+    if (this.latestUtterance.trim()) {
+      this.commitTurn(this.latestUtterance);
     }
   }
 
@@ -414,31 +388,30 @@ export class VoiceClient {
     return this.isMuted;
   }
 
-  public activeAudio: HTMLAudioElement | null = null;
-
   stopSpeaking(): void {
-    if (this.activeAudio) {
+    if (this.currentBufferSource) {
       try {
-        this.activeAudio.pause();
-        this.activeAudio.src = '';
+        this.currentBufferSource.stop();
+        this.currentBufferSource.disconnect();
       } catch {}
-      this.activeAudio = null;
+      this.currentBufferSource = null;
     }
-    if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-      try {
-        window.speechSynthesis.cancel();
-      } catch {}
-    }
-    this.activeUtterance = null;
     this.isSpeaking = false;
     this.callbacks.onAssistantSpeaking?.(false);
   }
 
-  speakText(text: string, personaName: string = ''): void {
-    if (!text || typeof window === 'undefined') return;
+  /**
+   * Synthesize & speak counterpart text using Microsoft Edge Neural TTS via Web Audio API.
+   * Completely bypasses robotic desktop window.speechSynthesis for 100% human neural voice.
+   */
+  async speakText(text: string, personaName: string = ''): Promise<void> {
+    if (!text || typeof window === 'undefined') {
+      this.isSpeaking = false;
+      return;
+    }
     this.stopSpeaking();
 
-    // Clean any markdown formatting for natural human speech flow
+    // Clean formatting for natural spoken flow
     const clean = text
       .replace(/\*\*([^*]+)\*\*/g, '$1')
       .replace(/\*([^*]+)\*/g, '$1')
@@ -448,131 +421,111 @@ export class VoiceClient {
       .replace(/—/g, ', ')
       .trim();
 
-    if (!clean) return;
+    if (!clean) {
+      this.isSpeaking = false;
+      return;
+    }
 
-    // Detect persona voice gender
+    // Determine voice gender based on persona name
     const nameLower = (personaName || '').toLowerCase();
     const isMale = /marcus|david|james|carlos|vikram|tariq|michael|liam|jonathan|omar|rohan|kevin|alexander|daniel|andrew|guy|chris/.test(nameLower);
     const voiceParam = isMale ? 'male' : 'female';
 
-    // Primary: High-fidelity Edge-TTS Neural Audio via backend API
-    const audioUrl = `/api/voice/tts?text=${encodeURIComponent(clean.slice(0, 450))}&voice=${voiceParam}`;
-    const audio = new Audio(audioUrl);
-    this.activeAudio = audio;
+    const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+    const apiHost = isVercel ? 'https://scenariolab-api.onrender.com' : '';
+    const audioUrl = `${apiHost}/api/voice/tts?text=${encodeURIComponent(clean.slice(0, 600))}&voice=${voiceParam}`;
 
-    let hasStartedAudio = false;
+    try {
+      const ctx = await this.ensureAudioContext();
 
-    audio.onplay = () => {
-      hasStartedAudio = true;
+      let audioBuffer = this.ttsAudioCache.get(audioUrl);
+      if (!audioBuffer) {
+        const res = await fetch(audioUrl);
+        if (!res.ok) {
+          throw new Error(`Edge-TTS endpoint returned HTTP ${res.status}`);
+        }
+        const arrayBuffer = await res.arrayBuffer();
+        audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+        if (this.ttsAudioCache.size < 100) {
+          this.ttsAudioCache.set(audioUrl, audioBuffer);
+        }
+      }
+
+      const source = ctx.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(ctx.destination);
+
+      this.currentBufferSource = source;
       this.isSpeaking = true;
       this.callbacks.onAssistantSpeaking?.(true);
-    };
 
-    audio.onended = () => {
-      this.isSpeaking = false;
-      this.callbacks.onAssistantSpeaking?.(false);
-      this.activeAudio = null;
+      source.onended = () => {
+        if (this.currentBufferSource === source) {
+          this.currentBufferSource = null;
+          this.isSpeaking = false;
+          this.callbacks.onAssistantSpeaking?.(false);
+          this.latestUtterance = '';
 
-      if (this.isContinuousCall && !this.isMuted && this.isConnected) {
-        setTimeout(() => {
-          this.startAudioCapture().catch(() => {});
-        }, 300);
+          // Re-arm speech recognition in hands-free mode
+          if (this.isContinuousCall && !this.isMuted) {
+            setTimeout(() => {
+              if (!this.isRecording) {
+                this.startAudioCapture().catch(() => {});
+              }
+            }, 250);
+          }
+        }
+      };
+
+      source.start(0);
+    } catch (err) {
+      console.warn('Neural audio playback notice, attempting direct Audio element fallback:', err);
+      try {
+        const audio = new Audio(audioUrl);
+        audio.onplay = () => {
+          this.isSpeaking = true;
+          this.callbacks.onAssistantSpeaking?.(true);
+        };
+        audio.onended = () => {
+          this.isSpeaking = false;
+          this.callbacks.onAssistantSpeaking?.(false);
+          this.latestUtterance = '';
+          if (this.isContinuousCall && !this.isMuted) {
+            setTimeout(() => {
+              if (!this.isRecording) {
+                this.startAudioCapture().catch(() => {});
+              }
+            }, 250);
+          }
+        };
+        await audio.play();
+      } catch (audioErr) {
+        console.error('All neural TTS playback channels failed:', audioErr);
+        this.isSpeaking = false;
+        this.callbacks.onAssistantSpeaking?.(false);
       }
-    };
-
-    audio.onerror = () => {
-      // Fast fallback to browser neural speech synthesis if audio endpoint is unreachable
-      if (!hasStartedAudio) {
-        this.fallbackWebSpeech(clean, isMale);
-      }
-    };
-
-    audio.play().catch(() => {
-      // Autoplay restriction or network error: fallback to Web Speech
-      if (!hasStartedAudio) {
-        this.fallbackWebSpeech(clean, isMale);
-      }
-    });
-  }
-
-  private fallbackWebSpeech(clean: string, isMale: boolean): void {
-    if (typeof window === 'undefined' || !('speechSynthesis' in window)) return;
-
-    const utterance = new SpeechSynthesisUtterance(clean);
-    utterance.rate = 1.02;
-    utterance.pitch = isMale ? 0.95 : 1.05;
-    utterance.lang = 'en-US';
-
-    const voices = window.speechSynthesis.getVoices();
-    const naturalVoice =
-      voices.find(
-        (v) =>
-          v.lang.startsWith('en') &&
-          (isMale ? v.name.includes('Guy') || v.name.includes('David') || v.name.includes('Male') : v.name.includes('Jenny') || v.name.includes('Aria') || v.name.includes('Female')) &&
-          (v.name.includes('Natural') || v.name.includes('Neural') || v.name.includes('Online'))
-      ) ||
-      voices.find(
-        (v) =>
-          v.lang.startsWith('en') &&
-          (v.name.includes('Natural') || v.name.includes('Online') || v.name.includes('Neural') || v.name.includes('Google'))
-      ) ||
-      voices.find((v) => v.lang.startsWith('en')) ||
-      voices[0];
-
-    if (naturalVoice) {
-      utterance.voice = naturalVoice;
     }
-
-    utterance.onstart = () => {
-      this.isSpeaking = true;
-      this.callbacks.onAssistantSpeaking?.(true);
-    };
-
-    utterance.onend = () => {
-      this.isSpeaking = false;
-      this.callbacks.onAssistantSpeaking?.(false);
-      this.activeUtterance = null;
-
-      if (this.isContinuousCall && !this.isMuted && this.isConnected) {
-        setTimeout(() => {
-          this.startAudioCapture().catch(() => {});
-        }, 300);
-      }
-    };
-
-    utterance.onerror = () => {
-      this.isSpeaking = false;
-      this.callbacks.onAssistantSpeaking?.(false);
-      this.activeUtterance = null;
-    };
-
-    this.activeUtterance = utterance;
-    window.speechSynthesis.speak(utterance);
   }
 
   interrupt(): void {
     this.stopSpeaking();
-    if (this.ws && this.isConnected) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: 'interrupt' }));
     }
-    this.callbacks.onAssistantSpeaking?.(false);
   }
 
   endSession(): void {
-    this.stopSpeaking();
-    if (this.ws && this.isConnected) {
-      this.ws.send(JSON.stringify({ type: 'session.end' }));
-    }
-    this.stopAudioCapture();
+    this.disconnect();
   }
 
   disconnect(): void {
-    this.stopSpeaking();
     this.stopAudioCapture();
+    this.stopSpeaking();
     if (this.ws) {
-      this.ws.close();
+      try {
+        this.ws.close();
+      } catch {}
       this.ws = null;
     }
-    this.isConnected = false;
   }
 }
