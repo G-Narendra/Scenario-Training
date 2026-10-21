@@ -459,8 +459,40 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
           </div>
         </div>
 
-        {/* Controls: Voice Toggle, Timer & End Practice Button */}
+        {/* Controls: Voice/Text Mode Switcher, Voice Toggle, Timer & End Practice Button */}
         <div className="flex items-center space-x-2 sm:space-x-3">
+          <button
+            id="mode-switch-btn"
+            type="button"
+            onClick={() => {
+              const nextMode = session.mode === 'voice' ? 'text' : 'voice';
+              if (nextMode === 'voice') {
+                setAutoVoice(true);
+              } else if (voiceClient) {
+                voiceClient.stopSpeaking();
+              }
+              setSession((prev) => ({ ...prev, mode: nextMode }));
+            }}
+            className={`flex items-center space-x-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-sm ${
+              session.mode === 'voice'
+                ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300'
+                : 'border-slate-300 bg-white hover:bg-slate-100 text-slate-700 dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-200'
+            }`}
+            title="Toggle between real-time voice call and text messaging"
+          >
+            {session.mode === 'voice' ? (
+              <>
+                <Mic className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
+                <span>Voice Call Active</span>
+              </>
+            ) : (
+              <>
+                <Mic className="h-3.5 w-3.5 text-slate-500" />
+                <span>Switch to Voice</span>
+              </>
+            )}
+          </button>
+
           {session.mode === 'voice' && (
             <button
               type="button"
