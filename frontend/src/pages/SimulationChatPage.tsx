@@ -219,7 +219,12 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       },
       onError: (err) => {
         console.warn('Voice notice:', err);
-        setVoiceError(err);
+        const lower = (err || '').toLowerCase();
+        if (lower.includes('mic') || lower.includes('permission') || lower.includes('not-allowed')) {
+          setVoiceError(err);
+        } else {
+          setVoiceError(null);
+        }
       },
       onSessionEnded: () => {
         setSession((prev) => ({ ...prev, status: 'completed' }));

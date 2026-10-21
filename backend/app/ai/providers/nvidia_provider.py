@@ -112,8 +112,8 @@ class NVIDIAProvider(LLMProvider):
 
             try:
                 logger.info(f"[NVIDIA Multi-Key Pool] Routing stream turn to key #{attempt + 1}/{len(candidate_keys)} ({masked_key})")
-                # Snappy 8s per-key streaming timeout with 3s connect gate to prevent stalls while giving ample headroom
-                async with client.stream("POST", self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(8.0, connect=3.0, read=8.0)) as response:
+                # Snappy 5.0s per-key streaming timeout with 3.5s connect gate for instant failover across keys
+                async with client.stream("POST", self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(5.0, connect=3.5, read=5.0)) as response:
                     if response.status_code != 200:
                         body = await response.aread()
                         logger.warning(
@@ -136,6 +136,11 @@ class NVIDIAProvider(LLMProvider):
                             break
                         try:
                             event = json.loads(data_str)
+                            if "error" in event:
+                                err_msg = event["error"].get("message", "NVIDIA worker error")
+                                logger.warning(f"[NVIDIA Multi-Key Pool] Key #{attempt + 1} stream error event: {err_msg}")
+                                last_error = LLMProviderError(f"NVIDIA worker error: {err_msg}", retryable=True)
+                                break  # Break to fail over to next key immediately!
                             choices = event.get("choices", [])
                             if choices:
                                 delta = choices[0].get("delta", {})
@@ -157,7 +162,7 @@ class NVIDIAProvider(LLMProvider):
         # If all keys in the pool were exhausted
         if last_error:
             logger.error(f"[NVIDIA Multi-Key Pool] All {len(candidate_keys)} keys failed: {last_error}")
-            raise LLMProviderError(f"All {len(candidate_keys)} NVIDIA NIM keys failed: {str(last_error)}", retryable=True)
+            raise LLMProviderError("NVIDIA NIM temporary queue capacity reached; initiating conversational fallback.", retryable=True)
 
     async def complete(
         self,
@@ -209,7 +214,7 @@ class NVIDIAProvider(LLMProvider):
             }
 
             try:
-                response = await client.post(self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(8.0, connect=3.0, read=8.0))
+                response = await client.post(self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(10.0, connect=6.0, read=10.0))
                 if response.status_code != 200:
                     logger.warning(
                         f"[NVIDIA Multi-Key Pool] Key #{attempt + 1} ({masked_key}) returned {response.status_code}. Failing over..."
@@ -240,4 +245,4 @@ class NVIDIAProvider(LLMProvider):
 
         if last_error:
             logger.error(f"[NVIDIA Multi-Key Pool] All {len(candidate_keys)} keys failed complete: {last_error}")
-            raise LLMProviderError(f"All {len(candidate_keys)} NVIDIA NIM keys failed: {str(last_error)}", retryable=True)
+            raise LLMProviderError("NVIDIA NIM temporary queue capacity reached; initiating evaluation fallback.", retryable=True)

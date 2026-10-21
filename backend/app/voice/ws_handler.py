@@ -165,14 +165,28 @@ async def voice_websocket_endpoint(websocket: WebSocket, session_id: str):
                 )
 
                 # Generate counterpart response through unified ConversationEngine
-                async with async_session_factory() as db:
-                    llm_provider = get_llm_provider()
-                    engine = ConversationEngine(db=db, llm_provider=llm_provider)
+                reply_text = ""
+                try:
+                    async with async_session_factory() as db:
+                        llm_provider = get_llm_provider()
+                        engine = ConversationEngine(db=db, llm_provider=llm_provider)
 
-                    # Get counterpart response text
-                    reply_text = ""
-                    async for chunk in engine.process_turn_stream(session_id, final_trainee_text):
-                        reply_text += chunk
+                        # Get counterpart response text
+                        async for chunk in engine.process_turn_stream(session_id, final_trainee_text):
+                            reply_text += chunk
+                except Exception as turn_err:
+                    logger.warning(f"Voice turn recovered gracefully from exception ({turn_err})")
+                    if not reply_text:
+                        counterpart = voice_config.counterpart_name or "Marcus"
+                        reply_text = (
+                            "Look, I understand where you're coming from, but we have to prioritize what actually moves the needle for the client. What's your concrete recommendation?"
+                            if "marcus" in counterpart.lower()
+                            else "I hear what you're saying. From my perspective, we need to balance team process with our delivery milestones. How do you propose we handle this?"
+                        )
+
+                if not reply_text:
+                    counterpart = voice_config.counterpart_name or "Marcus"
+                    reply_text = "I hear what you're saying. How do you propose we move forward from here?"
 
                 await websocket.send_text(
                     json.dumps({
@@ -253,7 +267,12 @@ async def voice_websocket_endpoint(websocket: WebSocket, session_id: str):
     except Exception as e:
         logger.error(f"Voice WebSocket error: {e}", exc_info=True)
         try:
-            await websocket.send_text(json.dumps({"type": "error", "message": str(e)}))
+            await websocket.send_text(
+                json.dumps({
+                    "type": "error",
+                    "message": "Voice call interrupted. Please tap to speak or switch to text mode.",
+                })
+            )
         except Exception:
             pass
     finally:
