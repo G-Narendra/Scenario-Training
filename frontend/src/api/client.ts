@@ -98,8 +98,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   }
 
   if (!response.ok) {
-    if (response.status === 401 && endpoint.includes('/auth/me')) {
+    if (response.status === 401 && !endpoint.includes('/auth/login')) {
       localStorage.removeItem('auth_token');
+      sessionStorage.removeItem('scenariolab_active_session_id');
     }
     let errorMsg = `Request failed (${response.status})`;
     let errorCode = 'UNKNOWN';
