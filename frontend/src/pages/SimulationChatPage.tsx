@@ -113,6 +113,40 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     return () => clearInterval(interval);
   }, [session.status]);
 
+  const hasSpokenOpeningRef = useRef(false);
+
+  // Auto-speak scenario opening line after exactly 1.0 second upon entering voice practice
+  useEffect(() => {
+    if (session.mode !== 'voice' || session.status !== 'active') return;
+    if (hasSpokenOpeningRef.current) return;
+
+    const openingMsg = messages.find((m) => m.role === 'counterpart');
+    if (!openingMsg || !openingMsg.content) return;
+
+    hasSpokenOpeningRef.current = true;
+
+    // Immediately prefetch neural audio into memory cache during the 1-second delay
+    const client = voiceClient || localVoiceClientRef.current;
+    if (client) {
+      client.prefetchAudio(openingMsg.content, personaName).catch(() => {});
+    }
+
+    const timer = setTimeout(async () => {
+      const activeClient = voiceClient || localVoiceClientRef.current;
+      if (activeClient && session.status === 'active') {
+        setCurrentlySpeakingSeq(openingMsg.seq);
+        setIsAssistantSpeaking(true);
+        try {
+          await activeClient.speakText(openingMsg.content, personaName);
+        } catch (err) {
+          console.warn('Auto-speak opening line notice:', err);
+        }
+      }
+    }, 1000); // EXACTLY 1 second delay after clicking Start Practice & mounting
+
+    return () => clearTimeout(timer);
+  }, [session.mode, session.status, messages, voiceClient, personaName]);
+
   // Unified Voice Turn Handler: streams reply via API and speaks with neural Edge-TTS
   const handleVoiceTurnCommit = async (spokenText: string) => {
     if (!spokenText.trim() || isStreaming || session.status !== 'active') return;
@@ -141,8 +175,9 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       },
       async () => {
         setIsStreaming(false);
+        const counterpartSeq = nextSeq + 1;
         const counterpartMsg: SessionMessage = {
-          seq: nextSeq + 1,
+          seq: counterpartSeq,
           role: 'counterpart',
           content: accumulatedReply,
           created_at: new Date().toISOString(),
@@ -152,6 +187,8 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
         // Speak counterpart response aloud using neural human voice
         if (accumulatedReply) {
+          setCurrentlySpeakingSeq(counterpartSeq);
+          setIsAssistantSpeaking(true);
           const client = voiceClient || localVoiceClientRef.current;
           if (client) {
             await client.speakText(accumulatedReply, personaName);
@@ -197,18 +234,27 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         await handleVoiceTurnCommit(spokenText);
       },
       onAssistantText: (text) => {
+        const nextSeq = messages.length + 1;
+        setCurrentlySpeakingSeq(nextSeq);
         setMessages((prev) => [
           ...prev,
           {
-            seq: prev.length + 1,
+            seq: nextSeq,
             role: 'counterpart',
             content: text,
             created_at: new Date().toISOString(),
           },
         ]);
+        api.getSessionDetail(session.id)
+          .then((updated) => {
+            setSession(updated);
+            if (updated.status !== 'active') onSessionEnded(updated);
+          })
+          .catch(() => {});
       },
       onAssistantSpeaking: (speaking) => {
         setIsAssistantSpeaking(speaking);
+        if (!speaking) setCurrentlySpeakingSeq(null);
       },
       onMicStatusChange: (isCapturing, muted) => {
         setIsRecordingMic(isCapturing);
@@ -232,6 +278,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     });
 
     client.setPersona(personaName);
+    localVoiceClientRef.current = client;
 
     client
       .connect(session.id, token)

@@ -260,7 +260,18 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
 
           <button
             id="start-simulation-btn"
-            onClick={() => onStartSimulation(scenario.id, selectedMode)}
+            onClick={() => {
+              try {
+                const AudioCtx =
+                  window.AudioContext ||
+                  (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+                if (AudioCtx) {
+                  const ctx = new AudioCtx({ sampleRate: 24000 });
+                  ctx.resume().catch(() => {});
+                }
+              } catch {}
+              onStartSimulation(scenario.id, selectedMode);
+            }}
             disabled={isStarting}
             className="flex items-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-7 py-3 text-base font-bold text-white shadow-lg shadow-[#FF6500]/30 transition disabled:opacity-50"
           >

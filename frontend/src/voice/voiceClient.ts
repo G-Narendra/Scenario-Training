@@ -78,6 +78,50 @@ export class VoiceClient {
     return this.audioContext;
   }
 
+  /**
+   * Pre-fetches and decodes neural TTS audio into in-memory cache.
+   * Ensures 0ms delay when playback is triggered after the 1-second delay.
+   */
+  public async prefetchAudio(text: string, personaName: string = ''): Promise<void> {
+    if (!text || typeof window === 'undefined') return;
+
+    const clean = text
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/#+\s/g, '')
+      .replace(/`([^`]+)`/g, '$1')
+      .replace(/•\s*/g, '')
+      .replace(/—/g, ', ')
+      .trim();
+
+    if (!clean) return;
+
+    const nameToTest = (personaName || this.sessionPersonaName || '').toLowerCase();
+    const isFemale = /sarah|priya|elena|rachel|maya|jessica|emily|anna|claire|female/.test(nameToTest);
+    const isMale = /marcus|david|james|carlos|vikram|tariq|michael|liam|jonathan|omar|rohan|kevin|alexander|daniel|andrew|guy|chris|male/.test(nameToTest);
+    const voiceParam = isFemale ? 'female' : isMale ? 'male' : this.sessionVoiceGender;
+
+    const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+    const apiHost = isVercel ? 'https://scenariolab-api.onrender.com' : '';
+    const audioUrl = `${apiHost}/api/voice/tts?text=${encodeURIComponent(clean.slice(0, 600))}&voice=${voiceParam}`;
+
+    if (this.ttsAudioCache.has(audioUrl)) return;
+
+    try {
+      const ctx = await this.ensureAudioContext();
+      const res = await fetch(audioUrl);
+      if (res.ok) {
+        const arrayBuffer = await res.arrayBuffer();
+        const audioBuffer = await ctx.decodeAudioData(arrayBuffer);
+        if (this.ttsAudioCache.size < 100) {
+          this.ttsAudioCache.set(audioUrl, audioBuffer);
+        }
+      }
+    } catch {
+      // Best-effort prefetch
+    }
+  }
+
   async connect(sessionId: string, token: string): Promise<void> {
     await this.ensureAudioContext().catch(() => {});
 
@@ -99,7 +143,7 @@ export class VoiceClient {
       ? `${hostProxy}/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`
       : `${hostDirect}/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`;
 
-    const tryConnect = (url: string, timeoutMs = 5000): Promise<void> => {
+    const tryConnect = (url: string, timeoutMs = 1200): Promise<void> => {
       return new Promise((resolve, reject) => {
         let settled = false;
         const timer = setTimeout(() => {
@@ -163,10 +207,12 @@ export class VoiceClient {
       }
     }
 
-    // Always arm microphone capture on connect so trainee can speak immediately
-    if (this.isContinuousCall && !this.isMuted) {
+    // Arm microphone capture if continuous call is active, unmuted, and assistant not speaking
+    if (this.isContinuousCall && !this.isMuted && !this.isSpeaking) {
       setTimeout(() => {
-        this.startAudioCapture().catch((e) => console.warn('Mic auto-arm notice:', e));
+        if (!this.isSpeaking && !this.isRecording) {
+          this.startAudioCapture().catch((e) => console.warn('Mic auto-arm notice:', e));
+        }
       }, 300);
     }
   }
@@ -264,11 +310,17 @@ export class VoiceClient {
         // If muted or assistant is actively speaking, ignore to avoid feedback loop
         if (this.isMuted || this.isSpeaking) return;
 
-        // Extract transcript starting from the current result index to prevent duplicating past turns
+        // Accumulate full utterance across all results for the active turn so no words are dropped
         let currentUtterance = '';
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
+        let isFinalChunk = false;
+        for (let i = 0; i < event.results.length; ++i) {
           const piece = event.results[i][0]?.transcript || '';
-          currentUtterance += piece + ' ';
+          if (piece) {
+            currentUtterance += piece + ' ';
+          }
+          if (event.results[i].isFinal) {
+            isFinalChunk = true;
+          }
         }
 
         const trimmed = currentUtterance.trim();
@@ -283,12 +335,29 @@ export class VoiceClient {
           }
 
           // Natural human conversational silence detection:
-          // 1000ms pause after meaningful spoken thought auto-commits the turn
+          // If the chunk was finalized by speech engine, commit after 500ms.
+          // If interim, allow 850ms so trainee can pause to breathe without getting cut off.
           if (this.isContinuousCall && trimmed.length >= 2) {
+            const delayMs = isFinalChunk ? 500 : 850;
             this.silenceTimer = setTimeout(() => {
-              this.commitTurn(trimmed);
-            }, 1000);
+              if (this.latestUtterance && !this.isSpeaking) {
+                this.commitTurn(trimmed);
+              }
+            }, delayMs);
           }
+        }
+      };
+
+      // Built-in speech cessation detection: fires the exact millisecond vocal sound ends
+      recog.onspeechend = () => {
+        if (this.isMuted || this.isSpeaking) return;
+        if (this.latestUtterance && this.latestUtterance.length >= 2) {
+          if (this.silenceTimer) clearTimeout(this.silenceTimer);
+          this.silenceTimer = setTimeout(() => {
+            if (this.latestUtterance && !this.isSpeaking) {
+              this.commitTurn(this.latestUtterance);
+            }
+          }, 350);
         }
       };
 
@@ -304,7 +373,7 @@ export class VoiceClient {
       };
 
       recog.onend = () => {
-        // Auto-rearm speech recognition if continuous call is active and user didn't mute
+        // Auto-rearm speech recognition if continuous call is active and user didn't mute or speak
         if (this.isRecording && !this.isMuted && !this.isSpeaking) {
           if (this.restartTimeout) clearTimeout(this.restartTimeout);
           this.restartTimeout = setTimeout(() => {
@@ -315,7 +384,7 @@ export class VoiceClient {
                 console.warn('Recognition auto-restart notice:', e);
               }
             }
-          }, 200);
+          }, 150);
         }
       };
 
@@ -369,6 +438,9 @@ export class VoiceClient {
     // Set speaking flag immediately to ignore room echo while counterpart processes
     this.isSpeaking = true;
     this.callbacks.onTranscriptFinal?.(spokenText);
+
+    // Stop audio capture immediately upon turn commit so microphone doesn't pick up ambient sound
+    this.stopAudioCapture();
 
     // Primary: Send over WebSocket if open
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
@@ -430,6 +502,7 @@ export class VoiceClient {
       return;
     }
     this.stopSpeaking();
+    this.stopAudioCapture();
 
     // Clean formatting for natural spoken flow
     const clean = text
@@ -490,10 +563,8 @@ export class VoiceClient {
           // Re-arm speech recognition in hands-free mode
           if (this.isContinuousCall && !this.isMuted) {
             setTimeout(() => {
-              if (!this.isRecording) {
-                this.startAudioCapture().catch(() => {});
-              }
-            }, 250);
+              this.startAudioCapture().catch(() => {});
+            }, 100);
           }
         }
       };
@@ -513,10 +584,8 @@ export class VoiceClient {
           this.latestUtterance = '';
           if (this.isContinuousCall && !this.isMuted) {
             setTimeout(() => {
-              if (!this.isRecording) {
-                this.startAudioCapture().catch(() => {});
-              }
-            }, 250);
+              this.startAudioCapture().catch(() => {});
+            }, 100);
           }
         };
         await audio.play();
@@ -524,6 +593,11 @@ export class VoiceClient {
         console.error('All neural TTS playback channels failed:', audioErr);
         this.isSpeaking = false;
         this.callbacks.onAssistantSpeaking?.(false);
+        if (this.isContinuousCall && !this.isMuted) {
+          setTimeout(() => {
+            this.startAudioCapture().catch(() => {});
+          }, 100);
+        }
       }
     }
   }
@@ -532,6 +606,9 @@ export class VoiceClient {
     this.stopSpeaking();
     if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(JSON.stringify({ type: 'interrupt' }));
+    }
+    if (this.isContinuousCall && !this.isMuted) {
+      this.startAudioCapture().catch(() => {});
     }
   }
 
