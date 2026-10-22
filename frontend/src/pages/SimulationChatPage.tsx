@@ -9,10 +9,13 @@ import {
   ChevronUp,
   Clock,
   Hand,
+  Languages,
+  Loader2,
   LogOut,
   MessageSquare,
   Mic,
   MicOff,
+  RefreshCw,
   Send,
   Sparkles,
   UserCheck,
@@ -60,6 +63,15 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   const [voicePartial, setVoicePartial] = useState('');
   const [, setVoiceLatencyMs] = useState<number | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
+  const [selectedVoiceLang, setSelectedVoiceLang] = useState<string>(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('scenariolab_voice_lang');
+      if (saved) return saved;
+      const nav = (navigator.languages && navigator.languages[0]) || navigator.language;
+      if (nav) return nav;
+    }
+    return 'en-IN';
+  });
 
   // Auto-Voice & Hands-free Dictation
   const [autoVoice, setAutoVoice] = useState(session.mode === 'voice');
@@ -222,54 +234,65 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     let accumulatedReply = '';
     let hasPrefetchedSentence = false;
 
-    await api.sendSessionMessageStream(
-      session.id,
-      traineeText,
-      (chunk) => {
-        accumulatedReply += chunk;
-        setStreamingReply((prev) => prev + chunk);
+    try {
+      await api.sendSessionMessageStream(
+        session.id,
+        traineeText,
+        (chunk) => {
+          accumulatedReply += chunk;
+          setStreamingReply((prev) => prev + chunk);
 
-        // Early TTS pipeline: As soon as the first sentence ends, prefetch neural TTS in background!
-        if (!hasPrefetchedSentence && accumulatedReply.length >= 25 && /[.?!]\s+$/.test(accumulatedReply)) {
-          hasPrefetchedSentence = true;
-          voiceClient.prefetchAudio(accumulatedReply.trim(), personaName).catch(() => {});
-        }
-      },
-      async () => {
-        setIsStreaming(false);
-        const counterpartSeq = nextSeq + 1;
-        const counterpartMsg: SessionMessage = {
-          seq: counterpartSeq,
-          role: 'counterpart',
-          content: accumulatedReply,
-          created_at: new Date().toISOString(),
-        };
-        setMessages((prev) => [...prev, counterpartMsg]);
-        setStreamingReply('');
-
-        // Speak counterpart response aloud using neural human voice with instant audio playback
-        if (accumulatedReply) {
-          setCurrentlySpeakingSeq(counterpartSeq);
-          setIsAssistantSpeaking(true);
-          await voiceClient.speakText(accumulatedReply, personaName);
-        }
-
-        try {
-          const updated = await api.getSessionDetail(session.id);
-          setSession(updated);
-          if (updated.status !== 'active') {
-            onSessionEnded(updated);
+          // Early TTS pipeline: As soon as the first sentence ends, prefetch neural TTS in background!
+          if (!hasPrefetchedSentence && accumulatedReply.length >= 25 && /[.?!]\s+$/.test(accumulatedReply)) {
+            hasPrefetchedSentence = true;
+            voiceClient.prefetchAudio(accumulatedReply.trim(), personaName).catch(() => {});
           }
-        } catch (err) {
-          console.error('Error refreshing session', err);
+        },
+        async () => {
+          setIsStreaming(false);
+          const counterpartSeq = nextSeq + 1;
+          const counterpartMsg: SessionMessage = {
+            seq: counterpartSeq,
+            role: 'counterpart',
+            content: accumulatedReply,
+            created_at: new Date().toISOString(),
+          };
+          setMessages((prev) => [...prev, counterpartMsg]);
+          setStreamingReply('');
+
+          // Speak counterpart response aloud using neural human voice with instant audio playback
+          if (accumulatedReply && accumulatedReply.trim()) {
+            setCurrentlySpeakingSeq(counterpartSeq);
+            setIsAssistantSpeaking(true);
+            await voiceClient.speakText(accumulatedReply, personaName);
+          } else {
+            // Empty response safety: immediately unlock so conversation never stalls
+            voiceClient.releaseTurnLock();
+          }
+
+          try {
+            const updated = await api.getSessionDetail(session.id);
+            setSession(updated);
+            if (updated.status !== 'active') {
+              onSessionEnded(updated);
+            }
+          } catch (err) {
+            console.error('Error refreshing session', err);
+          }
+        },
+        (err) => {
+          console.error('Voice stream error', err);
+          setIsStreaming(false);
+          setVoiceError('Connection interrupted. You can speak again now.');
+          // Vital: Release turn lock on stream failure so call is never stuck paused!
+          voiceClient.releaseTurnLock();
         }
-      },
-      (err) => {
-        console.error('Voice stream error', err);
-        setIsStreaming(false);
-        setVoiceError('Connection interrupted. Please speak again.');
-      }
-    );
+      );
+    } catch (unexpectedErr) {
+      console.error('Unexpected voice turn error', unexpectedErr);
+      setIsStreaming(false);
+      voiceClient.releaseTurnLock();
+    }
   };
 
   handleVoiceTurnCommitRef.current = handleVoiceTurnCommit;
@@ -428,7 +451,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       const rec = new SpeechRec();
       rec.continuous = true;
       rec.interimResults = true;
-      rec.lang = 'en-US';
+      rec.lang = selectedVoiceLang || 'en-IN';
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       rec.onresult = (event: any) => {
@@ -669,14 +692,20 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
             <div className="flex items-center space-x-3 sm:space-x-4 w-full md:w-auto">
               <div
                 className={`relative flex h-10 w-10 sm:h-14 sm:w-14 flex-shrink-0 items-center justify-center rounded-xl sm:rounded-2xl transition-all duration-300 shadow-md ${
-                  isAssistantSpeaking
+                  isStreaming
+                    ? 'bg-amber-500 text-white shadow-amber-500/40 animate-pulse'
+                    : isAssistantSpeaking
                     ? 'bg-[#FF6500] text-white shadow-[#FF6500]/40 scale-105'
                     : isMicMuted
                     ? 'bg-slate-700 text-slate-300'
-                    : 'bg-emerald-600 text-white shadow-emerald-500/30 animate-pulse'
+                    : isRecordingMic
+                    ? 'bg-emerald-600 text-white shadow-emerald-500/30 animate-pulse'
+                    : 'bg-slate-600 text-slate-200'
                 }`}
               >
-                {isAssistantSpeaking ? (
+                {isStreaming ? (
+                  <Loader2 className="h-5 w-5 sm:h-6 sm:w-6 text-white animate-spin" />
+                ) : isAssistantSpeaking ? (
                   <div className="flex items-center space-x-1">
                     <span className="sound-bar [animation-delay:0.1s]" />
                     <span className="sound-bar [animation-delay:0.3s]" />
@@ -691,29 +720,84 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
               <div className="min-w-0 flex-1">
                 <div className="flex items-center space-x-1.5 sm:space-x-2">
-                  <span className={`inline-block h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full flex-shrink-0 ${isAssistantSpeaking ? 'bg-[#FF6500] animate-ping' : isMicMuted ? 'bg-slate-400' : 'bg-emerald-500 animate-pulse'}`} />
+                  <span
+                    className={`inline-block h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full flex-shrink-0 ${
+                      isStreaming
+                        ? 'bg-amber-400 animate-ping'
+                        : isAssistantSpeaking
+                        ? 'bg-[#FF6500] animate-ping'
+                        : isMicMuted
+                        ? 'bg-slate-400'
+                        : isRecordingMic
+                        ? 'bg-emerald-500 animate-pulse'
+                        : 'bg-slate-400'
+                    }`}
+                  />
                   <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 truncate">
-                    {isAssistantSpeaking
+                    {isStreaming
+                      ? `${personaName} is thinking...`
+                      : isAssistantSpeaking
                       ? `${personaName} is speaking...`
                       : isMicMuted
                       ? 'Microphone Muted'
-                      : 'Live Call Active • Hands-Free'}
+                      : isRecordingMic
+                      ? 'Listening to you • Hands-Free'
+                      : 'Microphone Ready'}
                   </span>
                 </div>
                 <div className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400 mt-0.5 font-medium truncate sm:whitespace-normal">
-                  {isAssistantSpeaking
+                  {isStreaming
+                    ? 'Generating counterpart response • Please wait...'
+                    : isAssistantSpeaking
                     ? 'Listening to counterpart...'
                     : isMicMuted
                     ? 'Click Unmute to speak'
-                    : 'Speak naturally — pauses auto-send'}
+                    : isRecordingMic
+                    ? 'Speak naturally (1.2s pause auto-sends)'
+                    : 'Tap "Tap to Speak" or click Unmute'}
                 </div>
               </div>
             </div>
 
             {/* Right: Actions (Mute, Interrupt, Done Speaking, Text Switch, Conclude) */}
             <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 w-full md:w-auto">
-              {/* Immediate Send / Done Speaking Manual Action */}
-              {voicePartial ? (
+              {/* Dialect / Language Selector to eradicate mistranscription */}
+              <div className="col-span-3 sm:col-span-auto flex items-center space-x-1 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] px-2 py-1.5 text-[11px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200 shadow-sm flex-shrink-0">
+                <Languages className="h-3.5 w-3.5 text-[#FF6500] flex-shrink-0" />
+                <select
+                  id="voice-language-select"
+                  value={selectedVoiceLang}
+                  onChange={(e) => {
+                    const newLang = e.target.value;
+                    setSelectedVoiceLang(newLang);
+                    voiceClient?.setRecognitionLanguage(newLang);
+                  }}
+                  className="bg-transparent font-bold text-slate-800 dark:text-slate-200 focus:outline-none cursor-pointer text-[11px] sm:text-xs pr-0.5 w-full sm:w-auto"
+                  title="Select accent/dialect for highest speech recognition accuracy"
+                >
+                  <option value="en-IN" className="dark:bg-[#0B192C]">English (India) 🇮🇳</option>
+                  <option value="en-US" className="dark:bg-[#0B192C]">English (US) 🇺🇸</option>
+                  <option value="en-GB" className="dark:bg-[#0B192C]">English (UK) 🇬🇧</option>
+                  <option value="en-AU" className="dark:bg-[#0B192C]">English (AU) 🇦🇺</option>
+                </select>
+              </div>
+
+              {/* Streaming state: Cancel & speak again */}
+              {isStreaming ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsStreaming(false);
+                    setStreamingReply('');
+                    voiceClient?.releaseTurnLock();
+                  }}
+                  className="col-span-3 sm:col-span-1 flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-xl border border-amber-500/50 bg-amber-500/20 px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-bold text-amber-800 dark:text-amber-200 hover:bg-amber-500/30 transition shadow-sm"
+                  title="Cancel response generation and speak again"
+                >
+                  <RefreshCw className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span>Cancel & Speak</span>
+                </button>
+              ) : voicePartial ? (
                 <button
                   id="voice-send-now-btn"
                   type="button"
@@ -728,7 +812,9 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                 <button
                   id="voice-start-speaking-btn"
                   type="button"
-                  onClick={() => voiceClient?.startAudioCapture()}
+                  onClick={() => {
+                    voiceClient?.startAudioCapture(true);
+                  }}
                   className="col-span-3 sm:col-span-1 flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-[11px] sm:text-xs font-bold text-white shadow-md shadow-emerald-600/30 transition"
                 >
                   <Mic className="h-3.5 w-3.5 flex-shrink-0" />
@@ -763,7 +849,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                 </button>
               )}
 
-              {messages.some((m) => m.role === 'counterpart') && !isAssistantSpeaking && (
+              {messages.some((m) => m.role === 'counterpart') && !isAssistantSpeaking && !isStreaming && (
                 <button
                   id="voice-replay-btn"
                   type="button"
