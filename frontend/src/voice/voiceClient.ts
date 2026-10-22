@@ -29,6 +29,9 @@ export class VoiceClient {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private recognition: any = null;
   private latestUtterance = '';
+  private finalAccumulator = '';
+  private lastFinalChunk = '';
+  private isCommitting = false;
   public isConnected = false;
   private isRecording = false;
   private isMuted = false;
@@ -264,8 +267,10 @@ export class VoiceClient {
   async startAudioCapture(): Promise<void> {
     if (this.isMuted) return;
 
+    // Critical: Do NOT interrupt assistant speech when mic capture arms!
+    // Counterpart must speak freely without microphone initialization cutting them off.
     if (this.isSpeaking) {
-      this.interrupt();
+      return;
     }
 
     // Fully tear down any previous recognition instance before constructing a fresh one
@@ -301,33 +306,44 @@ export class VoiceClient {
       this.callbacks.onMicStatusChange?.(true, this.isMuted);
 
       const recog = new SpeechRecognitionClass();
-      recog.continuous = true;
+      const isMobile =
+        typeof navigator !== 'undefined' &&
+        /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+
+      // On Android/mobile, continuous=true triggers a known bug that re-concatenates the same text repeatedly ("hi hi hi").
+      // Using continuous=false on mobile while auto-restarting in onend delivers rock-solid, non-duplicating recognition.
+      recog.continuous = !isMobile;
       recog.interimResults = true;
       recog.lang = 'en-US';
       recog.maxAlternatives = 1;
 
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       recog.onresult = (event: any) => {
-        // If muted or assistant is actively speaking, ignore to avoid feedback loop
-        if (this.isMuted || this.isSpeaking) return;
+        // If muted, assistant is speaking, or currently committing turn, ignore incoming audio
+        if (this.isMuted || this.isSpeaking || this.isCommitting) return;
 
-        // Accumulate full utterance across all results for the active turn so no words are dropped
-        let currentUtterance = '';
-        let isFinalChunk = false;
-        for (let i = 0; i < event.results.length; ++i) {
-          const piece = event.results[i][0]?.transcript || '';
-          if (piece) {
-            currentUtterance += piece + ' ';
-          }
-          if (event.results[i].isFinal) {
-            isFinalChunk = true;
+        let interim = '';
+        // Only inspect results from event.resultIndex forward to avoid compounding duplicates
+        for (let i = event.resultIndex; i < event.results.length; ++i) {
+          const res = event.results[i];
+          const segment = (res[0]?.transcript || '').trim();
+          if (!segment) continue;
+
+          if (res.isFinal) {
+            // Deduplicate back-to-back identical final events from Android Chrome
+            if (segment !== this.lastFinalChunk) {
+              this.finalAccumulator = (this.finalAccumulator + ' ' + segment).trim();
+              this.lastFinalChunk = segment;
+            }
+          } else {
+            interim = (interim + ' ' + segment).trim();
           }
         }
 
-        const trimmed = currentUtterance.trim();
-        if (trimmed) {
-          this.latestUtterance = trimmed;
-          this.callbacks.onTranscriptPartial?.(trimmed);
+        const combined = (this.finalAccumulator + ' ' + interim).trim();
+        if (combined) {
+          this.latestUtterance = combined;
+          this.callbacks.onTranscriptPartial?.(combined);
 
           // Clear any pending silence commit timer
           if (this.silenceTimer) {
@@ -335,30 +351,29 @@ export class VoiceClient {
             this.silenceTimer = null;
           }
 
-          // Natural human conversational silence detection:
-          // If the chunk was finalized by speech engine, commit after 500ms.
-          // If interim, allow 850ms so trainee can pause to breathe without getting cut off.
-          if (this.isContinuousCall && trimmed.length >= 2) {
-            const delayMs = isFinalChunk ? 500 : 850;
-            this.silenceTimer = setTimeout(() => {
-              if (this.latestUtterance && !this.isSpeaking) {
-                this.commitTurn(trimmed);
-              }
-            }, delayMs);
-          }
+          // Snappy conversational silence detection:
+          // 320ms for mobile, 350ms for finalized desktop chunk, 480ms for interim
+          const isFinal = event.results[event.results.length - 1]?.isFinal;
+          const delayMs = isMobile ? 320 : (isFinal ? 350 : 480);
+          this.silenceTimer = setTimeout(() => {
+            if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
+              this.commitTurn(this.latestUtterance);
+            }
+          }, delayMs);
         }
       };
 
       // Built-in speech cessation detection: fires the exact millisecond vocal sound ends
       recog.onspeechend = () => {
-        if (this.isMuted || this.isSpeaking) return;
+        if (this.isMuted || this.isSpeaking || this.isCommitting) return;
         if (this.latestUtterance && this.latestUtterance.length >= 2) {
           if (this.silenceTimer) clearTimeout(this.silenceTimer);
+          // Rapid turn handoff: 220ms after acoustic speech cessation
           this.silenceTimer = setTimeout(() => {
-            if (this.latestUtterance && !this.isSpeaking) {
+            if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
               this.commitTurn(this.latestUtterance);
             }
-          }, 350);
+          }, 220);
         }
       };
 
@@ -375,14 +390,14 @@ export class VoiceClient {
 
       recog.onend = () => {
         this.recognition = null;
-        // Auto-rearm fresh speech recognition if continuous call is active and user didn't mute or speak
-        if (this.isRecording && !this.isMuted && !this.isSpeaking) {
+        // Auto-rearm speech recognition in hands-free mode if user is not speaking or committing
+        if (this.isRecording && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
           if (this.restartTimeout) clearTimeout(this.restartTimeout);
           this.restartTimeout = setTimeout(() => {
-            if (this.isRecording && !this.isMuted && !this.isSpeaking) {
+            if (this.isRecording && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
               this.startAudioCapture().catch(() => {});
             }
-          }, 100);
+          }, 80);
         }
       };
 
@@ -415,7 +430,7 @@ export class VoiceClient {
         this.recognition.onerror = null;
         this.recognition.onresult = null;
         this.recognition.onspeechend = null;
-        this.recognition.stop();
+        this.recognition.abort();
       } catch {}
       this.recognition = null;
     }
@@ -430,14 +445,18 @@ export class VoiceClient {
       this.silenceTimer = null;
     }
 
+    if (this.isCommitting) return;
+
     const spokenText = (text || this.latestUtterance).trim();
     this.latestUtterance = '';
+    this.finalAccumulator = '';
+    this.lastFinalChunk = '';
 
     if (!spokenText || spokenText.match(/^(\.|\s|\.\.\.)+$/)) {
       return;
     }
 
-    // Set speaking flag immediately to ignore room echo while counterpart processes
+    this.isCommitting = true;
     this.isSpeaking = true;
     this.callbacks.onTranscriptFinal?.(spokenText);
 
@@ -458,6 +477,7 @@ export class VoiceClient {
     } else {
       console.error('No turn dispatch route available (WS closed and onFallbackHttpSend missing)');
       this.isSpeaking = false;
+      this.isCommitting = false;
     }
   }
 
@@ -491,6 +511,9 @@ export class VoiceClient {
       this.currentBufferSource = null;
     }
     this.isSpeaking = false;
+    this.isCommitting = false;
+    this.finalAccumulator = '';
+    this.lastFinalChunk = '';
     this.callbacks.onAssistantSpeaking?.(false);
   }
 
@@ -559,14 +582,17 @@ export class VoiceClient {
         if (this.currentBufferSource === source) {
           this.currentBufferSource = null;
           this.isSpeaking = false;
-          this.callbacks.onAssistantSpeaking?.(false);
+          this.isCommitting = false;
+          this.finalAccumulator = '';
+          this.lastFinalChunk = '';
           this.latestUtterance = '';
+          this.callbacks.onAssistantSpeaking?.(false);
 
           // Re-arm speech recognition in hands-free mode
           if (this.isContinuousCall && !this.isMuted) {
             setTimeout(() => {
               this.startAudioCapture().catch(() => {});
-            }, 100);
+            }, 80);
           }
         }
       };
@@ -582,23 +608,29 @@ export class VoiceClient {
         };
         audio.onended = () => {
           this.isSpeaking = false;
-          this.callbacks.onAssistantSpeaking?.(false);
+          this.isCommitting = false;
+          this.finalAccumulator = '';
+          this.lastFinalChunk = '';
           this.latestUtterance = '';
+          this.callbacks.onAssistantSpeaking?.(false);
           if (this.isContinuousCall && !this.isMuted) {
             setTimeout(() => {
               this.startAudioCapture().catch(() => {});
-            }, 100);
+            }, 80);
           }
         };
         await audio.play();
       } catch (audioErr) {
         console.error('All neural TTS playback channels failed:', audioErr);
         this.isSpeaking = false;
+        this.isCommitting = false;
+        this.finalAccumulator = '';
+        this.lastFinalChunk = '';
         this.callbacks.onAssistantSpeaking?.(false);
         if (this.isContinuousCall && !this.isMuted) {
           setTimeout(() => {
             this.startAudioCapture().catch(() => {});
-          }, 100);
+          }, 80);
         }
       }
     }

@@ -220,6 +220,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     setStreamingReply('');
 
     let accumulatedReply = '';
+    let hasPrefetchedSentence = false;
 
     await api.sendSessionMessageStream(
       session.id,
@@ -227,6 +228,12 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       (chunk) => {
         accumulatedReply += chunk;
         setStreamingReply((prev) => prev + chunk);
+
+        // Early TTS pipeline: As soon as the first sentence ends, prefetch neural TTS in background!
+        if (!hasPrefetchedSentence && accumulatedReply.length >= 25 && /[.?!]\s+$/.test(accumulatedReply)) {
+          hasPrefetchedSentence = true;
+          voiceClient.prefetchAudio(accumulatedReply.trim(), personaName).catch(() => {});
+        }
       },
       async () => {
         setIsStreaming(false);
@@ -240,7 +247,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         setMessages((prev) => [...prev, counterpartMsg]);
         setStreamingReply('');
 
-        // Speak counterpart response aloud using neural human voice
+        // Speak counterpart response aloud using neural human voice with instant audio playback
         if (accumulatedReply) {
           setCurrentlySpeakingSeq(counterpartSeq);
           setIsAssistantSpeaking(true);
@@ -490,31 +497,31 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   return (
     <div className="flex h-[calc(100vh-4rem)] bg-slate-50 text-slate-900 dark:bg-[#0B192C] dark:text-slate-100 flex-col overflow-hidden transition-colors duration-200">
       {/* Top Header Bar */}
-      <header className="flex items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-3 backdrop-blur-md sm:px-6 dark:border-[#1E3E62] dark:bg-[#0B192C] z-10">
-        <div className="flex items-center space-x-3">
+      <header className="flex items-center justify-between border-b border-slate-200 bg-white/95 px-3 py-2.5 backdrop-blur-md sm:px-6 sm:py-3 dark:border-[#1E3E62] dark:bg-[#0B192C] z-10">
+        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0">
           {/* Counterpart Avatar with CRISP WHITE text on dark navy background */}
-          <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[#0B192C] text-white font-bold text-sm border border-[#1E3E62] shadow-sm">
+          <div className="flex h-9 w-9 sm:h-11 sm:w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[#0B192C] text-white font-bold text-xs sm:text-sm border border-[#1E3E62] shadow-sm">
             {counterpartInitials}
           </div>
 
-          <div>
-            <div className="flex items-center space-x-2">
-              <h2 className="text-base font-bold text-slate-900 dark:text-white">
+          <div className="min-w-0">
+            <div className="flex items-center space-x-1.5 sm:space-x-2">
+              <h2 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white truncate max-w-[90px] sm:max-w-none">
                 {personaName}
               </h2>
               <span className="text-xs text-slate-400">•</span>
-              <span className="text-xs font-semibold text-[#FF6500] uppercase tracking-wider">
+              <span className="text-[10px] sm:text-xs font-semibold text-[#FF6500] uppercase tracking-wider truncate max-w-[80px] sm:max-w-none">
                 {personaRole}
               </span>
             </div>
-            <p className="text-xs text-slate-500 dark:text-slate-300 truncate max-w-xs sm:max-w-md">
+            <p className="text-[11px] sm:text-xs text-slate-500 dark:text-slate-300 truncate max-w-[130px] sm:max-w-md">
               {session.scenario_title}
             </p>
           </div>
         </div>
 
         {/* Controls: Voice/Text Mode Switcher, Voice Toggle, Timer & End Practice Button */}
-        <div className="flex items-center space-x-2 sm:space-x-3">
+        <div className="flex items-center space-x-1 sm:space-x-2.5 flex-shrink-0">
           <button
             id="mode-switch-btn"
             type="button"
@@ -527,7 +534,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
               }
               setSession((prev) => ({ ...prev, mode: nextMode }));
             }}
-            className={`flex items-center space-x-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-sm ${
+            className={`flex items-center space-x-1 sm:space-x-1.5 rounded-xl border px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-bold transition shadow-sm ${
               session.mode === 'voice'
                 ? 'border-emerald-500/40 bg-emerald-500/15 text-emerald-800 dark:text-emerald-300'
                 : 'border-slate-300 bg-white hover:bg-slate-100 text-slate-700 dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-200'
@@ -536,13 +543,15 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
           >
             {session.mode === 'voice' ? (
               <>
-                <Mic className="h-3.5 w-3.5 text-emerald-500 animate-pulse" />
-                <span>Voice Call Active</span>
+                <Mic className="h-3.5 w-3.5 text-emerald-500 animate-pulse flex-shrink-0" />
+                <span className="hidden sm:inline">Voice Call Active</span>
+                <span className="sm:hidden font-bold">Voice</span>
               </>
             ) : (
               <>
-                <Mic className="h-3.5 w-3.5 text-slate-500" />
-                <span>Switch to Voice</span>
+                <Mic className="h-3.5 w-3.5 text-slate-500 flex-shrink-0" />
+                <span className="hidden sm:inline">Switch to Voice</span>
+                <span className="sm:hidden font-bold">Voice</span>
               </>
             )}
           </button>
@@ -552,7 +561,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
               type="button"
               onClick={toggleAutoVoice}
               title={autoVoice ? "Mute automatic counterpart voice" : "Turn ON automatic counterpart voice"}
-              className={`flex items-center space-x-1.5 rounded-xl border px-3 py-1.5 text-xs font-bold transition shadow-sm ${
+              className={`flex items-center space-x-1 sm:space-x-1.5 rounded-xl border px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-bold transition shadow-sm ${
                 autoVoice
                   ? 'border-[#FF6500]/40 bg-[#FF6500]/15 text-[#FF6500] dark:bg-[#FF6500]/20'
                   : 'border-slate-300 bg-slate-100 text-slate-500 dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-400'
@@ -560,20 +569,20 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
             >
               {autoVoice ? (
                 <>
-                  <Volume2 className="h-3.5 w-3.5 text-[#FF6500] animate-pulse" />
-                  <span>Voice: ON</span>
+                  <Volume2 className="h-3.5 w-3.5 text-[#FF6500] animate-pulse flex-shrink-0" />
+                  <span className="hidden sm:inline">Voice: ON</span>
                 </>
               ) : (
                 <>
-                  <VolumeX className="h-3.5 w-3.5" />
-                  <span>Voice: OFF</span>
+                  <VolumeX className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span className="hidden sm:inline">Voice: OFF</span>
                 </>
               )}
             </button>
           )}
 
-          <div className="flex items-center space-x-1.5 rounded-lg border border-slate-300 bg-slate-50 px-3 py-1 font-mono text-xs font-bold text-slate-700 shadow-sm dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-200">
-            <Clock className="h-3.5 w-3.5 text-[#FF6500]" />
+          <div className="flex items-center space-x-1 rounded-lg border border-slate-300 bg-slate-50 px-2 sm:px-3 py-1 font-mono text-[11px] sm:text-xs font-bold text-slate-700 shadow-sm dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-200">
+            <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#FF6500] flex-shrink-0" />
             <span>{formatTimer(elapsedSeconds)}</span>
           </div>
 
@@ -581,27 +590,28 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
             <button
               id="end-practice-btn"
               onClick={() => setShowEndConfirm(true)}
-              className="flex items-center space-x-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-3.5 py-1.5 text-xs font-bold text-rose-700 hover:bg-rose-500/20 dark:text-rose-300 transition"
+              className="flex items-center space-x-1 sm:space-x-1.5 rounded-xl border border-rose-500/30 bg-rose-500/10 px-2.5 sm:px-3.5 py-1.5 text-[11px] sm:text-xs font-bold text-rose-700 hover:bg-rose-500/20 dark:text-rose-300 transition"
             >
-              <LogOut className="h-3.5 w-3.5" />
-              <span>End Practice</span>
+              <LogOut className="h-3 w-3 sm:h-3.5 sm:w-3.5 flex-shrink-0" />
+              <span className="hidden sm:inline">End Practice</span>
+              <span className="sm:hidden font-bold">End</span>
             </button>
           )}
         </div>
       </header>
 
       {/* Pinned Your Role & Mission Banner */}
-      <div className="border-b border-amber-500/30 bg-amber-500/10 dark:bg-[#132B45] px-4 py-2 sm:px-6 flex items-center justify-between text-xs z-10 transition-colors">
-        <div className="flex items-center space-x-2 flex-wrap gap-y-1">
-          <span className="font-black text-[#FF6500] uppercase tracking-wider flex items-center space-x-1">
+      <div className="border-b border-amber-500/30 bg-amber-500/10 dark:bg-[#132B45] px-3 py-2 sm:px-6 flex items-center justify-between text-[11px] sm:text-xs z-10 transition-colors">
+        <div className="flex items-center space-x-1.5 sm:space-x-2 flex-wrap gap-y-0.5 min-w-0">
+          <span className="font-black text-[#FF6500] uppercase tracking-wider flex items-center space-x-1 flex-shrink-0">
             <UserCheck className="h-3.5 w-3.5 inline mr-1" />
-            <span>YOU (STUDENT):</span>
+            <span>YOU:</span>
           </span>
-          <span className="font-bold text-slate-900 dark:text-white">
-            {scenarioDetail?.track === 'sales' ? 'Enterprise Sales Representative' : 'Direct Manager / Team Leader'}
+          <span className="font-bold text-slate-900 dark:text-white truncate max-w-[130px] sm:max-w-none">
+            {scenarioDetail?.track === 'sales' ? 'Enterprise Sales Rep' : 'Direct Manager / Team Leader'}
           </span>
           <span className="text-slate-400 hidden sm:inline">•</span>
-          <span className="text-slate-600 dark:text-slate-300">
+          <span className="text-slate-600 dark:text-slate-300 hidden md:inline truncate">
             {scenarioDetail?.track === 'sales'
               ? `Negotiating with client ${personaName}`
               : `Leading meeting with direct report ${personaName} (${personaRole})`}
@@ -609,15 +619,15 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         </div>
         <button
           onClick={() => setShowRoleDrawer(!showRoleDrawer)}
-          className="ml-2 font-bold text-[#FF6500] hover:underline flex items-center space-x-1 flex-shrink-0"
+          className="ml-2 font-bold text-[#FF6500] hover:underline flex items-center space-x-1 flex-shrink-0 text-[11px] sm:text-xs"
         >
-          <span>{showRoleDrawer ? 'Hide Brief' : 'Scenario Mission'}</span>
+          <span>{showRoleDrawer ? 'Hide Brief' : 'Brief'}</span>
           {showRoleDrawer ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
         </button>
       </div>
 
       {showRoleDrawer && scenarioDetail && (
-        <div className="border-b border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] px-6 py-3.5 text-xs z-10 space-y-2 shadow-md animate-in slide-in-from-top-1">
+        <div className="border-b border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] px-4 py-3 sm:px-6 sm:py-3.5 text-xs z-10 space-y-2 shadow-md animate-in slide-in-from-top-1">
           <div className="font-bold text-slate-900 dark:text-white uppercase tracking-wider text-[11px] text-[#FF6500]">
             Meeting Context & Your Objective:
           </div>
@@ -634,9 +644,9 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
       {/* Completion Banner if closed */}
       {isSessionClosed && (
-        <div className="flex items-center justify-between border-b border-[#FF6500]/40 bg-[#0B192C] px-6 py-3.5 z-10 text-white">
-          <div className="flex items-center space-x-2 text-sm font-semibold">
-            <Sparkles className="h-4 w-4 text-[#FF6500]" />
+        <div className="flex items-center justify-between border-b border-[#FF6500]/40 bg-[#0B192C] px-4 py-3 sm:px-6 sm:py-3.5 z-10 text-white flex-wrap gap-2">
+          <div className="flex items-center space-x-2 text-xs sm:text-sm font-semibold">
+            <Sparkles className="h-4 w-4 text-[#FF6500] flex-shrink-0" />
             <span>Practice session complete. Review your performance evaluation report below.</span>
           </div>
           <button
@@ -652,13 +662,13 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
       {/* Hands-Free Live Voice Call Control Deck */}
       {session.mode === 'voice' && !isSessionClosed && (
-        <div className="border-b border-slate-300 dark:border-[#1E3E62] bg-gradient-to-b from-slate-100 to-slate-200/80 dark:from-[#0B192C] dark:to-[#071322] p-5">
-          <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="border-b border-slate-300 dark:border-[#1E3E62] bg-gradient-to-b from-slate-100 to-slate-200/80 dark:from-[#0B192C] dark:to-[#071322] p-3 sm:p-5">
+          <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-3 sm:gap-4">
             
             {/* Left: Call Status & Persona Info */}
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-3 sm:space-x-4 w-full md:w-auto">
               <div
-                className={`relative flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl transition-all duration-300 shadow-lg ${
+                className={`relative flex h-10 w-10 sm:h-14 sm:w-14 flex-shrink-0 items-center justify-center rounded-xl sm:rounded-2xl transition-all duration-300 shadow-md ${
                   isAssistantSpeaking
                     ? 'bg-[#FF6500] text-white shadow-[#FF6500]/40 scale-105'
                     : isMicMuted
@@ -673,16 +683,16 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                     <span className="sound-bar [animation-delay:0.2s]" />
                   </div>
                 ) : isMicMuted ? (
-                  <MicOff className="h-6 w-6 text-rose-300" />
+                  <MicOff className="h-5 w-5 sm:h-6 sm:w-6 text-rose-300" />
                 ) : (
-                  <Mic className="h-6 w-6 text-white" />
+                  <Mic className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
                 )}
               </div>
 
-              <div>
-                <div className="flex items-center space-x-2">
-                  <span className={`inline-block h-2.5 w-2.5 rounded-full ${isAssistantSpeaking ? 'bg-[#FF6500] animate-ping' : isMicMuted ? 'bg-slate-400' : 'bg-emerald-500 animate-pulse'}`} />
-                  <span className="text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200">
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center space-x-1.5 sm:space-x-2">
+                  <span className={`inline-block h-2 w-2 sm:h-2.5 sm:w-2.5 rounded-full flex-shrink-0 ${isAssistantSpeaking ? 'bg-[#FF6500] animate-ping' : isMicMuted ? 'bg-slate-400' : 'bg-emerald-500 animate-pulse'}`} />
+                  <span className="text-[11px] sm:text-xs font-bold uppercase tracking-wider text-slate-800 dark:text-slate-200 truncate">
                     {isAssistantSpeaking
                       ? `${personaName} is speaking...`
                       : isMicMuted
@@ -690,37 +700,38 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                       : 'Live Call Active • Hands-Free'}
                   </span>
                 </div>
-                <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5 font-medium">
+                <div className="text-[10px] sm:text-xs text-slate-600 dark:text-slate-400 mt-0.5 font-medium truncate sm:whitespace-normal">
                   {isAssistantSpeaking
-                    ? 'Listen to the client response (barge in anytime by speaking)'
+                    ? 'Listening to counterpart...'
                     : isMicMuted
-                    ? 'Click Unmute when you want to respond'
-                    : 'Speak naturally — pauses auto-send without clicking buttons'}
+                    ? 'Click Unmute to speak'
+                    : 'Speak naturally — pauses auto-send'}
                 </div>
               </div>
             </div>
 
             {/* Right: Actions (Mute, Interrupt, Done Speaking, Text Switch, Conclude) */}
-            <div className="flex flex-wrap items-center gap-2">
+            <div className="grid grid-cols-3 sm:flex sm:flex-wrap items-center gap-1.5 sm:gap-2 w-full md:w-auto">
               {/* Immediate Send / Done Speaking Manual Action */}
               {voicePartial ? (
                 <button
                   id="voice-send-now-btn"
                   type="button"
                   onClick={() => voiceClient?.forceCommitTurn()}
-                  className="flex items-center space-x-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-600/30 transition animate-pulse"
+                  className="col-span-3 sm:col-span-1 flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-[11px] sm:text-xs font-bold text-white shadow-md shadow-emerald-600/30 transition animate-pulse"
                 >
-                  <Send className="h-3.5 w-3.5" />
-                  <span>Done Speaking • Send Now</span>
+                  <Send className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span className="hidden sm:inline">Done Speaking • Send Now</span>
+                  <span className="sm:hidden">Send Spoken Words Now</span>
                 </button>
               ) : !isRecordingMic && !isAssistantSpeaking && !isMicMuted ? (
                 <button
                   id="voice-start-speaking-btn"
                   type="button"
                   onClick={() => voiceClient?.startAudioCapture()}
-                  className="flex items-center space-x-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-emerald-600/30 transition"
+                  className="col-span-3 sm:col-span-1 flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 px-3 py-2 text-[11px] sm:text-xs font-bold text-white shadow-md shadow-emerald-600/30 transition"
                 >
-                  <Mic className="h-3.5 w-3.5" />
+                  <Mic className="h-3.5 w-3.5 flex-shrink-0" />
                   <span>Tap to Speak</span>
                 </button>
               ) : null}
@@ -729,14 +740,15 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                 id="voice-mic-mute-btn"
                 type="button"
                 onClick={toggleMicMute}
-                className={`flex items-center space-x-1.5 rounded-xl px-3.5 py-2 text-xs font-bold transition shadow-sm ${
+                className={`flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-xl px-2.5 sm:px-3.5 py-2 text-[11px] sm:text-xs font-bold transition shadow-sm ${
                   isMicMuted
                     ? 'bg-rose-600 hover:bg-rose-500 text-white shadow-rose-600/30'
                     : 'bg-slate-200 hover:bg-slate-300 dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] text-slate-800 dark:text-white'
                 }`}
               >
-                {isMicMuted ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4 text-emerald-500" />}
-                <span>{isMicMuted ? 'Unmute Mic' : 'Mute Mic'}</span>
+                {isMicMuted ? <MicOff className="h-3.5 w-3.5 flex-shrink-0" /> : <Mic className="h-3.5 w-3.5 text-emerald-500 flex-shrink-0" />}
+                <span className="hidden sm:inline">{isMicMuted ? 'Unmute Mic' : 'Mute Mic'}</span>
+                <span className="sm:hidden">{isMicMuted ? 'Unmute' : 'Mute'}</span>
               </button>
 
               {isAssistantSpeaking && (
@@ -744,9 +756,9 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                   id="voice-interrupt-btn"
                   type="button"
                   onClick={handleInterrupt}
-                  className="flex items-center space-x-1.5 rounded-xl border border-amber-500/50 bg-amber-500/20 px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-200 hover:bg-amber-500/30 transition"
+                  className="flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-xl border border-amber-500/50 bg-amber-500/20 px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-bold text-amber-800 dark:text-amber-200 hover:bg-amber-500/30 transition"
                 >
-                  <Hand className="h-3.5 w-3.5" />
+                  <Hand className="h-3.5 w-3.5 flex-shrink-0" />
                   <span>Interrupt</span>
                 </button>
               )}
@@ -759,10 +771,10 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                     const last = [...messages].reverse().find((m) => m.role === 'counterpart');
                     if (last) handlePlayMessageAudio(last.content);
                   }}
-                  className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:text-[#FF6500] dark:hover:text-[#FF6500] transition"
+                  className="flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200 hover:text-[#FF6500] dark:hover:text-[#FF6500] transition"
                   title="Re-play the counterpart's last spoken sentence"
                 >
-                  <Volume2 className="h-3.5 w-3.5 text-[#FF6500]" />
+                  <Volume2 className="h-3.5 w-3.5 text-[#FF6500] flex-shrink-0" />
                   <span>Replay</span>
                 </button>
               )}
@@ -777,17 +789,18 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                   }
                   setSession((prev) => ({ ...prev, mode: 'text' }));
                 }}
-                className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] px-3 py-2 text-xs font-semibold text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white transition"
+                className="flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] px-2.5 sm:px-3 py-2 text-[11px] sm:text-xs font-semibold text-slate-800 dark:text-slate-200 hover:text-slate-900 dark:hover:text-white transition"
               >
-                <MessageSquare className="h-3.5 w-3.5" />
-                <span>Text Mode</span>
+                <MessageSquare className="h-3.5 w-3.5 flex-shrink-0" />
+                <span className="hidden sm:inline">Text Mode</span>
+                <span className="sm:hidden">Text</span>
               </button>
 
               <button
                 id="voice-end-call-btn"
                 type="button"
                 onClick={() => setShowEndConfirm(true)}
-                className="flex items-center space-x-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 px-3.5 py-2 text-xs font-bold text-white shadow-md shadow-rose-600/20 transition"
+                className="flex items-center justify-center space-x-1 sm:space-x-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 px-2.5 sm:px-3.5 py-2 text-[11px] sm:text-xs font-bold text-white shadow-md shadow-rose-600/20 transition"
               >
                 <span>End Call</span>
               </button>
@@ -796,25 +809,25 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
           {/* Live Speech Recognition Transcript Pill with Quick Send */}
           {voicePartial && (
-            <div className="max-w-4xl mx-auto mt-3 flex items-center justify-between text-xs bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/40 text-emerald-900 dark:text-emerald-200 px-4 py-2.5 rounded-xl shadow-sm">
-              <div className="flex items-center space-x-2">
-                <span className="h-2.5 w-2.5 rounded-full bg-emerald-500 animate-ping flex-shrink-0" />
-                <span className="font-bold uppercase tracking-wider text-[11px] text-emerald-700 dark:text-emerald-300 flex-shrink-0">Hearing You:</span>
-                <span className="italic font-medium text-slate-800 dark:text-white">"{voicePartial}"</span>
+            <div className="max-w-4xl mx-auto mt-2.5 flex items-center justify-between text-xs bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-500/40 text-emerald-900 dark:text-emerald-200 px-3 sm:px-4 py-2 rounded-xl shadow-sm">
+              <div className="flex items-center space-x-2 min-w-0 flex-1 mr-2">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-ping flex-shrink-0" />
+                <span className="font-bold uppercase tracking-wider text-[10px] sm:text-[11px] text-emerald-700 dark:text-emerald-300 flex-shrink-0">Hearing You:</span>
+                <span className="italic font-medium text-slate-800 dark:text-white truncate">"{voicePartial}"</span>
               </div>
               <button
                 type="button"
                 onClick={() => voiceClient?.forceCommitTurn()}
-                className="ml-3 flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-3 py-1.5 rounded-lg shadow-sm transition flex-shrink-0"
+                className="flex items-center space-x-1 bg-emerald-600 hover:bg-emerald-500 text-white font-bold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-lg shadow-sm transition flex-shrink-0 text-[11px] sm:text-xs"
               >
-                <span>Send Now</span>
+                <span>Send</span>
                 <Send className="h-3 w-3" />
               </button>
             </div>
           )}
 
           {voiceError && (
-            <div className="max-w-4xl mx-auto mt-3 text-xs text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-500/30 px-3 py-1.5 rounded-lg">
+            <div className="max-w-4xl mx-auto mt-2.5 text-xs text-rose-700 dark:text-rose-300 bg-rose-50 dark:bg-rose-950/40 border border-rose-500/30 px-3 py-1.5 rounded-lg">
               {voiceError}
             </div>
           )}

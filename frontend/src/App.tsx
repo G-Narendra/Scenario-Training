@@ -23,6 +23,8 @@ const AppContent: React.FC = () => {
   const [isStartingSimulation, setIsStartingSimulation] = useState(false);
   const [attemptLimitMessage, setAttemptLimitMessage] = useState<string | null>(null);
 
+  const [isRestoringSession, setIsRestoringSession] = useState(false);
+
   const navigateTo = (view: ViewMode, track?: string, replace = false) => {
     if (track) setSelectedTrack(track);
     setCurrentView(view);
@@ -38,11 +40,50 @@ const AppContent: React.FC = () => {
   React.useEffect(() => {
     const validViews: ViewMode[] = ['tracks', 'scenarios', 'chat', 'evaluation', 'progress', 'admin'];
     const hashView = window.location.hash.replace('#', '') as ViewMode;
-    if (hashView && validViews.includes(hashView)) {
-      setCurrentView(hashView);
-      window.history.replaceState({ view: hashView, selectedTrack }, '', '#' + hashView);
-    } else {
-      window.history.replaceState({ view: 'scenarios', selectedTrack }, '', '#scenarios');
+    const targetView = hashView && validViews.includes(hashView) ? hashView : 'scenarios';
+    setCurrentView(targetView);
+    window.history.replaceState({ view: targetView, selectedTrack }, '', '#' + targetView);
+
+    // If refreshing on #chat and no activeSession in memory, restore from sessionStorage or recent active session
+    if (targetView === 'chat' && !activeSession) {
+      const storedSessionId = sessionStorage.getItem('scenariolab_active_session_id');
+      setIsRestoringSession(true);
+
+      const restore = async () => {
+        try {
+          if (storedSessionId) {
+            const sessionData = await api.getSessionDetail(storedSessionId);
+            if (sessionData && sessionData.status === 'active') {
+              setActiveSession(sessionData);
+              return;
+            } else if (sessionData && sessionData.status === 'completed') {
+              setEvalSessionId(sessionData.id);
+              navigateTo('evaluation', undefined, true);
+              return;
+            }
+          }
+
+          // Fallback: Check if user has any active session in the database
+          const mySessions = await api.listMySessions();
+          const running = mySessions.find((s) => s.status === 'active');
+          if (running) {
+            sessionStorage.setItem('scenariolab_active_session_id', running.id);
+            setActiveSession(running);
+          } else {
+            // No active session found; redirect to scenario library gracefully
+            sessionStorage.removeItem('scenariolab_active_session_id');
+            navigateTo('scenarios', undefined, true);
+          }
+        } catch (err) {
+          console.warn('Failed to restore session on reload, returning to library', err);
+          sessionStorage.removeItem('scenariolab_active_session_id');
+          navigateTo('scenarios', undefined, true);
+        } finally {
+          setIsRestoringSession(false);
+        }
+      };
+
+      restore();
     }
 
     const handlePopState = (e: PopStateEvent) => {
@@ -101,6 +142,7 @@ const AppContent: React.FC = () => {
     setIsStartingSimulation(true);
     try {
       const session = await api.createSession(scenarioId, mode);
+      sessionStorage.setItem('scenariolab_active_session_id', session.id);
       setActiveSession(session);
       navigateTo('chat');
     } catch (err: unknown) {
@@ -121,6 +163,9 @@ const AppContent: React.FC = () => {
 
   const handleSessionEnded = (session: SimulationSession) => {
     setActiveSession(session);
+    if (session.id) {
+      sessionStorage.setItem('scenariolab_active_session_id', session.id);
+    }
   };
 
   const handleViewEvaluation = (sessionId: string) => {
@@ -146,12 +191,31 @@ const AppContent: React.FC = () => {
           />
         )}
 
-        {currentView === 'chat' && activeSession && (
-          <SimulationChatPage
-            session={activeSession}
-            onSessionEnded={handleSessionEnded}
-            onViewEvaluation={handleViewEvaluation}
-          />
+        {currentView === 'chat' && (
+          isRestoringSession ? (
+            <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#FF6500] border-t-transparent" />
+                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Restoring your practice session...</p>
+              </div>
+            </div>
+          ) : activeSession ? (
+            <SimulationChatPage
+              session={activeSession}
+              onSessionEnded={handleSessionEnded}
+              onViewEvaluation={handleViewEvaluation}
+            />
+          ) : (
+            <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100 p-6 text-center">
+              <p className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">No active practice session in progress.</p>
+              <button
+                onClick={() => navigateTo('scenarios')}
+                className="px-5 py-2.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] text-white text-sm font-bold shadow-md transition"
+              >
+                Go to Scenario Library
+              </button>
+            </div>
+          )
         )}
 
         {currentView === 'evaluation' && (evalSessionId || activeSession) && (

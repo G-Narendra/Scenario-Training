@@ -253,8 +253,8 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
         </div>
 
         {/* Footer CTA */}
-        <div className="border-t border-slate-300 dark:border-[#1E3E62] p-6 bg-slate-50 dark:bg-[#0B192C] flex items-center justify-between">
-          <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">
+        <div className="border-t border-slate-300 dark:border-[#1E3E62] p-4 sm:p-6 bg-slate-50 dark:bg-[#0B192C] flex flex-col sm:flex-row items-center justify-between gap-3">
+          <div className="text-xs text-slate-600 dark:text-slate-400 font-medium text-center sm:text-left">
             20 practice attempts allocated per scenario
           </div>
 
@@ -284,7 +284,7 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
               onStartSimulation(scenario.id, selectedMode);
             }}
             disabled={isStarting}
-            className="flex items-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-7 py-3 text-base font-bold text-white shadow-lg shadow-[#FF6500]/30 transition disabled:opacity-50"
+            className="w-full sm:w-auto flex items-center justify-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-7 py-3 text-base font-bold text-white shadow-lg shadow-[#FF6500]/30 transition disabled:opacity-50"
           >
             <span>{isStarting ? 'Starting Practice...' : 'Start Practice'}</span>
           </button>
