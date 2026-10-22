@@ -53,7 +53,6 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   }, [showEndConfirm]);
 
   // Voice Mode State
-  const [voiceClient, setVoiceClient] = useState<VoiceClient | null>(null);
   const [, setIsVoiceConnected] = useState(false);
   const [isRecordingMic, setIsRecordingMic] = useState(false);
   const [isMicMuted, setIsMicMuted] = useState(false);
@@ -68,7 +67,6 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   const [isDictating, setIsDictating] = useState(false);
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const dictationRecRef = useRef<any>(null);
-  const localVoiceClientRef = useRef<VoiceClient | null>(null);
 
   // Resolve Persona Name early with robust scenario fallbacks
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -78,15 +76,77 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     rawScenario?.persona?.name ||
     (session.scenario_title?.toLowerCase().includes('marcus') || session.scenario_id?.toLowerCase().includes('marcus') ? 'Marcus Vance' : 'Marcus Vance');
 
-  if (!localVoiceClientRef.current) {
-    localVoiceClientRef.current = new VoiceClient({
+  // Single unified VoiceClient instance across the entire page lifecycle
+  const voiceClientRef = useRef<VoiceClient | null>(null);
+  const handleVoiceTurnCommitRef = useRef<((text: string) => Promise<void>) | null>(null);
+  const sessionRef = useRef(session);
+  sessionRef.current = session;
+
+  if (!voiceClientRef.current) {
+    voiceClientRef.current = new VoiceClient({
+      onSessionReady: (readyName) => {
+        if (readyName) voiceClientRef.current?.setPersona(readyName);
+        setIsVoiceConnected(true);
+        setVoiceError(null);
+      },
+      onTranscriptPartial: (text) => {
+        setVoicePartial(text);
+      },
+      onTranscriptFinal: (_text) => {
+        setVoicePartial('');
+      },
+      onFallbackHttpSend: async (spokenText) => {
+        if (handleVoiceTurnCommitRef.current) {
+          await handleVoiceTurnCommitRef.current(spokenText);
+        }
+      },
+      onAssistantText: (text) => {
+        const nextSeq = messages.length + 1;
+        setCurrentlySpeakingSeq(nextSeq);
+        setMessages((prev) => [
+          ...prev,
+          {
+            seq: nextSeq,
+            role: 'counterpart',
+            content: text,
+            created_at: new Date().toISOString(),
+          },
+        ]);
+        api.getSessionDetail(sessionRef.current.id)
+          .then((updated) => {
+            setSession(updated);
+            if (updated.status !== 'active') onSessionEnded(updated);
+          })
+          .catch(() => {});
+      },
       onAssistantSpeaking: (speaking) => {
         setIsAssistantSpeaking(speaking);
         if (!speaking) setCurrentlySpeakingSeq(null);
       },
+      onMicStatusChange: (isCapturing, muted) => {
+        setIsRecordingMic(isCapturing);
+        setIsMicMuted(muted);
+      },
+      onTurnComplete: (latency) => {
+        setVoiceLatencyMs(latency);
+      },
+      onError: (err) => {
+        console.warn('Voice notice:', err);
+        const lower = (err || '').toLowerCase();
+        if (lower.includes('mic') || lower.includes('permission') || lower.includes('not-allowed')) {
+          setVoiceError(err);
+        } else {
+          setVoiceError(null);
+        }
+      },
+      onSessionEnded: () => {
+        setSession((prev) => ({ ...prev, status: 'completed' }));
+      },
     });
-    localVoiceClientRef.current.setPersona(personaName);
+    voiceClientRef.current.setPersona(personaName);
   }
+
+  const voiceClient = voiceClientRef.current;
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -97,12 +157,11 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       .then((detail) => {
         setScenarioDetail(detail);
         if (detail.persona?.name) {
-          localVoiceClientRef.current?.setPersona(detail.persona.name);
-          voiceClient?.setPersona(detail.persona.name);
+          voiceClient.setPersona(detail.persona.name);
         }
       })
       .catch((err) => console.error('Failed to load scenario details', err));
-  }, [session.scenario_id, voiceClient, personaName]);
+  }, [session.scenario_id, personaName]);
 
   // Timer Effect
   useEffect(() => {
@@ -126,18 +185,14 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     hasSpokenOpeningRef.current = true;
 
     // Immediately prefetch neural audio into memory cache during the 1-second delay
-    const client = voiceClient || localVoiceClientRef.current;
-    if (client) {
-      client.prefetchAudio(openingMsg.content, personaName).catch(() => {});
-    }
+    voiceClient.prefetchAudio(openingMsg.content, personaName).catch(() => {});
 
     const timer = setTimeout(async () => {
-      const activeClient = voiceClient || localVoiceClientRef.current;
-      if (activeClient && session.status === 'active') {
+      if (session.status === 'active') {
         setCurrentlySpeakingSeq(openingMsg.seq);
         setIsAssistantSpeaking(true);
         try {
-          await activeClient.speakText(openingMsg.content, personaName);
+          await voiceClient.speakText(openingMsg.content, personaName);
         } catch (err) {
           console.warn('Auto-speak opening line notice:', err);
         }
@@ -145,7 +200,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     }, 1000); // EXACTLY 1 second delay after clicking Start Practice & mounting
 
     return () => clearTimeout(timer);
-  }, [session.mode, session.status, messages, voiceClient, personaName]);
+  }, [session.mode, session.status, messages, personaName]);
 
   // Unified Voice Turn Handler: streams reply via API and speaks with neural Edge-TTS
   const handleVoiceTurnCommit = async (spokenText: string) => {
@@ -189,10 +244,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         if (accumulatedReply) {
           setCurrentlySpeakingSeq(counterpartSeq);
           setIsAssistantSpeaking(true);
-          const client = voiceClient || localVoiceClientRef.current;
-          if (client) {
-            await client.speakText(accumulatedReply, personaName);
-          }
+          await voiceClient.speakText(accumulatedReply, personaName);
         }
 
         try {
@@ -213,87 +265,27 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     );
   };
 
-  // Initialize Voice Client if in voice mode
+  handleVoiceTurnCommitRef.current = handleVoiceTurnCommit;
+
+  // Initialize Voice Client connection if in voice mode
   useEffect(() => {
     if (session.mode !== 'voice' || session.status !== 'active') return;
 
     const token = localStorage.getItem('auth_token') || '';
-    const client = new VoiceClient({
-      onSessionReady: (readyName) => {
-        if (readyName) client.setPersona(readyName);
-        setIsVoiceConnected(true);
-        setVoiceError(null);
-      },
-      onTranscriptPartial: (text) => {
-        setVoicePartial(text);
-      },
-      onTranscriptFinal: (_text) => {
-        setVoicePartial('');
-      },
-      onFallbackHttpSend: async (spokenText) => {
-        await handleVoiceTurnCommit(spokenText);
-      },
-      onAssistantText: (text) => {
-        const nextSeq = messages.length + 1;
-        setCurrentlySpeakingSeq(nextSeq);
-        setMessages((prev) => [
-          ...prev,
-          {
-            seq: nextSeq,
-            role: 'counterpart',
-            content: text,
-            created_at: new Date().toISOString(),
-          },
-        ]);
-        api.getSessionDetail(session.id)
-          .then((updated) => {
-            setSession(updated);
-            if (updated.status !== 'active') onSessionEnded(updated);
-          })
-          .catch(() => {});
-      },
-      onAssistantSpeaking: (speaking) => {
-        setIsAssistantSpeaking(speaking);
-        if (!speaking) setCurrentlySpeakingSeq(null);
-      },
-      onMicStatusChange: (isCapturing, muted) => {
-        setIsRecordingMic(isCapturing);
-        setIsMicMuted(muted);
-      },
-      onTurnComplete: (latency) => {
-        setVoiceLatencyMs(latency);
-      },
-      onError: (err) => {
-        console.warn('Voice notice:', err);
-        const lower = (err || '').toLowerCase();
-        if (lower.includes('mic') || lower.includes('permission') || lower.includes('not-allowed')) {
-          setVoiceError(err);
-        } else {
-          setVoiceError(null);
-        }
-      },
-      onSessionEnded: () => {
-        setSession((prev) => ({ ...prev, status: 'completed' }));
-      },
-    });
+    voiceClient.setPersona(personaName);
 
-    client.setPersona(personaName);
-    localVoiceClientRef.current = client;
-
-    client
+    voiceClient
       .connect(session.id, token)
       .then(() => {
-        setVoiceClient(client);
         setIsVoiceConnected(true);
       })
       .catch((err) => {
         console.warn('Voice connection notice, continuing in HTTP audio mode', err);
-        setVoiceClient(client);
         setIsVoiceConnected(true);
       });
 
     return () => {
-      client.disconnect();
+      voiceClient.disconnect();
     };
   }, [session.id, session.mode, session.status]);
 
@@ -386,18 +378,11 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       setCurrentlySpeakingSeq(seq);
     }
     setIsAssistantSpeaking(true);
-
-    const client = voiceClient || localVoiceClientRef.current;
-    if (client) {
-      client.speakText(text, personaName);
-    }
+    voiceClient.speakText(text, personaName);
   };
 
   const handleStopAudio = () => {
-    const client = voiceClient || localVoiceClientRef.current;
-    if (client) {
-      client.stopSpeaking();
-    }
+    voiceClient.stopSpeaking();
     setIsAssistantSpeaking(false);
     setCurrentlySpeakingSeq(null);
   };

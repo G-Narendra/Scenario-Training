@@ -260,7 +260,7 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
 
           <button
             id="start-simulation-btn"
-            onClick={() => {
+            onClick={async () => {
               try {
                 const AudioCtx =
                   window.AudioContext ||
@@ -270,6 +270,17 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
                   ctx.resume().catch(() => {});
                 }
               } catch {}
+
+              // Upfront microphone permission request on direct user gesture
+              if (selectedMode === 'voice' && navigator.mediaDevices?.getUserMedia) {
+                try {
+                  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                  stream.getTracks().forEach((t) => t.stop());
+                } catch (micErr) {
+                  console.warn('Microphone permission check notice:', micErr);
+                }
+              }
+
               onStartSimulation(scenario.id, selectedMode);
             }}
             disabled={isStarting}

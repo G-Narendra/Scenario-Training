@@ -268,8 +268,16 @@ export class VoiceClient {
       this.interrupt();
     }
 
-    if (this.isRecording && this.recognition) {
-      return;
+    // Fully tear down any previous recognition instance before constructing a fresh one
+    if (this.recognition) {
+      try {
+        this.recognition.onend = null;
+        this.recognition.onerror = null;
+        this.recognition.onresult = null;
+        this.recognition.onspeechend = null;
+        this.recognition.abort();
+      } catch {}
+      this.recognition = null;
     }
 
     const windowWithSpeech = window as unknown as {
@@ -291,13 +299,6 @@ export class VoiceClient {
     try {
       this.isRecording = true;
       this.callbacks.onMicStatusChange?.(true, this.isMuted);
-
-      if (this.recognition) {
-        try {
-          this.recognition.abort();
-        } catch {}
-        this.recognition = null;
-      }
 
       const recog = new SpeechRecognitionClass();
       recog.continuous = true;
@@ -373,18 +374,15 @@ export class VoiceClient {
       };
 
       recog.onend = () => {
-        // Auto-rearm speech recognition if continuous call is active and user didn't mute or speak
+        this.recognition = null;
+        // Auto-rearm fresh speech recognition if continuous call is active and user didn't mute or speak
         if (this.isRecording && !this.isMuted && !this.isSpeaking) {
           if (this.restartTimeout) clearTimeout(this.restartTimeout);
           this.restartTimeout = setTimeout(() => {
             if (this.isRecording && !this.isMuted && !this.isSpeaking) {
-              try {
-                this.recognition?.start();
-              } catch (e) {
-                console.warn('Recognition auto-restart notice:', e);
-              }
+              this.startAudioCapture().catch(() => {});
             }
-          }, 150);
+          }, 100);
         }
       };
 
@@ -413,6 +411,10 @@ export class VoiceClient {
 
     if (this.recognition) {
       try {
+        this.recognition.onend = null;
+        this.recognition.onerror = null;
+        this.recognition.onresult = null;
+        this.recognition.onspeechend = null;
         this.recognition.stop();
       } catch {}
       this.recognition = null;
