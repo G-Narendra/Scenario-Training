@@ -29,6 +29,14 @@ export class VoiceClient {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private recognition: any = null;
   private latestUtterance = '';
+  /**
+   * Accumulates finalized speech results across the lifetime of a single
+   * SpeechRecognition session.  Indexed by result slot so each final is
+   * captured exactly once and never re-read from the growing event.results array.
+   */
+  private committedFinals: string[] = [];
+  /** Highest event.results index whose isFinal we have already captured. */
+  private lastFinalIdx = -1;
   private isCommitting = false;
   public isConnected = false;
   private isRecording = false;
@@ -78,11 +86,40 @@ export class VoiceClient {
   }
 
   /**
-   * Helper to deduplicate repeated consecutive tokens from recognition stutter/restarts.
+   * Two-pass deduplication that eliminates both single-word stutters and
+   * multi-word phrase cascades (e.g. "see our creator see our creator dashboard"
+   * → "see our creator dashboard").
+   *
+   * Pass 1: Regex collapses repeated 2–8 word phrases into a single occurrence.
+   * Pass 2: Linear scan removes consecutive duplicate single words.
    */
   private dedupConsecutiveWords(text: string): string {
     if (!text) return '';
-    const words = text.split(/\s+/);
+
+    let cleaned = text;
+
+    // Pass 1 — Collapse repeated multi-word phrases (greediest first).
+    // Matches a phrase of 2-8 words that repeats 2+ times consecutively.
+    // The regex uses word boundaries to avoid partial-word matches.
+    for (let phraseLen = 8; phraseLen >= 2; phraseLen--) {
+      // Build a regex that matches a phrase of exactly `phraseLen` words
+      // followed by one or more exact repetitions of that phrase
+      const wordGroup = '(?:\\S+)';
+      const phrasePattern = Array(phraseLen).fill(wordGroup).join('\\s+');
+      const re = new RegExp(
+        `(${phrasePattern})(?:\\s+\\1){1,}`,
+        'gi'
+      );
+      // Keep applying until stable (cascading phrases may nest)
+      let prev = '';
+      while (prev !== cleaned) {
+        prev = cleaned;
+        cleaned = cleaned.replace(re, '$1');
+      }
+    }
+
+    // Pass 2 — Single-word consecutive dedup
+    const words = cleaned.split(/\s+/).filter(Boolean);
     const result: string[] = [];
     for (let i = 0; i < words.length; i++) {
       const current = words[i];
@@ -356,7 +393,12 @@ export class VoiceClient {
 
       const recog = new SpeechRecognitionClass();
 
-      // Continuous mode across desktop and mobile, with clean full-result reconstruction
+      // Reset per-session accumulators for this fresh recognition instance
+      this.committedFinals = [];
+      this.lastFinalIdx = -1;
+      this.latestUtterance = '';
+
+      // Configure continuous mode with interim results for real-time feedback
       recog.continuous = true;
       recog.interimResults = true;
       recog.lang = this.recognitionLanguage || 'en-IN';
@@ -367,22 +409,37 @@ export class VoiceClient {
         // If muted, assistant is speaking, or currently committing turn, ignore incoming audio
         if (this.isMuted || this.isSpeaking || this.isCommitting) return;
 
-        let finalTranscript = '';
-        let interimTranscript = '';
+        // ─── KEY FIX: Only process results from event.resultIndex onward ───
+        // event.resultIndex tells us which slot changed; everything below it
+        // is a stale, previously-finalized result that we already captured.
+        // Iterating from 0 every time was the root cause of the cascading
+        // "see our see our see our creator..." duplication.
 
-        for (let i = 0; i < event.results.length; ++i) {
+        let currentInterim = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
           const res = event.results[i];
           const segment = (res[0]?.transcript || '').trim();
           if (!segment) continue;
 
           if (res.isFinal) {
-            finalTranscript += (finalTranscript ? ' ' : '') + segment;
+            // Capture this final into our accumulator exactly once
+            if (i > this.lastFinalIdx) {
+              this.committedFinals.push(segment);
+              this.lastFinalIdx = i;
+            }
           } else {
-            interimTranscript += (interimTranscript ? ' ' : '') + segment;
+            // Only the latest interim matters (there's at most one active interim at a time)
+            currentInterim = segment;
           }
         }
 
-        const combined = (finalTranscript + ' ' + interimTranscript).trim();
+        // Assemble: all committed finals + the single active interim
+        const parts = [...this.committedFinals];
+        if (currentInterim) {
+          parts.push(currentInterim);
+        }
+        const combined = parts.join(' ').trim();
         const cleaned = this.dedupConsecutiveWords(combined);
 
         if (cleaned) {
@@ -396,10 +453,11 @@ export class VoiceClient {
           }
 
           // Conversational silence detection:
-          // 1000ms for finalized chunk, 1350ms for interim chunk
+          // 1200ms for finalized chunk, 1500ms for interim chunk
           // Gives the trainee natural breathing room without severing sentences mid-thought
-          const isFinal = event.results[event.results.length - 1]?.isFinal;
-          const delayMs = isFinal ? 1000 : 1350;
+          const lastResult = event.results[event.results.length - 1];
+          const isFinal = lastResult?.isFinal;
+          const delayMs = isFinal ? 1200 : 1500;
           this.silenceTimer = setTimeout(() => {
             if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
               this.commitTurn(this.latestUtterance);
@@ -494,6 +552,8 @@ export class VoiceClient {
 
     const spokenText = (text || this.latestUtterance).trim();
     this.latestUtterance = '';
+    this.committedFinals = [];
+    this.lastFinalIdx = -1;
 
     if (!spokenText || spokenText.match(/^(\.|\s|\.\.\.)+$/)) {
       return;
@@ -565,6 +625,8 @@ export class VoiceClient {
     this.isSpeaking = false;
     this.isCommitting = false;
     this.latestUtterance = '';
+    this.committedFinals = [];
+    this.lastFinalIdx = -1;
     this.callbacks.onAssistantSpeaking?.(false);
 
     if (this.isContinuousCall && !this.isMuted) {
