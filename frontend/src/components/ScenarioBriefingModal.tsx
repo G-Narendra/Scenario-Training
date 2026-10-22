@@ -271,11 +271,15 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
                 }
               } catch {}
 
-              // Upfront microphone permission request on direct user gesture
+              // Upfront microphone permission request on direct user gesture with 800ms non-blocking race
               if (selectedMode === 'voice' && navigator.mediaDevices?.getUserMedia) {
                 try {
-                  const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                  stream.getTracks().forEach((t) => t.stop());
+                  await Promise.race([
+                    navigator.mediaDevices.getUserMedia({ audio: true }).then((stream) => {
+                      stream.getTracks().forEach((t) => t.stop());
+                    }),
+                    new Promise((resolve) => setTimeout(resolve, 800)),
+                  ]);
                 } catch (micErr) {
                   console.warn('Microphone permission check notice:', micErr);
                 }
