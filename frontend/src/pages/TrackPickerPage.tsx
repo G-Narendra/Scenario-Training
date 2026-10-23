@@ -118,6 +118,38 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
           </div>
         </div>
       </div>
+
+      {/* Uzair's 60 Capabilities Matrix Banner */}
+      <div
+        id="track-card-capabilities"
+        onClick={() => onSelectTrack('leadership')}
+        className="mt-8 group cursor-pointer overflow-hidden rounded-2xl border-2 border-[#FF6500]/50 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-6 sm:p-8 dark:border-[#1E3E62] dark:bg-[#132B45] transition-all hover:border-[#FF6500] hover:shadow-xl"
+      >
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FF6500] text-white shadow-md">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h3 className="text-xl font-black text-slate-900 dark:text-white font-heading">
+                  Uzair's Shortlisted 60 Executive Capabilities
+                </h3>
+                <span className="rounded-full bg-[#FF6500]/20 px-2.5 py-0.5 text-xs font-bold text-[#FF6500] border border-[#FF6500]/30">
+                  60 Capabilities • 6 Pillars
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 font-medium">
+                Practice each of the 60 capabilities from the master curriculum: Strategic Thinking (#1) through Lead by Example (#60).
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-1.5 text-sm font-bold text-[#FF6500] group-hover:translate-x-1 transition-transform whitespace-nowrap">
+            <span>Explore 60 Capabilities</span>
+            <ArrowRight className="h-4 w-4" />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

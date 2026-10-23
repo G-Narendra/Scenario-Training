@@ -44,3 +44,14 @@ async def get_scenario(
     db: AsyncSession = Depends(get_db),
 ):
     return await ScenarioService.get_public_scenario_detail(db=db, scenario_id_or_slug=id_or_slug)
+
+
+@router.get("/api/capabilities")
+@router.get("/api/skills")
+async def list_capabilities(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """Return all 60 executive capabilities from Uzair's curriculum with mapped practice scenarios."""
+    return await ScenarioService.list_all_capabilities(db=db)
+

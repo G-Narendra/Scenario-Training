@@ -2,6 +2,7 @@ import {
   AdminCohort,
   AdminScenarioVersion,
   AuditLogEntry,
+  CapabilityItem,
   CohortMember,
   CohortProgress,
   FeedbackReport,
@@ -65,7 +66,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   let response: Response | null = null;
   const maxRetries = 3;
-  let lastError: any = null;
+  let lastError: unknown = null;
 
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
@@ -145,7 +146,7 @@ export const api = {
   },
 
   // In-Memory Cache for fast, zero-delay navigation between tracks & scenarios
-  _cache: new Map<string, { data: any; timestamp: number }>(),
+  _cache: new Map<string, { data: unknown; timestamp: number }>(),
 
   clearCache(): void {
     api._cache.clear();
@@ -155,7 +156,7 @@ export const api = {
   async getTracks(): Promise<Track[]> {
     const cached = api._cache.get('tracks');
     if (cached && Date.now() - cached.timestamp < 300000) {
-      return cached.data;
+      return cached.data as Track[];
     }
     const data = await request<Track[]>('/tracks');
     api._cache.set('tracks', { data, timestamp: Date.now() });
@@ -166,7 +167,7 @@ export const api = {
     const cacheKey = `scenarios_${params?.track || 'all'}_${params?.topic || 'all'}_${params?.difficulty || 'all'}`;
     const cached = api._cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < 300000) {
-      return cached.data;
+      return cached.data as ScenarioListItem[];
     }
     const query = new URLSearchParams();
     if (params?.track) query.append('track', params.track);
@@ -182,9 +183,20 @@ export const api = {
     const cacheKey = `scenario_${id}`;
     const cached = api._cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < 300000) {
-      return cached.data;
+      return cached.data as ScenarioDetail;
     }
     const data = await request<ScenarioDetail>(`/scenarios/${id}`);
+    api._cache.set(cacheKey, { data, timestamp: Date.now() });
+    return data;
+  },
+
+  async getCapabilities(): Promise<CapabilityItem[]> {
+    const cacheKey = 'capabilities_60';
+    const cached = api._cache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < 300000) {
+      return cached.data as CapabilityItem[];
+    }
+    const data = await request<CapabilityItem[]>('/capabilities');
     api._cache.set(cacheKey, { data, timestamp: Date.now() });
     return data;
   },

@@ -13,6 +13,20 @@ export interface Track {
   description?: string;
 }
 
+export interface CapabilityItem {
+  number: number;
+  key: string;
+  name: string;
+  pillar: string;
+  description: string;
+  rubric: Record<string, string>;
+  matching_scenario_id?: string;
+  matching_scenario_slug?: string;
+  matching_scenario_title?: string;
+  matching_scenario_difficulty?: number;
+  matching_scenario_difficulty_level?: string;
+}
+
 export interface SkillAssessedPreview {
   skill: string;
   weight: number;

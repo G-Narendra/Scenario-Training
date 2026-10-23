@@ -342,3 +342,82 @@ class ScenarioService:
                 negative=["Rejects proposal outright"],
             ),
         )
+
+    _capabilities_cache: Optional[List[dict]] = None
+
+    @classmethod
+    async def list_all_capabilities(cls, db: AsyncSession) -> List[dict]:
+        """Load and return all 60 capabilities from Uzair's curriculum with mapped practice scenarios."""
+        if cls._capabilities_cache:
+            return cls._capabilities_cache
+
+        import os
+        import yaml
+
+        skills_path = os.path.join(
+            os.path.dirname(__file__), "..", "..", "scenarios", "skills.yaml"
+        )
+        if not os.path.exists(skills_path):
+            return []
+
+        with open(skills_path, "r", encoding="utf-8") as f:
+            data = yaml.safe_load(f)
+
+        lead_skills = data.get("leadership", {})
+
+        # Query all published scenarios to find matching scenarios for each capability
+        stmt = select(Scenario, Track).join(Track, Scenario.track_id == Track.id).where(Scenario.status == "published")
+        all_scen_results = (await db.execute(stmt)).all()
+        all_scenarios = [row[0] for row in all_scen_results]
+
+        capabilities = []
+        for key, s_info in lead_skills.items():
+            num = s_info.get("number", 0)
+            name = s_info.get("name", key.replace("_", " ").title())
+            pillar = s_info.get("pillar", "Executive Leadership")
+            desc = s_info.get("description", "")
+            rubric = s_info.get("rubric", {})
+
+            # Find matching scenario:
+            matched_scen = None
+            # 1. Exact topic match
+            for sc in all_scenarios:
+                if sc.topic.lower() == key.lower():
+                    matched_scen = sc
+                    break
+            # 2. Target capabilities match
+            if not matched_scen:
+                for sc in all_scenarios:
+                    if any(name.lower() in cap.lower() for cap in (sc.target_capabilities or [])):
+                        matched_scen = sc
+                        break
+            # 3. Skills assessed match
+            if not matched_scen:
+                for sc in all_scenarios:
+                    if any(s.get("skill") == key for s in (sc.skills_assessed or [])):
+                        matched_scen = sc
+                        break
+            # 4. Fallback to scenario by index
+            if not matched_scen and len(all_scenarios) > 0:
+                matched_scen = all_scenarios[(num - 1) % len(all_scenarios)]
+
+            diff_level = "Normal" if (matched_scen and matched_scen.difficulty <= 1) else ("Challenging" if (matched_scen and matched_scen.difficulty <= 3) else "Crisis")
+
+            capabilities.append({
+                "number": num,
+                "key": key,
+                "name": name,
+                "pillar": pillar,
+                "description": desc,
+                "rubric": rubric,
+                "matching_scenario_id": matched_scen.id if matched_scen else None,
+                "matching_scenario_slug": matched_scen.slug if matched_scen else None,
+                "matching_scenario_title": matched_scen.title if matched_scen else None,
+                "matching_scenario_difficulty": matched_scen.difficulty if matched_scen else 2,
+                "matching_scenario_difficulty_level": diff_level,
+            })
+
+        capabilities.sort(key=lambda x: x["number"])
+        cls._capabilities_cache = capabilities
+        return capabilities
+
