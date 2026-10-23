@@ -87,32 +87,32 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
             />
           )}
 
-          {/* CRITICAL ROLE CLARITY: WHO IS THE STUDENT VS WHO IS THE AI */}
+          {/* Your Role & Counterpart */}
           <div className="rounded-2xl border-2 border-[#FF6500]/60 bg-gradient-to-br from-[#FF6500]/15 via-[#FF6500]/5 to-transparent p-5 shadow-sm">
             <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#FF6500] mb-3">
               <UserCheck className="h-4 w-4" />
-              <span>Your Role & Mission in This Scenario</span>
+              <span>Meeting Setup</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4">
                 <div className="flex items-center space-x-1.5 text-[11px] font-bold uppercase tracking-wider text-[#FF6500]">
                   <Shield className="h-3.5 w-3.5" />
-                  <span>You Are (The Student)</span>
+                  <span>Your Role</span>
                 </div>
                 <div className="text-sm font-black text-slate-900 dark:text-white mt-1">
-                  {scenario.track === 'sales' ? 'Enterprise Account Executive / Seller' : 'Direct Manager / Team Leader'}
+                  {scenario.track === 'sales' ? 'Enterprise Account Executive' : 'Direct Manager / Team Leader'}
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed font-medium">
                   {scenario.track === 'sales'
-                    ? `You are in a strategic negotiation meeting with ${scenario.persona.name}. You lead the conversation to navigate objections and secure agreement.`
-                    : `${scenario.persona.name} is a key team member who reports to you. You are running this performance/operational meeting.`}
+                    ? `You are meeting with ${scenario.persona.name} to address objections and secure commitment on next steps.`
+                    : `You are leading this discussion with ${scenario.persona.name} to establish clear alignment and expectations.`}
                 </p>
               </div>
 
               <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4">
                 <div className="text-[11px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-                  Simulated AI Counterpart
+                  Your Counterpart
                 </div>
                 <div className="text-sm font-black text-slate-900 dark:text-white mt-1">
                   {scenario.persona.name} • <span className="text-xs font-semibold text-[#FF6500]">{scenario.persona.role}</span>

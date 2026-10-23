@@ -614,7 +614,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
             <div className="rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-5 shadow-sm">
               <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">Total Enrolled</span>
               <div className="mt-2 text-3xl font-black text-slate-900 dark:text-white">{cohortData.total_members}</div>
-              <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">Trainees and members</p>
+              <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">Enrolled participants</p>
             </div>
 
             <div className="rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-5 shadow-sm">
@@ -655,7 +655,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                   <span>Instructor Group Debrief: Top 3 Cohort Weaknesses & Live Agenda</span>
                 </div>
                 <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
-                  Synthesized across all student attempts. Use these 3 core gaps as your primary group talking points during live coaching.
+                  Synthesized across all cohort attempts. Use these 3 core gaps as your primary group talking points during live coaching.
                 </p>
               </div>
               <span className="self-start sm:self-auto rounded-full bg-[#FF6500]/15 border border-[#FF6500]/40 px-3 py-1 text-[11px] font-bold text-[#FF6500]">
@@ -684,7 +684,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                           {weakSkills[0]?.skill_name || 'Handling Defensive Pushback & Objections'}
                         </h3>
                         <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                          Students frequently defend initial positions rather than validating counterpart concerns.
+                          Participants frequently defend initial positions rather than validating counterpart concerns.
                         </p>
                       </div>
                       <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
@@ -708,7 +708,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                           {weakSkills[1]?.skill_name || 'Uncovering Hidden Motivations & Blockers'}
                         </h3>
                         <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                          Trainees move directly to solutions before discovering underlying emotional drivers.
+                          Participants often move directly to solutions before discovering underlying emotional drivers.
                         </p>
                       </div>
                       <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
@@ -747,7 +747,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
 
           {/* Member Completion Table */}
           <div className="space-y-4">
-            <h3 className="text-xl font-bold text-slate-900 dark:text-white font-heading">Trainee Roster & Performance</h3>
+            <h3 className="text-xl font-bold text-slate-900 dark:text-white font-heading">Cohort Roster & Performance</h3>
 
             <div className="overflow-hidden rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] shadow-sm">
               <div className="overflow-x-auto">

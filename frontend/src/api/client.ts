@@ -144,22 +144,49 @@ export const api = {
     }
   },
 
+  // In-Memory Cache for fast, zero-delay navigation between tracks & scenarios
+  _cache: new Map<string, { data: any; timestamp: number }>(),
+
+  clearCache(): void {
+    api._cache.clear();
+  },
+
   // Tracks & Scenarios
   async getTracks(): Promise<Track[]> {
-    return request<Track[]>('/tracks');
+    const cached = api._cache.get('tracks');
+    if (cached && Date.now() - cached.timestamp < 300000) {
+      return cached.data;
+    }
+    const data = await request<Track[]>('/tracks');
+    api._cache.set('tracks', { data, timestamp: Date.now() });
+    return data;
   },
 
   async getScenarios(params?: { track?: string; topic?: string; difficulty?: number }): Promise<ScenarioListItem[]> {
+    const cacheKey = `scenarios_${params?.track || 'all'}_${params?.topic || 'all'}_${params?.difficulty || 'all'}`;
+    const cached = api._cache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < 300000) {
+      return cached.data;
+    }
     const query = new URLSearchParams();
     if (params?.track) query.append('track', params.track);
     if (params?.topic) query.append('topic', params.topic);
     if (params?.difficulty) query.append('difficulty', String(params.difficulty));
     const qs = query.toString() ? `?${query.toString()}` : '';
-    return request<ScenarioListItem[]>(`/scenarios${qs}`);
+    const data = await request<ScenarioListItem[]>(`/scenarios${qs}`);
+    api._cache.set(cacheKey, { data, timestamp: Date.now() });
+    return data;
   },
 
   async getScenarioDetail(id: string): Promise<ScenarioDetail> {
-    return request<ScenarioDetail>(`/scenarios/${id}`);
+    const cacheKey = `scenario_${id}`;
+    const cached = api._cache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < 300000) {
+      return cached.data;
+    }
+    const data = await request<ScenarioDetail>(`/scenarios/${id}`);
+    api._cache.set(cacheKey, { data, timestamp: Date.now() });
+    return data;
   },
 
   // Sessions

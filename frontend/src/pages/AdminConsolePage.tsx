@@ -159,9 +159,9 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
       const added = await api.addCohortMember(cohort.id, newMemberName.trim(), 'trainee');
       setCohortMembers((prev) => [...prev, added]);
       setNewMemberName('');
-      showFeedback(`Student "${added.display_name}" enrolled successfully`);
+      showFeedback(`Participant "${added.display_name}" enrolled successfully`);
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : 'Failed to add student';
+      const msg = err instanceof Error ? err.message : 'Failed to add participant';
       showFeedback(msg, 'error');
     } finally {
       setIsAddingMember(false);
@@ -187,7 +187,7 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
       setCohortMembers((prev) => [...prev, ...addedList]);
       setBulkNamesText('');
       setShowBulkAdd(false);
-      showFeedback(`Successfully enrolled ${addedList.length} students into the cohort`);
+      showFeedback(`Successfully enrolled ${addedList.length} participants into the cohort`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Bulk enrollment failed';
       showFeedback(msg, 'error');
@@ -202,7 +202,7 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
     try {
       await api.removeCohortMember(cohort.id, userId);
       setCohortMembers((prev) => prev.filter((m) => m.id !== userId));
-      showFeedback(`Student "${name}" removed from roster`);
+      showFeedback(`Participant "${name}" removed from roster`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to remove member';
       showFeedback(msg, 'error');
@@ -211,7 +211,7 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
 
   const handleRotatePasscode = async () => {
     if (!cohort) return;
-    if (!confirm('Generate a new cohort passcode? Enrolled students will need the new passcode for their next login.')) return;
+    if (!confirm('Generate a new cohort passcode? Enrolled participants will need the new passcode for their next login.')) return;
     try {
       const res = await api.rotateCohortPasscode(cohort.id, 0);
       setCohort((prev) => (prev ? { ...prev, initial_passcode: res.new_passcode } : null));
@@ -354,7 +354,7 @@ conclusion_signals:
             Trainer & Cohort Oversight
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 font-medium">
-            Facilitator: <span className="text-[#FF6500] font-bold">Uzair</span> · 3H Solutions Executive Corporate Simulation Management
+            Facilitator: <span className="text-[#FF6500] font-bold">Uzair</span> · 3H Solutions Executive Scenario Training Platform
           </p>
         </div>
 
@@ -370,7 +370,7 @@ conclusion_signals:
             }`}
           >
             <Users className="h-4 w-4" />
-            <span>Trainee Roster & Debriefs</span>
+            <span>Participant Roster & Debriefs</span>
           </button>
 
           <button
@@ -425,19 +425,19 @@ conclusion_signals:
             </button>
           </div>
           <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-            Share this with students on your table
+            Share this with participants on your table
           </div>
         </div>
 
         {/* Trainees Enrolled */}
         <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-5 shadow-sm">
           <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-            <span>Enrolled Students</span>
+            <span>Enrolled Participants</span>
             <Users className="h-4 w-4 text-emerald-500" />
           </div>
           <div className="mt-2 text-3xl font-black text-slate-900 dark:text-white">
             {cohortMembers.filter((m) => m.role === 'trainee').length}
-            <span className="text-sm font-semibold text-slate-400 ml-1.5">trainees</span>
+            <span className="text-sm font-semibold text-slate-400 ml-1.5">participants</span>
           </div>
           <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
             Whitelisted for cohort login
@@ -455,7 +455,7 @@ conclusion_signals:
             <span className="text-sm font-semibold text-slate-400 ml-1.5">attempts</span>
           </div>
           <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-            20 practice attempts allocated per student
+            20 practice attempts allocated per participant
           </div>
         </div>
 
@@ -498,7 +498,7 @@ conclusion_signals:
                   <span>Instructor Group Debrief: Top 3 Cohort Weaknesses & Live Agenda</span>
                 </div>
                 <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
-                  Synthesized across all student attempts. Use these 3 core gaps as your primary group talking points during live coaching.
+                  Synthesized across all cohort attempts. Use these 3 core gaps as your primary group talking points during live coaching.
                 </p>
               </div>
               <span className="self-start sm:self-auto rounded-full bg-[#FF6500]/15 border border-[#FF6500]/40 px-3 py-1 text-[11px] font-bold text-[#FF6500]">
@@ -528,7 +528,7 @@ conclusion_signals:
                           {weakSkills[0]?.skill_name || 'Handling Defensive Pushback & Objections'}
                         </h3>
                         <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                          Students frequently defend initial positions rather than validating counterpart concerns.
+                          Participants frequently defend initial positions rather than validating counterpart concerns.
                         </p>
                       </div>
                       <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
@@ -597,10 +597,10 @@ conclusion_signals:
               <div>
                 <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
                   <UserPlus className="h-4 w-4 text-[#FF6500]" />
-                  <span>Enroll New Student in Cohort</span>
+                  <span>Enroll New Participant in Cohort</span>
                 </h2>
                 <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
-                  Add student name to authorize them to log in with the cohort passcode.
+                  Add participant name to authorize them to log in with the cohort passcode.
                 </p>
               </div>
 
@@ -609,16 +609,16 @@ conclusion_signals:
                 onClick={() => setShowBulkAdd(!showBulkAdd)}
                 className="text-xs font-bold text-[#FF6500] hover:underline"
               >
-                {showBulkAdd ? 'Hide Bulk Paste' : '+ Bulk Paste 15-20 Student Names'}
+                {showBulkAdd ? 'Hide Bulk Paste' : '+ Bulk Paste 15-20 Participant Names'}
               </button>
             </div>
 
-            {/* Single Student Add Input */}
+            {/* Single Participant Add Input */}
             {!showBulkAdd && (
               <form onSubmit={handleAddMember} className="mt-4 flex flex-col sm:flex-row items-center gap-3">
                 <input
                   type="text"
-                  placeholder="Enter student's full name (e.g., Sarah Jenkins)"
+                  placeholder="Enter participant's full name (e.g., Sarah Jenkins)"
                   value={newMemberName}
                   onChange={(e) => setNewMemberName(e.target.value)}
                   className="flex-1 w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500] font-medium"
@@ -630,45 +630,45 @@ conclusion_signals:
                   className="w-full sm:w-auto flex items-center justify-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2.5 text-xs font-bold text-white transition shadow-md shadow-[#FF6500]/25 disabled:opacity-50"
                 >
                   <Plus className="h-4 w-4" />
-                  <span>{isAddingMember ? 'Enrolling...' : 'Enroll Student'}</span>
+                  <span>{isAddingMember ? 'Enrolling...' : 'Enroll Participant'}</span>
                 </button>
               </form>
             )}
 
-            {/* Bulk Student Add Textarea */}
+            {/* Bulk Participant Add Textarea */}
             {showBulkAdd && (
               <form onSubmit={handleBulkAdd} className="mt-4 space-y-3">
                 <textarea
                   rows={4}
-                  placeholder="Paste student names here (one name per line, or separated by commas)...&#10;Andrew Doherty&#10;Sarah Jenkins&#10;Michael Chen"
+                  placeholder="Paste participant names here (one name per line, or separated by commas)...&#10;Andrew Doherty&#10;Sarah Jenkins&#10;Michael Chen"
                   value={bulkNamesText}
                   onChange={(e) => setBulkNamesText(e.target.value)}
                   className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500] font-medium"
                   required
                 />
                 <div className="flex items-center justify-between">
-                  <span className="text-[11px] text-slate-500">Takes less than 1 minute to enroll your entire class of 15 to 20 students.</span>
+                  <span className="text-[11px] text-slate-500">Takes less than 1 minute to enroll up to 20 participants at once.</span>
                   <button
                     type="submit"
                     disabled={!bulkNamesText.trim() || isSubmittingBulk}
                     className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2 text-xs font-bold text-white transition shadow-md disabled:opacity-50"
                   >
-                    <span>{isSubmittingBulk ? 'Enrolling All...' : 'Enroll All Students'}</span>
+                    <span>{isSubmittingBulk ? 'Enrolling All...' : 'Enroll All Participants'}</span>
                   </button>
                 </div>
               </form>
             )}
           </div>
 
-          {/* Student Roster Table */}
+          {/* Participant Roster Table */}
           <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-6 shadow-sm">
             <div className="flex items-center justify-between pb-4 border-b border-slate-200 dark:border-[#1E3E62]">
               <div>
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">
-                  Enrolled Students ({cohortMembers.filter((m) => m.role === 'trainee').length})
+                  Enrolled Participants ({cohortMembers.filter((m) => m.role === 'trainee').length})
                 </h2>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Click on any student to review their completed attempts and generate the official 1-Pager Evaluation Debrief.
+                  Click on any participant to review their completed attempts and generate the official 1-Pager Evaluation Debrief.
                 </p>
               </div>
 
@@ -684,30 +684,30 @@ conclusion_signals:
             <div className="mt-4 divide-y divide-slate-200 dark:divide-[#1E3E62]/70">
               {cohortMembers
                 .filter((m) => m.role === 'trainee')
-                .map((student) => {
-                  const studentProg = progressByUserId.get(student.id);
-                  const sessionsDone = studentProg?.sessions_completed || 0;
-                  const avgScore = studentProg?.average_score;
-                  const studentSessions = completedSessions.filter((s) => s.user_id === student.id);
-                  const latestSession = studentSessions[0];
+                .map((participant) => {
+                  const participantProg = progressByUserId.get(participant.id);
+                  const sessionsDone = participantProg?.sessions_completed || 0;
+                  const avgScore = participantProg?.average_score;
+                  const participantSessions = completedSessions.filter((s) => s.user_id === participant.id);
+                  const latestSession = participantSessions[0];
 
                   return (
                     <div
-                      key={student.id}
+                      key={participant.id}
                       className="py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-[#0B192C]/40 px-3 rounded-xl transition"
                     >
                       <div className="flex items-center space-x-3.5">
                         <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-[#0B192C] dark:bg-[#071322] border border-[#1E3E62] text-white font-bold text-xs">
-                          {student.display_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
+                          {participant.display_name.split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase()}
                         </div>
                         <div>
                           <div className="text-sm font-bold text-slate-900 dark:text-white">
-                            {student.display_name}
+                            {participant.display_name}
                           </div>
                           <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-2 mt-0.5">
                             <span>{sessionsDone} of 20 scenario attempts completed</span>
-                            {studentProg?.top_skill && (
-                              <span>• Top skill: <span className="font-semibold text-slate-700 dark:text-slate-300 capitalize">{studentProg.top_skill.replace(/_/g, ' ')}</span></span>
+                            {participantProg?.top_skill && (
+                              <span>• Top skill: <span className="font-semibold text-slate-700 dark:text-slate-300 capitalize">{participantProg.top_skill.replace(/_/g, ' ')}</span></span>
                             )}
                           </div>
                         </div>
@@ -749,12 +749,12 @@ conclusion_signals:
                           </button>
                         )}
 
-                        {/* Remove Student */}
+                        {/* Remove Participant */}
                         <button
                           type="button"
-                          onClick={() => handleRemoveMember(student.id, student.display_name)}
+                          onClick={() => handleRemoveMember(participant.id, participant.display_name)}
                           className="p-1.5 text-slate-400 hover:text-rose-500 transition rounded-lg"
-                          title="Remove student from cohort"
+                          title="Remove participant from cohort"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -765,7 +765,7 @@ conclusion_signals:
 
               {cohortMembers.filter((m) => m.role === 'trainee').length === 0 && (
                 <div className="py-12 text-center text-slate-400 text-sm">
-                  No students enrolled yet. Enter student names above to grant practice access.
+                  No participants enrolled yet. Enter participant names above to grant practice access.
                 </div>
               )}
             </div>
@@ -777,14 +777,14 @@ conclusion_signals:
               Completed Practice Sessions ({completedSessions.length})
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Live log of scenario runs completed by students. Click any debrief button to inspect or print the 1-Pager Report.
+              Live log of scenario runs completed by participants. Click any debrief button to inspect or print the 1-Pager Report.
             </p>
 
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
                   <tr className="border-b border-slate-200 dark:border-[#1E3E62] text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider">
-                    <th className="py-2.5 px-3">Student Name</th>
+                    <th className="py-2.5 px-3">Participant Name</th>
                     <th className="py-2.5 px-3">Scenario Title</th>
                     <th className="py-2.5 px-3">Mode</th>
                     <th className="py-2.5 px-3">Completed Date</th>
@@ -796,7 +796,7 @@ conclusion_signals:
                   {completedSessions.map((session) => (
                     <tr key={session.id} className="hover:bg-slate-50 dark:hover:bg-[#0B192C]/40">
                       <td className="py-3 px-3 font-bold text-slate-900 dark:text-white">
-                        {session.trainee_name || 'Student'}
+                        {session.trainee_name || 'Participant'}
                       </td>
                       <td className="py-3 px-3 font-medium text-slate-700 dark:text-slate-300">
                         {session.scenario_title}
@@ -836,7 +836,7 @@ conclusion_signals:
                   {completedSessions.length === 0 && (
                     <tr>
                       <td colSpan={6} className="py-8 text-center text-slate-400 italic">
-                        No scenario sessions completed yet. When students complete a practice session, their 1-pager reports will populate here.
+                        No scenario sessions completed yet. When participants complete a practice session, their 1-pager reports will populate here.
                       </td>
                     </tr>
                   )}
@@ -917,7 +917,7 @@ conclusion_signals:
                     {cohort?.initial_passcode || 'UZAIR-2026'}
                   </div>
                   <p className="mt-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-                    Students enter this code along with their enrolled name to access scenarios and practice simulations.
+                    Participants enter this code along with their enrolled name to access workplace practice scenarios.
                   </p>
                 </div>
 
@@ -966,7 +966,7 @@ conclusion_signals:
                 Executive Scenario Catalog ({scenarios.length} Total)
               </h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                Curated simulation scenarios available for training across Leadership and B2B Sales.
+                Curated executive scenarios available for practice across Leadership and B2B Sales.
               </p>
             </div>
 
@@ -1097,7 +1097,7 @@ conclusion_signals:
                   Scenario Studio
                 </span>
                 <h2 className="text-lg font-black text-slate-900 dark:text-white font-heading">
-                  Create & Publish Simulation Scenario
+                  Create & Publish Practice Scenario
                 </h2>
               </div>
               <button
@@ -1174,7 +1174,7 @@ conclusion_signals:
                 </label>
                 <textarea
                   rows={3}
-                  placeholder="Describe the background situation, friction, and the student's operational objective..."
+                  placeholder="Describe the background situation, friction, and the participant's operational objective..."
                   value={newScenBrief}
                   onChange={(e) => setNewScenBrief(e.target.value)}
                   className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500]"
@@ -1225,7 +1225,7 @@ conclusion_signals:
 
               <div>
                 <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
-                  Tactical Coaching Clue (Guidance given to student)
+                  Tactical Coaching Clue (Guidance given to participant)
                 </label>
                 <input
                   type="text"

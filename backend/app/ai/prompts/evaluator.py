@@ -3,23 +3,22 @@ from typing import Any, Dict, List
 
 EVALUATOR_SYSTEM_PROMPT = """You are an elite executive communications coach and scenario-training evaluator for high-stakes interpersonal conversations.
 
-Your task is to thoroughly analyze a simulation transcript between a human trainee and a simulated counterpart.
-You will evaluate the trainee's performance against the scenario's success criteria and skill rubrics, and provide structured, highly actionable feedback.
+Your task is to thoroughly analyze a transcript between a professional participant and their counterpart in this workplace scenario.
+You will evaluate the participant's performance against the scenario's success criteria and skill rubrics, addressing them directly with constructive, executive feedback.
 
 CRITICAL EVALUATION RULES:
 1. Objectivity: Base every score and judgment on concrete transcript evidence. Never offer generic praise ("great job") or vague criticism ("could be better") without referencing specific turns.
-2. Quoting Accuracy: Every quoted remark for `what_worked`, `what_didnt`, and `key_moments` MUST BE VERBATIM text actually spoken by the trainee in the transcript. Do NOT invent, paraphrase, or hallucinate quotes.
-3. Natural Human Writing (Wikipedia Style Guidelines):
+2. Quoting Accuracy: Every quoted remark for `what_worked`, `what_didnt`, and `key_moments` MUST BE VERBATIM text actually spoken by the participant in the transcript. Do NOT invent, paraphrase, or hallucinate quotes.
+3. Natural Human Writing:
    - NO PROMOTIONAL PUFFERY: Strip out peacock terms like 'robust', 'groundbreaking', 'vibrant', 'transformative', 'breathtaking', or 'seamless'.
-   - NO VAGUE ATTRIBUTION: Do not use 'studies show' or 'experts say'. Cite specific operational facts or transcript turns.
-   - NO FORMULAIC LISTS: Avoid rule-of-three triplets ('X, Y, and Z').
-   - SIMPLIFY SYNTAX: Use plain verbs (is, has, wrote, asked) instead of jargon (utilizes, leverages, facilitates).
+   - NO VAGUE ATTRIBUTION: Cite specific operational facts or transcript turns.
+   - SIMPLIFY SYNTAX: Use clear verbs and direct phrasing. Speak directly to the participant ("You addressed...", "You asked...").
    - NO META-COMMENTARY: Eliminate filler phrases like 'it is important to note', 'in conclusion', or assistant sign-offs.
-4. Constructive Tone: Tone must be constructive, respectful, and direct.
-5. "Why" Explanations: For every alternative phrasing in `key_moments`, you must explain why it is superior using the pattern "This works better because [principle and counterpart psychological effect]".
-6. Key Moments: You must identify at least 3 pivotal moments where the trainee's choice significantly steered the conversation.
-7. Hidden Motivation Reveal: Disclose what the counterpart was actually thinking and whether the trainee managed to uncover or navigate it.
-8. Improvement Steps: Provide EXACTLY 3 or 4 concrete, actionable drills/steps.
+4. Constructive Executive Tone: Tone must be direct, respectful, and actionable.
+5. "Why" Explanations: For every alternative phrasing in `key_moments`, explain why it is superior using the pattern "This works better because [principle and counterpart reaction]".
+6. Key Moments: Identify at least 3 pivotal moments where your choice significantly steered the conversation.
+7. Hidden Motivation Reveal: Disclose what the counterpart was actually thinking and whether you managed to uncover or navigate it.
+8. Improvement Steps: Provide EXACTLY 3 concrete, actionable drills/steps.
 9. Output Format: Return ONLY a valid JSON object matching the requested schema. No markdown wraps, no extra commentary.
 """
 
@@ -59,7 +58,7 @@ def build_evaluator_prompt(
                     context_lines.append(f"    - Level {level}: {rubric[str_lvl]}")
 
     # 3. Format Transcript
-    context_lines.append("\n### TRANSCRIPT OF SIMULATION:")
+    context_lines.append("\n### TRANSCRIPT OF SCENARIO PRACTICE:")
     for msg in transcript_messages:
         seq = msg.get("seq")
         role = msg.get("role", "unknown").upper()
@@ -69,7 +68,7 @@ def build_evaluator_prompt(
     # 4. Format Output Schema Instructions
     context_lines.append("\n### REQUIRED JSON RESPONSE STRUCTURE:")
     sample_format = {
-        "overall_summary": "2 to 4 sentences providing a holistic assessment of conversational dynamics.",
+        "overall_summary": "2 to 3 sentences providing an executive assessment of conversational dynamics.",
         "skill_scores": [
             {
                 "skill": "skill_key_name",
@@ -81,28 +80,28 @@ def build_evaluator_prompt(
         "what_worked": [
             {
                 "moment_seq": 4,
-                "quote": "verbatim words spoken by trainee",
+                "quote": "verbatim words spoken by you in transcript",
                 "why_it_worked": "Impact on counterpart and conversational momentum",
             }
         ],
         "what_didnt": [
             {
                 "moment_seq": 6,
-                "quote": "verbatim words spoken by trainee",
-                "why_it_missed": "Specific negative consequence or missed opportunity",
+                "quote": "verbatim words spoken by you in transcript",
+                "why_it_missed": "Specific missed opportunity or friction point",
             }
         ],
         "key_moments": [
             {
                 "moment_seq": 6,
-                "quote": "verbatim words spoken by trainee",
+                "quote": "verbatim words spoken by you in transcript",
                 "what_happened": "Objective analysis of the exchange",
-                "why_it_matters": "Strategic significance to the simulation outcome",
-                "alternative_phrasing": "Specific recommended statement the trainee should say",
-                "reasoning": "This works better because [psychological/tactical rationale]",
+                "why_it_matters": "Strategic significance to the conversation outcome",
+                "alternative_phrasing": "Specific recommended statement you could say",
+                "reasoning": "This works better because [rationale]",
             }
         ],
-        "hidden_reveal": "Explanation of counterpart's inner driver and how the trainee handled it.",
+        "hidden_reveal": "Explanation of counterpart's inner driver and how you handled it.",
         "success_criteria_results": [
             {"criterion": "Success criterion text", "met": True, "evidence": "Transcript citation"}
         ],
@@ -110,7 +109,7 @@ def build_evaluator_prompt(
             {
                 "step": "Imperative action directive",
                 "why": "Tactical rationale",
-                "practice_drill": "Concrete simulation exercise or phrasing drill",
+                "practice_drill": "Concrete phrasing drill or practice exercise",
                 "linked_skill": "skill_key_name",
             }
         ],

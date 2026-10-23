@@ -34,7 +34,7 @@ export const LoginPage: React.FC = () => {
     }
 
     if (!cleanName) {
-      setError('Please enter your enrolled student or administrator name.');
+      setError('Please enter your enrolled name.');
       return;
     }
 
@@ -79,7 +79,7 @@ export const LoginPage: React.FC = () => {
             High-Impact Corporate Training & Scenario Practice
           </p>
           <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Uzair / 3H Solutions Executive Simulation Platform
+            Executive Scenario Practice Platform
           </p>
         </div>
 
@@ -120,7 +120,7 @@ export const LoginPage: React.FC = () => {
 
             <div>
               <label htmlFor="display-name-input" className="block text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Enrolled Student / Administrator Name
+                Your Full Name
               </label>
               <div className="relative mt-2">
                 <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3.5">

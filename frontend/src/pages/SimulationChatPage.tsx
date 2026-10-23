@@ -640,28 +640,26 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         </div>
       </header>
 
-      {/* Pinned Your Role & Mission Banner */}
-      <div className="border-b border-amber-500/30 bg-amber-500/10 dark:bg-[#132B45] px-3 py-2 sm:px-6 flex items-center justify-between text-[11px] sm:text-xs z-10 transition-colors">
-        <div className="flex items-center space-x-1.5 sm:space-x-2 flex-wrap gap-y-0.5 min-w-0">
-          <span className="font-black text-[#FF6500] uppercase tracking-wider flex items-center space-x-1 flex-shrink-0">
+      {/* Pinned Role & Brief Header */}
+      <div className="border-b border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#132B45] px-3 py-2 sm:px-6 flex items-center justify-between text-xs z-10 transition-colors">
+        <div className="flex items-center space-x-2 truncate">
+          <span className="font-bold text-[#FF6500] flex items-center space-x-1 flex-shrink-0">
             <UserCheck className="h-3.5 w-3.5 inline mr-1" />
-            <span>YOU:</span>
+            <span>Role:</span>
           </span>
-          <span className="font-bold text-slate-900 dark:text-white truncate max-w-[130px] sm:max-w-none">
-            {scenarioDetail?.track === 'sales' ? 'Enterprise Sales Rep' : 'Direct Manager / Team Leader'}
+          <span className="font-semibold text-slate-900 dark:text-white truncate">
+            {scenarioDetail?.track === 'sales' ? 'Account Executive' : 'Team Lead'}
           </span>
-          <span className="text-slate-400 hidden sm:inline">•</span>
-          <span className="text-slate-600 dark:text-slate-300 hidden md:inline truncate">
-            {scenarioDetail?.track === 'sales'
-              ? `Negotiating with client ${personaName}`
-              : `Leading meeting with direct report ${personaName} (${personaRole})`}
+          <span className="text-slate-400">•</span>
+          <span className="text-slate-600 dark:text-slate-300 truncate">
+            Meeting with {personaName} ({personaRole})
           </span>
         </div>
         <button
           onClick={() => setShowRoleDrawer(!showRoleDrawer)}
-          className="ml-2 font-bold text-[#FF6500] hover:underline flex items-center space-x-1 flex-shrink-0 text-[11px] sm:text-xs"
+          className="ml-2 font-semibold text-[#FF6500] hover:underline flex items-center space-x-1 flex-shrink-0 text-xs"
         >
-          <span>{showRoleDrawer ? 'Hide Brief' : 'Brief'}</span>
+          <span>{showRoleDrawer ? 'Hide Brief' : 'View Brief'}</span>
           {showRoleDrawer ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
         </button>
       </div>
