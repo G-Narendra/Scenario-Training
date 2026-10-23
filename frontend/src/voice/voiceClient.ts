@@ -48,6 +48,16 @@ export class VoiceClient {
   private restartTimeout: any = null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private watchdogTimer: any = null;
+  /**
+   * Hard-deadline timer: forces a turn commit N seconds after the user first
+   * starts speaking, regardless of whether the silence timer fires. Prevents
+   * the "keeps listening forever" bug caused by ambient noise resetting the
+   * silence timer on mobile.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private hardCommitTimer: any = null;
+  /** Timestamp (ms) when the user first started speaking in the current utterance. */
+  private speechStartedAt = 0;
   public isContinuousCall = true;
   public sessionPersonaName = '';
   public sessionVoiceGender: 'male' | 'female' = 'male';
@@ -394,12 +404,19 @@ export class VoiceClient {
       const recog = new SpeechRecognitionClass();
 
       // Reset per-session accumulators for this fresh recognition instance
-      this.committedFinals = [];
+      // NOTE: Do NOT reset committedFinals here — they persist across auto-restarts
+      // within the same user turn. They get reset in commitTurn() and releaseTurnLock().
       this.lastFinalIdx = -1;
-      this.latestUtterance = '';
 
-      // Configure continuous mode with interim results for real-time feedback
-      recog.continuous = true;
+      // ─── SINGLE-UTTERANCE MODE (continuous=false) ───
+      // Mobile Chrome/Android with continuous=true often:
+      //   (a) Produces garbled interim text that never finalizes
+      //   (b) Feeds ambient noise as phantom interims that reset silence timers
+      //   (c) Never fires onspeechend reliably
+      // Single-utterance mode produces ONE clean final per spoken phrase, then
+      // fires onend, at which point we auto-restart to capture the next phrase.
+      // This dramatically improves transcription accuracy on mobile.
+      recog.continuous = false;
       recog.interimResults = true;
       recog.lang = this.recognitionLanguage || 'en-IN';
       recog.maxAlternatives = 1;
@@ -408,12 +425,6 @@ export class VoiceClient {
       recog.onresult = (event: any) => {
         // If muted, assistant is speaking, or currently committing turn, ignore incoming audio
         if (this.isMuted || this.isSpeaking || this.isCommitting) return;
-
-        // ─── KEY FIX: Only process results from event.resultIndex onward ───
-        // event.resultIndex tells us which slot changed; everything below it
-        // is a stale, previously-finalized result that we already captured.
-        // Iterating from 0 every time was the root cause of the cascading
-        // "see our see our see our creator..." duplication.
 
         let currentInterim = '';
 
@@ -429,7 +440,6 @@ export class VoiceClient {
               this.lastFinalIdx = i;
             }
           } else {
-            // Only the latest interim matters (there's at most one active interim at a time)
             currentInterim = segment;
           }
         }
@@ -446,18 +456,35 @@ export class VoiceClient {
           this.latestUtterance = cleaned;
           this.callbacks.onTranscriptPartial?.(cleaned);
 
-          // Clear any pending silence commit timer
+          // ─── ARM HARD-DEADLINE TIMER on first speech ───
+          // After the user starts speaking, give them at most 8 seconds
+          // before we force-commit. This prevents the "listening forever" bug
+          // where ambient noise keeps feeding phantom interims.
+          if (!this.speechStartedAt) {
+            this.speechStartedAt = Date.now();
+          }
+          if (!this.hardCommitTimer) {
+            this.hardCommitTimer = setTimeout(() => {
+              this.hardCommitTimer = null;
+              if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
+                this.commitTurn(this.latestUtterance);
+              }
+            }, 8000);
+          }
+
+          // ─── Silence detection timer ───
           if (this.silenceTimer) {
             clearTimeout(this.silenceTimer);
             this.silenceTimer = null;
           }
 
-          // Conversational silence detection:
-          // 1200ms for finalized chunk, 1500ms for interim chunk
-          // Gives the trainee natural breathing room without severing sentences mid-thought
+          // Determine if the latest result was a final
           const lastResult = event.results[event.results.length - 1];
           const isFinal = lastResult?.isFinal;
-          const delayMs = isFinal ? 1200 : 1500;
+
+          // When we get a final result in single-utterance mode, the browser
+          // will fire onend shortly. Use a shorter silence timer for finals.
+          const delayMs = isFinal ? 800 : 1200;
           this.silenceTimer = setTimeout(() => {
             if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
               this.commitTurn(this.latestUtterance);
@@ -471,12 +498,12 @@ export class VoiceClient {
         if (this.isMuted || this.isSpeaking || this.isCommitting) return;
         if (this.latestUtterance && this.latestUtterance.length >= 2) {
           if (this.silenceTimer) clearTimeout(this.silenceTimer);
-          // Allow 900ms after acoustic speech cessation so speaker can breathe or complete thoughts
+          // Quick commit after acoustic speech cessation
           this.silenceTimer = setTimeout(() => {
             if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
               this.commitTurn(this.latestUtterance);
             }
-          }, 900);
+          }, 700);
         }
       };
 
@@ -493,14 +520,18 @@ export class VoiceClient {
 
       recog.onend = () => {
         this.recognition = null;
-        // Auto-rearm speech recognition in hands-free mode if user is not speaking or committing
+
+        // In single-utterance mode, onend fires after each phrase completes.
+        // If the user has accumulated text but the silence timer hasn't fired yet,
+        // we let the silence timer handle it. Meanwhile, auto-restart to capture
+        // additional phrases the user might say.
         if (this.isRecording && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
           if (this.restartTimeout) clearTimeout(this.restartTimeout);
           this.restartTimeout = setTimeout(() => {
             if (this.isRecording && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
               this.startAudioCapture().catch(() => {});
             }
-          }, 150);
+          }, 100);
         }
       };
 
@@ -547,6 +578,11 @@ export class VoiceClient {
       clearTimeout(this.silenceTimer);
       this.silenceTimer = null;
     }
+    if (this.hardCommitTimer) {
+      clearTimeout(this.hardCommitTimer);
+      this.hardCommitTimer = null;
+    }
+    this.speechStartedAt = 0;
 
     if (this.isCommitting) return;
 
@@ -609,6 +645,11 @@ export class VoiceClient {
       clearTimeout(this.restartTimeout);
       this.restartTimeout = null;
     }
+    if (this.hardCommitTimer) {
+      clearTimeout(this.hardCommitTimer);
+      this.hardCommitTimer = null;
+    }
+    this.speechStartedAt = 0;
     if (this.currentBufferSource) {
       try {
         this.currentBufferSource.stop();

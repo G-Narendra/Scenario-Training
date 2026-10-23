@@ -753,7 +753,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                     : isMicMuted
                     ? 'Click Unmute to speak'
                     : isRecordingMic
-                    ? 'Speak naturally (1.2s pause auto-sends)'
+                    ? 'Speak naturally (auto-sends when you pause)'
                     : 'Tap "Tap to Speak" or click Unmute'}
                 </div>
               </div>
