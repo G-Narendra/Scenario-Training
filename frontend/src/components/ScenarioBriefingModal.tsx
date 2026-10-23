@@ -262,11 +262,15 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
             id="start-simulation-btn"
             onClick={async () => {
               try {
-                const AudioCtx =
-                  window.AudioContext ||
-                  (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+                const windowWithAudio = window as unknown as {
+                  __sharedAudioContext?: AudioContext;
+                  AudioContext?: typeof AudioContext;
+                  webkitAudioContext?: typeof AudioContext;
+                };
+                const AudioCtx = window.AudioContext || windowWithAudio.webkitAudioContext;
                 if (AudioCtx) {
-                  const ctx = new AudioCtx({ sampleRate: 24000 });
+                  const ctx = windowWithAudio.__sharedAudioContext || new AudioCtx({ sampleRate: 24000 });
+                  windowWithAudio.__sharedAudioContext = ctx;
                   ctx.resume().catch(() => {});
                 }
               } catch {}

@@ -184,6 +184,20 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     return () => clearInterval(interval);
   }, [session.status]);
 
+  // Mobile AudioContext unlock on any screen touch or click
+  useEffect(() => {
+    if (session.mode !== 'voice') return;
+    const unlockAudio = () => {
+      voiceClient.ensureAudioContext().catch(() => {});
+    };
+    window.addEventListener('touchstart', unlockAudio, { passive: true });
+    window.addEventListener('click', unlockAudio, { passive: true });
+    return () => {
+      window.removeEventListener('touchstart', unlockAudio);
+      window.removeEventListener('click', unlockAudio);
+    };
+  }, [session.mode, voiceClient]);
+
   const hasSpokenOpeningRef = useRef(false);
 
   // Auto-speak scenario opening line after exactly 1.0 second upon entering voice practice
@@ -207,12 +221,15 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
           await voiceClient.speakText(openingMsg.content, personaName);
         } catch (err) {
           console.warn('Auto-speak opening line notice:', err);
+          voiceClient.releaseTurnLock();
+          setIsAssistantSpeaking(false);
+          setCurrentlySpeakingSeq(null);
         }
       }
     }, 1000); // EXACTLY 1 second delay after clicking Start Practice & mounting
 
     return () => clearTimeout(timer);
-  }, [session.mode, session.status, messages, personaName]);
+  }, [session.mode, session.status, messages, personaName, voiceClient]);
 
   // Unified Voice Turn Handler: streams reply via API and speaks with neural Edge-TTS
   const handleVoiceTurnCommit = async (spokenText: string) => {

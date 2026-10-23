@@ -29,14 +29,6 @@ export class VoiceClient {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private recognition: any = null;
   private latestUtterance = '';
-  /**
-   * Accumulates finalized speech results across the lifetime of a single
-   * SpeechRecognition session.  Indexed by result slot so each final is
-   * captured exactly once and never re-read from the growing event.results array.
-   */
-  private committedFinals: string[] = [];
-  /** Highest event.results index whose isFinal we have already captured. */
-  private lastFinalIdx = -1;
   private isCommitting = false;
   public isConnected = false;
   private isRecording = false;
@@ -50,14 +42,10 @@ export class VoiceClient {
   private watchdogTimer: any = null;
   /**
    * Hard-deadline timer: forces a turn commit N seconds after the user first
-   * starts speaking, regardless of whether the silence timer fires. Prevents
-   * the "keeps listening forever" bug caused by ambient noise resetting the
    * silence timer on mobile.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private hardCommitTimer: any = null;
-  /** Timestamp (ms) when the user first started speaking in the current utterance. */
-  private speechStartedAt = 0;
   public isContinuousCall = true;
   public sessionPersonaName = '';
   public sessionVoiceGender: 'male' | 'female' = 'male';
@@ -96,50 +84,41 @@ export class VoiceClient {
   }
 
   /**
-   * Two-pass deduplication that eliminates both single-word stutters and
-   * multi-word phrase cascades (e.g. "see our creator see our creator dashboard"
-   * → "see our creator dashboard").
-   *
-   * Pass 1: Regex collapses repeated 2–8 word phrases into a single occurrence.
-   * Pass 2: Linear scan removes consecutive duplicate single words.
+   * Sliding-window deduplication that deterministically removes repeated phrases
+   * of ANY length (e.g. "see our see our see our" -> "see our", or
+   * "see our software dashboard see our software dashboard" -> "see our software dashboard")
+   * as well as consecutive duplicate single words.
    */
   private dedupConsecutiveWords(text: string): string {
     if (!text) return '';
-
-    let cleaned = text;
-
-    // Pass 1 — Collapse repeated multi-word phrases (greediest first).
-    // Matches a phrase of 2-8 words that repeats 2+ times consecutively.
-    // The regex uses word boundaries to avoid partial-word matches.
-    for (let phraseLen = 8; phraseLen >= 2; phraseLen--) {
-      // Build a regex that matches a phrase of exactly `phraseLen` words
-      // followed by one or more exact repetitions of that phrase
-      const wordGroup = '(?:\\S+)';
-      const phrasePattern = Array(phraseLen).fill(wordGroup).join('\\s+');
-      const re = new RegExp(
-        `(${phrasePattern})(?:\\s+\\1){1,}`,
-        'gi'
-      );
-      // Keep applying until stable (cascading phrases may nest)
-      let prev = '';
-      while (prev !== cleaned) {
-        prev = cleaned;
-        cleaned = cleaned.replace(re, '$1');
-      }
-    }
-
-    // Pass 2 — Single-word consecutive dedup
+    const cleaned = text.trim();
     const words = cleaned.split(/\s+/).filter(Boolean);
-    const result: string[] = [];
-    for (let i = 0; i < words.length; i++) {
-      const current = words[i];
-      const prev = result[result.length - 1];
-      if (prev && prev.toLowerCase() === current.toLowerCase()) {
-        continue;
+    if (words.length <= 1) return cleaned;
+
+    let changed = true;
+    while (changed) {
+      changed = false;
+      const maxL = Math.floor(words.length / 2);
+      for (let L = maxL; L >= 1; L--) {
+        for (let i = 0; i <= words.length - 2 * L; i++) {
+          let match = true;
+          for (let k = 0; k < L; k++) {
+            if (words[i + k].toLowerCase() !== words[i + L + k].toLowerCase()) {
+              match = false;
+              break;
+            }
+          }
+          if (match) {
+            words.splice(i + L, L);
+            changed = true;
+            break;
+          }
+        }
+        if (changed) break;
       }
-      result.push(current);
     }
-    return result.join(' ');
+
+    return words.join(' ');
   }
 
   /**
@@ -161,16 +140,29 @@ export class VoiceClient {
    * Unlock and ensure browser AudioContext is running on user gesture.
    */
   public async ensureAudioContext(): Promise<AudioContext> {
+    const windowWithAudio = window as unknown as {
+      __sharedAudioContext?: AudioContext;
+      AudioContext?: typeof AudioContext;
+      webkitAudioContext?: typeof AudioContext;
+    };
+
+    if (windowWithAudio.__sharedAudioContext && windowWithAudio.__sharedAudioContext.state !== 'closed') {
+      this.audioContext = windowWithAudio.__sharedAudioContext;
+    }
+
     if (!this.audioContext || this.audioContext.state === 'closed') {
       const AudioCtx =
         window.AudioContext ||
-        (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-      this.audioContext = new AudioCtx({ sampleRate: 24000 });
+        windowWithAudio.webkitAudioContext;
+      if (AudioCtx) {
+        this.audioContext = new AudioCtx({ sampleRate: 24000 });
+        windowWithAudio.__sharedAudioContext = this.audioContext;
+      }
     }
-    if (this.audioContext.state === 'suspended') {
-      await this.audioContext.resume();
+    if (this.audioContext && this.audioContext.state === 'suspended') {
+      await this.audioContext.resume().catch(() => {});
     }
-    return this.audioContext;
+    return this.audioContext!;
   }
 
   /**
@@ -403,19 +395,11 @@ export class VoiceClient {
 
       const recog = new SpeechRecognitionClass();
 
-      // Reset per-session accumulators for this fresh recognition instance
-      // NOTE: Do NOT reset committedFinals here — they persist across auto-restarts
-      // within the same user turn. They get reset in commitTurn() and releaseTurnLock().
-      this.lastFinalIdx = -1;
-
-      // ─── SINGLE-UTTERANCE MODE (continuous=false) ───
-      // Mobile Chrome/Android with continuous=true often:
-      //   (a) Produces garbled interim text that never finalizes
-      //   (b) Feeds ambient noise as phantom interims that reset silence timers
-      //   (c) Never fires onspeechend reliably
-      // Single-utterance mode produces ONE clean final per spoken phrase, then
-      // fires onend, at which point we auto-restart to capture the next phrase.
-      // This dramatically improves transcription accuracy on mobile.
+      // ─── SINGLE-UTTERANCE CONVERSATIONAL TURN ───
+      // When the user speaks, we capture the live phrase.
+      // When the user pauses or stops speaking, onend/onspeechend/silenceTimer
+      // triggers commitTurn(), which shuts the mic and triggers the assistant response.
+      // Once assistant finishes speaking, startAudioCapture() arms for the next turn.
       recog.continuous = false;
       recog.interimResults = true;
       recog.lang = this.recognitionLanguage || 'en-IN';
@@ -426,50 +410,42 @@ export class VoiceClient {
         // If muted, assistant is speaking, or currently committing turn, ignore incoming audio
         if (this.isMuted || this.isSpeaking || this.isCommitting) return;
 
-        let currentInterim = '';
+        let finalTranscript = '';
+        let interimTranscript = '';
 
-        for (let i = event.resultIndex; i < event.results.length; i++) {
+        for (let i = 0; i < event.results.length; i++) {
           const res = event.results[i];
           const segment = (res[0]?.transcript || '').trim();
           if (!segment) continue;
 
           if (res.isFinal) {
-            // Capture this final into our accumulator exactly once
-            if (i > this.lastFinalIdx) {
-              this.committedFinals.push(segment);
-              this.lastFinalIdx = i;
+            // Android Bug Fix: Do not duplicate if already ending with this piece
+            if (!finalTranscript) {
+              finalTranscript = segment;
+            } else if (!finalTranscript.toLowerCase().endsWith(segment.toLowerCase())) {
+              finalTranscript += ' ' + segment;
             }
           } else {
-            currentInterim = segment;
+            interimTranscript = segment;
           }
         }
 
-        // Assemble: all committed finals + the single active interim
-        const parts = [...this.committedFinals];
-        if (currentInterim) {
-          parts.push(currentInterim);
-        }
-        const combined = parts.join(' ').trim();
+        const combined = (finalTranscript ? finalTranscript + (interimTranscript ? ' ' + interimTranscript : '') : interimTranscript).trim();
         const cleaned = this.dedupConsecutiveWords(combined);
 
         if (cleaned) {
           this.latestUtterance = cleaned;
           this.callbacks.onTranscriptPartial?.(cleaned);
 
-          // ─── ARM HARD-DEADLINE TIMER on first speech ───
-          // After the user starts speaking, give them at most 8 seconds
-          // before we force-commit. This prevents the "listening forever" bug
-          // where ambient noise keeps feeding phantom interims.
-          if (!this.speechStartedAt) {
-            this.speechStartedAt = Date.now();
-          }
+          // ─── 5-second hard deadline ───
+          // If the user has been speaking continuously for 5 seconds without a pause, auto-commit
           if (!this.hardCommitTimer) {
             this.hardCommitTimer = setTimeout(() => {
               this.hardCommitTimer = null;
               if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
                 this.commitTurn(this.latestUtterance);
               }
-            }, 8000);
+            }, 5000);
           }
 
           // ─── Silence detection timer ───
@@ -478,13 +454,11 @@ export class VoiceClient {
             this.silenceTimer = null;
           }
 
-          // Determine if the latest result was a final
           const lastResult = event.results[event.results.length - 1];
           const isFinal = lastResult?.isFinal;
+          // Shorter pause (600ms) for finalized speech, 1000ms for interim
+          const delayMs = isFinal ? 600 : 1000;
 
-          // When we get a final result in single-utterance mode, the browser
-          // will fire onend shortly. Use a shorter silence timer for finals.
-          const delayMs = isFinal ? 800 : 1200;
           this.silenceTimer = setTimeout(() => {
             if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
               this.commitTurn(this.latestUtterance);
@@ -496,14 +470,14 @@ export class VoiceClient {
       // Built-in speech cessation detection: fires when vocal sound ends
       recog.onspeechend = () => {
         if (this.isMuted || this.isSpeaking || this.isCommitting) return;
-        if (this.latestUtterance && this.latestUtterance.length >= 2) {
+        if (this.latestUtterance && this.latestUtterance.trim().length >= 2) {
           if (this.silenceTimer) clearTimeout(this.silenceTimer);
-          // Quick commit after acoustic speech cessation
+          // Browser detected acoustic voice cessation: commit quickly after 400ms
           this.silenceTimer = setTimeout(() => {
             if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
               this.commitTurn(this.latestUtterance);
             }
-          }, 700);
+          }, 400);
         }
       };
 
@@ -521,17 +495,32 @@ export class VoiceClient {
       recog.onend = () => {
         this.recognition = null;
 
-        // In single-utterance mode, onend fires after each phrase completes.
-        // If the user has accumulated text but the silence timer hasn't fired yet,
-        // we let the silence timer handle it. Meanwhile, auto-restart to capture
-        // additional phrases the user might say.
-        if (this.isRecording && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
+        if (this.isSpeaking || this.isCommitting) return;
+
+        // CRITICAL FIX: If the user spoke words and recognition ended (turn completed by acoustic model):
+        // COMMIT THE TURN IMMEDIATELY! Do NOT loop-restart listening!
+        if (this.latestUtterance && this.latestUtterance.trim().length >= 2) {
+          if (this.silenceTimer) {
+            clearTimeout(this.silenceTimer);
+            this.silenceTimer = null;
+          }
+          if (this.hardCommitTimer) {
+            clearTimeout(this.hardCommitTimer);
+            this.hardCommitTimer = null;
+          }
+          this.commitTurn(this.latestUtterance);
+          return;
+        }
+
+        // If NO speech occurred (e.g. browser timed out with no-speech while waiting for trainee to speak):
+        // Re-arm listening with a 250ms backoff so microphone stays ready.
+        if (this.isRecording && !this.isMuted) {
           if (this.restartTimeout) clearTimeout(this.restartTimeout);
           this.restartTimeout = setTimeout(() => {
             if (this.isRecording && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
               this.startAudioCapture().catch(() => {});
             }
-          }, 100);
+          }, 250);
         }
       };
 
@@ -549,6 +538,10 @@ export class VoiceClient {
     if (this.silenceTimer) {
       clearTimeout(this.silenceTimer);
       this.silenceTimer = null;
+    }
+    if (this.hardCommitTimer) {
+      clearTimeout(this.hardCommitTimer);
+      this.hardCommitTimer = null;
     }
     if (this.restartTimeout) {
       clearTimeout(this.restartTimeout);
@@ -582,14 +575,11 @@ export class VoiceClient {
       clearTimeout(this.hardCommitTimer);
       this.hardCommitTimer = null;
     }
-    this.speechStartedAt = 0;
 
     if (this.isCommitting) return;
 
     const spokenText = (text || this.latestUtterance).trim();
     this.latestUtterance = '';
-    this.committedFinals = [];
-    this.lastFinalIdx = -1;
 
     if (!spokenText || spokenText.match(/^(\.|\s|\.\.\.)+$/)) {
       return;
@@ -649,7 +639,6 @@ export class VoiceClient {
       clearTimeout(this.hardCommitTimer);
       this.hardCommitTimer = null;
     }
-    this.speechStartedAt = 0;
     if (this.currentBufferSource) {
       try {
         this.currentBufferSource.stop();
@@ -666,8 +655,6 @@ export class VoiceClient {
     this.isSpeaking = false;
     this.isCommitting = false;
     this.latestUtterance = '';
-    this.committedFinals = [];
-    this.lastFinalIdx = -1;
     this.callbacks.onAssistantSpeaking?.(false);
 
     if (this.isContinuousCall && !this.isMuted) {
@@ -806,11 +793,20 @@ export class VoiceClient {
       source.connect(ctx.destination);
       this.currentBufferSource = source;
 
-      source.onended = () => {
-        if (this.currentBufferSource === source) {
-          onPlaybackComplete();
+      const durationMs = ((audioBuffer.duration || 3) * 1000) + 800;
+      let completed = false;
+      const finishBufferPlayback = () => {
+        if (!completed) {
+          completed = true;
+          clearTimeout(bufferSafetyTimer);
+          if (this.currentBufferSource === source) {
+            onPlaybackComplete();
+          }
         }
       };
+
+      const bufferSafetyTimer = setTimeout(finishBufferPlayback, durationMs);
+      source.onended = finishBufferPlayback;
 
       source.start(0);
       return;
@@ -837,12 +833,19 @@ export class VoiceClient {
           if (matching) utterance.voice = matching;
         }
 
-        utterance.onend = () => {
-          onPlaybackComplete();
+        const estDurationMs = Math.max(2500, clean.length * 90);
+        let synthCompleted = false;
+        const completeSynth = () => {
+          if (!synthCompleted) {
+            synthCompleted = true;
+            clearTimeout(synthSafetyTimer);
+            onPlaybackComplete();
+          }
         };
-        utterance.onerror = () => {
-          onPlaybackComplete();
-        };
+
+        const synthSafetyTimer = setTimeout(completeSynth, estDurationMs + 1000);
+        utterance.onend = completeSynth;
+        utterance.onerror = completeSynth;
 
         window.speechSynthesis.speak(utterance);
         return;
