@@ -98,7 +98,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
               </div>
               <span className="font-bold text-slate-900 dark:text-white max-w-[120px] truncate">{user.display_name}</span>
               <span className="rounded bg-[#FF6500]/15 px-1.5 py-0.5 text-[9px] font-bold text-[#FF6500] uppercase tracking-wider border border-[#FF6500]/30">
-                {user.role}
+                {user.role === 'trainee' ? 'Participant' : user.role === 'super_admin' ? 'Super Admin' : user.role === 'group_admin' ? 'Facilitator' : user.role}
               </span>
             </div>
 

@@ -553,7 +553,7 @@ conclusion_signals:
                           {weakSkills[1]?.skill_name || 'Uncovering Hidden Motivations & Blockers'}
                         </h3>
                         <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                          Trainees move directly to solutions before discovering underlying emotional drivers.
+                          Participants move directly to solutions before discovering underlying emotional drivers.
                         </p>
                       </div>
                       <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
@@ -879,7 +879,7 @@ conclusion_signals:
 
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="rounded-xl bg-slate-50 dark:bg-[#0B192C] p-3 border border-slate-200 dark:border-[#1E3E62]">
-                    <span className="text-xs text-slate-500 font-bold uppercase">Attempts / Trainee</span>
+                    <span className="text-xs text-slate-500 font-bold uppercase">Attempts / Participant</span>
                     <div className="text-lg font-bold text-[#FF6500] mt-1">20 Attempts</div>
                   </div>
 
