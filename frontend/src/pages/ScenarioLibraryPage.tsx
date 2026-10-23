@@ -78,12 +78,6 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
       const tier = s.difficulty_level || (s.difficulty <= 1 ? 'Normal' : s.difficulty <= 3 ? 'Challenging' : 'Crisis');
       if (tier !== difficultyFilter) return false;
     }
-    if (selectedCapabilityFilter !== 'all') {
-      const matchCap = s.target_capabilities?.some((c) => c.toLowerCase() === selectedCapabilityFilter.toLowerCase()) ||
-        s.primary_capability?.toLowerCase() === selectedCapabilityFilter.toLowerCase() ||
-        s.topic.toLowerCase() === selectedCapabilityFilter.toLowerCase();
-      if (!matchCap) return false;
-    }
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const matchTitle = s.title.toLowerCase().includes(q);
