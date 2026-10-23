@@ -3,7 +3,7 @@ import { api } from '../api/client';
 import { CapabilityItem, ScenarioDetail, ScenarioListItem } from '../types';
 import { ScenarioBriefingModal } from '../components/ScenarioBriefingModal';
 import { DifficultyBadge } from '../components/DifficultyBadge';
-import { ArrowRight, BookOpen, Clock, Layers, Lightbulb, Search, Sparkles, Target } from 'lucide-react';
+import { ArrowRight, BookOpen, Clock, Lightbulb, Search, Sparkles, Target } from 'lucide-react';
 
 interface ScenarioLibraryPageProps {
   selectedTrack: string;
@@ -24,7 +24,6 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
   const [viewMode, setViewMode] = useState<'scenarios' | 'capabilities'>('scenarios');
   const [difficultyFilter, setDifficultyFilter] = useState<string | 'all'>('all');
   const [selectedPillar, setSelectedPillar] = useState<string | 'all'>('all');
-  const [selectedCapabilityFilter, setSelectedCapabilityFilter] = useState<string | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [briefingScenario, setBriefingScenario] = useState<ScenarioDetail | null>(null);
 
