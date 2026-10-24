@@ -4,10 +4,10 @@ from datetime import datetime, timedelta, timezone
 from typing import Any, Dict, List, Optional, Tuple
 
 from fastapi import HTTPException, status
-from sqlalchemy import and_, func, select, update
+from sqlalchemy import and_, delete, func, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.app.db.models import AuditLog, AuthSession, Cohort, Passcode, User
+from backend.app.db.models import AttemptLedger, AuditLog, AuthSession, Cohort, Passcode, User
 from backend.app.security.passcodes import (
     generate_passcode,
     hash_passcode,
@@ -73,10 +73,11 @@ class AccessService:
         track_access: str = "both",
         max_members: int = 50,
         budget_cap_usd: float = 100.0,
+        custom_passcode: Optional[str] = None,
         actor_id: Optional[str] = None,
         ip: Optional[str] = None,
     ) -> Tuple[Cohort, str]:
-        """Create a new cohort with a hard 30-day window and initial passcode."""
+        """Create a new cohort with a hard duration window and initial or custom passcode."""
         now = datetime.now(timezone.utc)
         expires_at = now + timedelta(days=duration_days)
 
@@ -93,8 +94,12 @@ class AccessService:
         db.add(cohort)
         await db.flush()
 
-        # Generate initial passcode
-        plain_code = generate_passcode()
+        # Generate or normalize custom passcode
+        if custom_passcode and custom_passcode.strip():
+            plain_code = normalize_passcode(custom_passcode.strip())
+        else:
+            plain_code = generate_passcode()
+
         passcode = Passcode(
             cohort_id=cohort.id,
             code_hash=hash_passcode(plain_code),
@@ -241,6 +246,86 @@ class AccessService:
         db.add(audit)
         await db.commit()
         return result.rowcount
+
+    @staticmethod
+    async def delete_cohort(
+        db: AsyncSession,
+        cohort_id: str,
+        actor_id: Optional[str] = None,
+        ip: Optional[str] = None,
+    ) -> bool:
+        """Permanently delete a cohort and safely unlink/delete associated data."""
+        cohort = await db.get(Cohort, cohort_id)
+        if not cohort:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cohort not found")
+
+        # Clear attempt ledgers
+        await db.execute(delete(AttemptLedger).where(AttemptLedger.cohort_id == cohort_id))
+
+        # Delete passcodes
+        await db.execute(delete(Passcode).where(Passcode.cohort_id == cohort_id))
+
+        # Delete enrolled non-admin students belonging to this cohort
+        await db.execute(
+            delete(User).where(
+                and_(
+                    User.cohort_id == cohort_id,
+                    ~func.lower(User.display_name).in_(["narendra", "uzair"]),
+                )
+            )
+        )
+        # Unlink primary administrators (Narendra, Uzair)
+        await db.execute(
+            update(User).where(User.cohort_id == cohort_id).values(cohort_id=None)
+        )
+
+        audit = AuditLog(
+            actor_id=actor_id,
+            action="DELETE_COHORT",
+            entity="Cohort",
+            entity_id=cohort_id,
+            details={"name": cohort.name},
+            ip=ip,
+        )
+        db.add(audit)
+
+        await db.delete(cohort)
+        await db.commit()
+        invalidate_passcode_cache()
+        return True
+
+    @staticmethod
+    async def reset_member_attempts(
+        db: AsyncSession,
+        cohort_id: str,
+        user_id: str,
+        actor_id: Optional[str] = None,
+        ip: Optional[str] = None,
+    ) -> int:
+        """Reset all scenario attempt counts for a member in a cohort."""
+        user = await db.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+
+        stmt = delete(AttemptLedger).where(
+            and_(
+                AttemptLedger.cohort_id == cohort_id,
+                (AttemptLedger.user_id == user_id) | (AttemptLedger.student_name == user.display_name),
+            )
+        )
+        res = await db.execute(stmt)
+
+        audit = AuditLog(
+            actor_id=actor_id,
+            action="RESET_MEMBER_ATTEMPTS",
+            entity="User",
+            entity_id=user_id,
+            details={"user": user.display_name, "cohort_id": cohort_id, "deleted_ledgers": res.rowcount},
+            ip=ip,
+        )
+        db.add(audit)
+        await db.commit()
+        return res.rowcount
 
     @staticmethod
     async def authenticate_passcode(

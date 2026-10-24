@@ -272,10 +272,17 @@ export const api = {
     track_access?: string;
     max_members?: number;
     budget_cap_usd?: number;
+    custom_passcode?: string;
   }): Promise<AdminCohort> {
     return request<AdminCohort>('/admin/cohorts', {
       method: 'POST',
       body: JSON.stringify(payload),
+    });
+  },
+
+  async deleteCohort(cohortId: string): Promise<void> {
+    await request(`/admin/cohorts/${cohortId}`, {
+      method: 'DELETE',
     });
   },
 
@@ -327,6 +334,12 @@ export const api = {
   async removeCohortMember(cohortId: string, userId: string): Promise<void> {
     await request(`/admin/cohorts/${cohortId}/members/${userId}`, {
       method: 'DELETE',
+    });
+  },
+
+  async resetCohortMemberAttempts(cohortId: string, userId: string): Promise<{ message: string }> {
+    return request(`/admin/cohorts/${cohortId}/members/${userId}/reset-attempts`, {
+      method: 'POST',
     });
   },
 
@@ -426,9 +439,11 @@ export const api = {
     sessionId: string,
     content: string,
     onChunk: (chunk: string) => void,
-    onDone: (status?: string, endReason?: string) => void,
+    onDone: (status?: string, endReason?: string, latencyMs?: number) => void,
     onError: (err: Error) => void
   ): Promise<void> {
+    const t0 = performance.now();
+    let measuredLatencyMs = 0;
     try {
       let response: Response | null = null;
       for (let attempt = 0; attempt <= 2; attempt++) {
@@ -474,12 +489,15 @@ export const api = {
           if (!trimmed.startsWith('data: ')) continue;
           const payload = trimmed.slice(6).trim();
           if (payload === '[DONE]') {
-            onDone();
+            if (!measuredLatencyMs) measuredLatencyMs = Math.round(performance.now() - t0);
+            onDone(undefined, undefined, measuredLatencyMs);
             return;
           }
           try {
             const parsed = JSON.parse(payload);
-            if (parsed.chunk) {
+            if (parsed.type === 'timing') {
+              measuredLatencyMs = parsed.latency_ms || Math.round(performance.now() - t0);
+            } else if (parsed.chunk) {
               onChunk(parsed.chunk);
             }
           } catch {
@@ -488,7 +506,8 @@ export const api = {
           }
         }
       }
-      onDone();
+      if (!measuredLatencyMs) measuredLatencyMs = Math.round(performance.now() - t0);
+      onDone(undefined, undefined, measuredLatencyMs);
     } catch (err: unknown) {
       onError(err instanceof Error ? err : new Error(String(err)));
     }

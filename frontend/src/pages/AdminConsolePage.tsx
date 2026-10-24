@@ -50,10 +50,20 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   // Cohort & Roster State
+  const [allCohorts, setAllCohorts] = useState<AdminCohort[]>([]);
   const [cohort, setCohort] = useState<AdminCohort | null>(null);
   const [cohortMembers, setCohortMembers] = useState<CohortMember[]>([]);
   const [cohortProgress, setCohortProgress] = useState<CohortProgress | null>(null);
   const [completedSessions, setCompletedSessions] = useState<SimulationSession[]>([]);
+
+  // Telemetry Performance State
+  const [telemetryTiming, setTelemetryTiming] = useState<{
+    totalMs: number;
+    cohortCount: number;
+    memberCount: number;
+    sessionCount: number;
+    scenarioCount: number;
+  } | null>(null);
 
   // Add Member State
   const [newMemberName, setNewMemberName] = useState('');
@@ -61,6 +71,14 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
   const [showBulkAdd, setShowBulkAdd] = useState(false);
   const [bulkNamesText, setBulkNamesText] = useState('');
   const [isSubmittingBulk, setIsSubmittingBulk] = useState(false);
+
+  // Create Cohort Modal State
+  const [showCreateCohortModal, setShowCreateCohortModal] = useState(false);
+  const [newCohortName, setNewCohortName] = useState('');
+  const [newCohortDesc, setNewCohortDesc] = useState('');
+  const [newCohortDuration, setNewCohortDuration] = useState(90);
+  const [newCohortPasscode, setNewCohortPasscode] = useState('');
+  const [isCreatingCohort, setIsCreatingCohort] = useState(false);
 
   // Curriculum State
   const [scenarios, setScenarios] = useState<AdminScenarioItem[]>([]);
@@ -88,29 +106,49 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
     setTimeout(() => setFeedbackMsg(null), 4000);
   };
 
-  const loadAdminData = async () => {
+  const loadAdminData = async (targetCohortId?: string) => {
     setLoading(true);
+    const t0 = performance.now();
     try {
-      // 1. Load Cohorts & select primary official cohort
-      const cohortsList = await api.listAdminCohorts();
-      const primaryCohort = cohortsList.find((c) => c.is_active) || cohortsList[0] || null;
-      setCohort(primaryCohort);
+      // 1. Parallel Load: Cohorts List and Scenarios
+      const [cohortsList, scenData] = await Promise.all([
+        api.listAdminCohorts(),
+        api.listAdminScenarios(),
+      ]);
+      setAllCohorts(cohortsList);
+      setScenarios(scenData as unknown as AdminScenarioItem[]);
 
-      if (primaryCohort) {
-        // 2. Load Members, Progress telemetry, and Completed Sessions
+      const selectedCohort = targetCohortId
+        ? cohortsList.find((c) => c.id === targetCohortId) || cohortsList[0] || null
+        : cohortsList.find((c) => c.is_active) || cohortsList[0] || null;
+
+      setCohort(selectedCohort);
+
+      let memberCount = 0;
+      let sessionCount = 0;
+
+      if (selectedCohort) {
+        // 2. Parallel Load: Members, Progress Telemetry, and Completed Sessions
         const [membersData, progressData, sessionsData] = await Promise.all([
-          api.listCohortMembers(primaryCohort.id).catch(() => []),
-          api.getCohortProgress(primaryCohort.id).catch(() => null),
+          api.listCohortMembers(selectedCohort.id).catch(() => []),
+          api.getCohortProgress(selectedCohort.id).catch(() => null),
           api.listCohortSessions().catch(() => []),
         ]);
         setCohortMembers(membersData);
         setCohortProgress(progressData);
         setCompletedSessions(sessionsData.filter((s) => s.status === 'completed'));
+        memberCount = membersData.length;
+        sessionCount = sessionsData.length;
       }
 
-      // 3. Load Scenarios
-      const scenData = await api.listAdminScenarios();
-      setScenarios(scenData as unknown as AdminScenarioItem[]);
+      const elapsedMs = Math.round(performance.now() - t0);
+      setTelemetryTiming({
+        totalMs: elapsedMs,
+        cohortCount: cohortsList.length,
+        memberCount,
+        sessionCount,
+        scenarioCount: scenData.length,
+      });
     } catch (err: unknown) {
       console.error('Error loading admin portal', err);
       const msg = err instanceof Error ? err.message : 'Failed to load admin data';
@@ -205,6 +243,61 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
       showFeedback(`Participant "${name}" removed from roster`);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to remove member';
+      showFeedback(msg, 'error');
+    }
+  };
+
+  const handleResetAttempts = async (userId: string, name: string) => {
+    if (!cohort) return;
+    if (!confirm(`Reset scenario practice attempts for "${name}"? This will grant a fresh 10 attempts.`)) return;
+    try {
+      await api.resetCohortMemberAttempts(cohort.id, userId);
+      showFeedback(`Practice attempts for "${name}" reset to 10 chances.`);
+      await loadAdminData(cohort.id);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to reset attempts';
+      showFeedback(msg, 'error');
+    }
+  };
+
+  const handleCreateCohort = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newCohortName.trim()) return;
+    setIsCreatingCohort(true);
+    try {
+      const created = await api.createCohort({
+        name: newCohortName.trim(),
+        description: newCohortDesc.trim() || undefined,
+        duration_days: newCohortDuration || 90,
+        custom_passcode: newCohortPasscode.trim() || undefined,
+      });
+      showFeedback(`Cohort "${created.name}" created with passcode: ${created.initial_passcode}`);
+      setShowCreateCohortModal(false);
+      setNewCohortName('');
+      setNewCohortDesc('');
+      setNewCohortPasscode('');
+      await loadAdminData(created.id);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to create cohort';
+      showFeedback(msg, 'error');
+    } finally {
+      setIsCreatingCohort(false);
+    }
+  };
+
+  const handleDeleteCohort = async () => {
+    if (!cohort) return;
+    const confirmName = prompt(`To permanently delete this cohort, type "${cohort.name}":`);
+    if (confirmName !== cohort.name) {
+      if (confirmName !== null) showFeedback('Cohort name did not match. Deletion cancelled.', 'error');
+      return;
+    }
+    try {
+      await api.deleteCohort(cohort.id);
+      showFeedback(`Cohort "${cohort.name}" deleted successfully.`);
+      await loadAdminData();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Failed to delete cohort';
       showFeedback(msg, 'error');
     }
   };
@@ -401,6 +494,22 @@ conclusion_signals:
         </div>
       </div>
 
+      {/* Parallel Execution Telemetry Pill */}
+      {telemetryTiming && (
+        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-100 dark:bg-[#0B192C]/90 px-4 py-2 text-xs font-mono">
+          <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
+            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
+            <span className="font-bold text-slate-900 dark:text-white">Parallel Engine Telemetry:</span>
+            <span>
+              Loaded {telemetryTiming.cohortCount} cohort{telemetryTiming.cohortCount === 1 ? '' : 's'}, {telemetryTiming.memberCount} participant{telemetryTiming.memberCount === 1 ? '' : 's'}, {telemetryTiming.sessionCount} session{telemetryTiming.sessionCount === 1 ? '' : 's'}, {telemetryTiming.scenarioCount} scenarios
+            </span>
+          </div>
+          <span className="text-[#FF6500] font-bold">
+            ⚡ Parallel Load: {telemetryTiming.totalMs}ms
+          </span>
+        </div>
+      )}
+
       {/* KPI Stat Cards Strip */}
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Passcode Card with Quick Copy */}
@@ -455,7 +564,7 @@ conclusion_signals:
             <span className="text-sm font-semibold text-slate-400 ml-1.5">attempts</span>
           </div>
           <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-            20 practice attempts allocated per participant
+            10 practice attempts allocated per participant
           </div>
         </div>
 
@@ -705,7 +814,7 @@ conclusion_signals:
                             {participant.display_name}
                           </div>
                           <div className="text-xs text-slate-500 dark:text-slate-400 flex items-center space-x-2 mt-0.5">
-                            <span>{sessionsDone} of 20 scenario attempts completed</span>
+                            <span>{sessionsDone} of 10 scenario attempts completed</span>
                             {participantProg?.top_skill && (
                               <span>• Top skill: <span className="font-semibold text-slate-700 dark:text-slate-300 capitalize">{participantProg.top_skill.replace(/_/g, ' ')}</span></span>
                             )}
@@ -748,6 +857,16 @@ conclusion_signals:
                             <span>Pending Practice</span>
                           </button>
                         )}
+
+                        {/* Reset Participant Attempts */}
+                        <button
+                          type="button"
+                          onClick={() => handleResetAttempts(participant.id, participant.display_name)}
+                          className="p-1.5 text-slate-400 hover:text-[#FF6500] transition rounded-lg"
+                          title="Reset practice chances to 10 for this participant"
+                        >
+                          <RefreshCw className="h-4 w-4" />
+                        </button>
 
                         {/* Remove Participant */}
                         <button
@@ -853,12 +972,40 @@ conclusion_signals:
       {!loading && activeTab === 'cohort' && (
         <div className="mt-8 space-y-6">
           <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">
-              Active Cohort Parameters
-            </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Manage your cohort's passcode, expiration date, and curriculum track authorization.
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-200 dark:border-[#1E3E62] pb-4">
+              <div>
+                <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">
+                  Active Cohort Parameters
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Manage your cohort's passcode, expiration date, and curriculum track authorization.
+                </p>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                {allCohorts.length > 1 && (
+                  <select
+                    value={cohort?.id || ''}
+                    onChange={(e) => loadAdminData(e.target.value)}
+                    className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3 py-1.5 text-xs font-bold text-slate-900 dark:text-white"
+                  >
+                    {allCohorts.map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.name} ({c.initial_passcode})
+                      </option>
+                    ))}
+                  </select>
+                )}
+                <button
+                  type="button"
+                  onClick={() => setShowCreateCohortModal(true)}
+                  className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-3.5 py-1.5 text-xs font-bold text-white shadow-md transition"
+                >
+                  <Plus className="h-4 w-4" />
+                  <span>Create Cohort</span>
+                </button>
+              </div>
+            </div>
 
             <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
               {/* Left Column: Details */}
@@ -880,7 +1027,7 @@ conclusion_signals:
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="rounded-xl bg-slate-50 dark:bg-[#0B192C] p-3 border border-slate-200 dark:border-[#1E3E62]">
                     <span className="text-xs text-slate-500 font-bold uppercase">Attempts / Participant</span>
-                    <div className="text-lg font-bold text-[#FF6500] mt-1">20 Attempts</div>
+                    <div className="text-lg font-bold text-[#FF6500] mt-1">10 Attempts</div>
                   </div>
 
                   <div className="rounded-xl bg-slate-50 dark:bg-[#0B192C] p-3 border border-slate-200 dark:border-[#1E3E62]">
@@ -949,6 +1096,28 @@ conclusion_signals:
                     <span>+30 Days</span>
                   </button>
                 </div>
+              </div>
+            </div>
+
+            {/* Danger Zone: Delete Cohort */}
+            <div className="mt-8 pt-6 border-t border-rose-500/20">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 rounded-xl border border-rose-500/30 bg-rose-500/5 p-4">
+                <div>
+                  <h3 className="text-xs font-black uppercase tracking-wider text-rose-500">
+                    Danger Zone · Permanent Cohort Deletion
+                  </h3>
+                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                    Deletes this cohort, enrolled participants, and attempt history. Narendra and Uzair super administrator logins are permanently protected.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDeleteCohort}
+                  className="flex items-center space-x-1.5 rounded-xl bg-rose-600 hover:bg-rose-500 px-4 py-2 text-xs font-bold text-white shadow-md transition flex-shrink-0"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  <span>Delete Cohort</span>
+                </button>
               </div>
             </div>
           </div>
@@ -1256,6 +1425,128 @@ conclusion_signals:
                     {isSavingScenario ? 'Publishing...' : 'Publish Scenario'}
                   </button>
                 </div>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {/* ======================================================== */}
+      {/* MODAL: CREATE NEW COHORT                                 */}
+      {/* ======================================================== */}
+      {showCreateCohortModal && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6"
+        >
+          <div
+            onClick={() => setShowCreateCohortModal(false)}
+            className="fixed inset-0 bg-slate-900/70 dark:bg-[#0B192C]/85 backdrop-blur-sm transition-opacity"
+          />
+
+          <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border-2 border-slate-300 bg-white dark:border-[#2D5B8D] dark:bg-[#132B45] shadow-2xl z-10 flex flex-col">
+            <div className="flex items-center justify-between border-b border-slate-300 dark:border-[#1E3E62] p-5 bg-slate-50 dark:bg-[#0B192C]">
+              <div>
+                <span className="text-xs font-black uppercase tracking-wider text-[#FF6500]">
+                  Cohort Management
+                </span>
+                <h2 className="text-lg font-black text-slate-900 dark:text-white font-heading">
+                  Create New Training Cohort
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowCreateCohortModal(false)}
+                className="rounded-xl p-2 text-slate-500 hover:bg-slate-200 dark:text-slate-300 dark:hover:bg-[#1E3E62]"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateCohort} className="p-6 space-y-4 text-xs font-medium">
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
+                  Cohort Name *
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., Executive Leadership Q4 Cohort"
+                  value={newCohortName}
+                  onChange={(e) => setNewCohortName(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500]"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
+                  Custom Entry Passcode (Optional)
+                </label>
+                <input
+                  type="text"
+                  placeholder="e.g., UZAIR-OCT26 (Leave blank for auto-generated)"
+                  value={newCohortPasscode}
+                  onChange={(e) => setNewCohortPasscode(e.target.value.toUpperCase())}
+                  className="w-full font-mono rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500]"
+                />
+                <span className="text-[11px] text-slate-500 mt-1 block">
+                  Participants will use this passcode together with their enrolled name to log in.
+                </span>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
+                    Duration (Days)
+                  </label>
+                  <input
+                    type="number"
+                    min={7}
+                    max={365}
+                    value={newCohortDuration}
+                    onChange={(e) => setNewCohortDuration(Number(e.target.value))}
+                    className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3 py-2 text-xs text-slate-900 dark:text-white"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
+                    Chances / Scenario
+                  </label>
+                  <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-100 dark:bg-[#0B192C] px-3 py-2 text-xs font-bold text-[#FF6500]">
+                    10 Attempts
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
+                  Description
+                </label>
+                <textarea
+                  rows={2}
+                  placeholder="e.g., High-stakes simulation practice for senior leadership teams."
+                  value={newCohortDesc}
+                  onChange={(e) => setNewCohortDesc(e.target.value)}
+                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500]"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 dark:border-[#1E3E62] flex items-center justify-end space-x-2">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateCohortModal(false)}
+                  className="rounded-xl border border-slate-300 dark:border-[#1E3E62] px-4 py-2 text-xs font-bold text-slate-600 dark:text-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isCreatingCohort || !newCohortName.trim()}
+                  className="rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2 text-xs font-bold text-white shadow-md shadow-[#FF6500]/25 transition disabled:opacity-50"
+                >
+                  {isCreatingCohort ? 'Creating...' : 'Create Cohort'}
+                </button>
               </div>
             </form>
           </div>

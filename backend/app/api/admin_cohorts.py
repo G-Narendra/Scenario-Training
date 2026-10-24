@@ -1,10 +1,10 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, Request, Response, status
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from backend.app.db.models import Cohort, User
+from backend.app.db.models import AttemptLedger, Cohort, User
 from backend.app.db.session import get_db
 from backend.app.schemas.cohorts import (
     AddCohortMemberRequest,
@@ -40,6 +40,7 @@ async def create_cohort(
         track_access=payload.track_access,
         max_members=payload.max_members,
         budget_cap_usd=payload.budget_cap_usd,
+        custom_passcode=payload.custom_passcode,
         actor_id=current_admin.id,
         ip=ip,
     )
@@ -351,6 +352,26 @@ async def bulk_add_cohort_members(
     ]
 
 
+@router.delete("/{id}")
+async def delete_cohort(
+    id: str,
+    request: Request,
+    current_admin: User = Depends(require_group_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Permanently delete a cohort and safely clean up related access credentials."""
+    if current_admin.role != "super_admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: Only super administrators can permanently delete cohorts.",
+        )
+    ip = request.client.host if request.client else "127.0.0.1"
+    await AccessService.delete_cohort(
+        db=db, cohort_id=id, actor_id=current_admin.id, ip=ip
+    )
+    return {"message": "Cohort permanently deleted successfully."}
+
+
 @router.delete("/{id}/members/{user_id}")
 async def remove_cohort_member(
     id: str,
@@ -358,7 +379,7 @@ async def remove_cohort_member(
     current_admin: User = Depends(require_group_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    """Remove a student/trainee from the cohort roster."""
+    """Remove a student/trainee from the cohort roster and revoke logins."""
     if current_admin.role != "super_admin" and current_admin.cohort_id != id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -370,14 +391,46 @@ async def remove_cohort_member(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Member not found in cohort")
 
-    # Safety: Cannot remove developer Narendra
-    if user.display_name.lower() == "narendra":
+    # Safety: Cannot remove primary administrators
+    if user.display_name.lower() in ("narendra", "uzair"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Cannot remove the developer super_admin account.",
+            detail="Cannot remove primary administrator accounts (Narendra / Uzair).",
         )
+
+    # Clean up attempt ledger entries for this student
+    await db.execute(
+        delete(AttemptLedger).where(
+            and_(
+                AttemptLedger.cohort_id == id,
+                (AttemptLedger.user_id == user_id) | (AttemptLedger.student_name == user.display_name),
+            )
+        )
+    )
 
     await db.delete(user)
     await db.commit()
     return {"message": f"Successfully removed '{user.display_name}' from the cohort."}
+
+
+@router.post("/{id}/members/{user_id}/reset-attempts")
+async def reset_cohort_member_attempts(
+    id: str,
+    user_id: str,
+    request: Request,
+    current_admin: User = Depends(require_group_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Reset all scenario attempts back to 0 for a student/trainee in a cohort."""
+    if current_admin.role != "super_admin" and current_admin.cohort_id != id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: You cannot modify members of another cohort",
+        )
+    ip = request.client.host if request.client else "127.0.0.1"
+    count = await AccessService.reset_member_attempts(
+        db=db, cohort_id=id, user_id=user_id, actor_id=current_admin.id, ip=ip
+    )
+    return {"message": f"Successfully reset {count} attempt records for member."}
+
 

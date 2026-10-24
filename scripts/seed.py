@@ -8,7 +8,7 @@ import yaml
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from datetime import datetime, timedelta, timezone
-from sqlalchemy import and_, func, select
+from sqlalchemy import and_, delete, func, select
 
 import backend.app.db.models  # noqa: F401 - ensure models registered
 from backend.app.db.base import Base
@@ -64,7 +64,7 @@ async def seed_official_cohort(db):
 
     # 3. Seed Passcodes: UZAIR-2026 and NARENDRA-2026
     passcodes_to_seed = {
-        "Uzair Student Passcode": "UZAIR-2026",
+        "Uzair Executive Training Passcode": "UZAIR-2026",
         "Narendra Developer SuperAdmin Passcode": "NARENDRA-2026",
     }
     existing_codes = (
@@ -82,84 +82,61 @@ async def seed_official_cohort(db):
                     label=label,
                     valid_from=now,
                     valid_until=cohort_expiry,
-                    max_uses=2000,
+                    max_uses=5000,
                 )
             )
         else:
             code.valid_from = now
             code.valid_until = cohort_expiry
             code.revoked_at = None
-            code.max_uses = 2000
+            code.max_uses = 5000
 
-    # 4. Seed Enrolled Student Roster
-    # Narendra (super_admin developer with dual trainee + admin console access)
-    narendra_stmt = select(User).where(func.lower(User.display_name) == "narendra")
-    narendra = (await db.execute(narendra_stmt)).scalars().first()
-    if not narendra:
-        narendra = User(
-            cohort_id=cohort.id,
-            display_name="Narendra",
-            role="super_admin",
-            is_active=True,
-        )
-        db.add(narendra)
-    else:
-        narendra.cohort_id = cohort.id
-        narendra.role = "super_admin"
-        narendra.is_active = True
-
-    # 30 Enrolled Corporate Students for Uzair Executive Training Cohort
-    student_roster = [
-        "Sarah Jenkins",
-        "Marcus Vance",
-        "Priya Sharma",
-        "David Chen",
-        "Elena Rostova",
-        "James Wilson",
-        "Aaliyah Patel",
-        "Carlos Mendez",
-        "Rachel Green",
-        "Vikram Malhotra",
-        "Chloe Bennett",
-        "Tariq Al-Mansoor",
-        "Stephanie Wong",
-        "Michael Chang",
-        "Fatima Zahra",
-        "Liam O'Connor",
-        "Ananya Iyer",
-        "Jonathan Brooks",
-        "Mei-Ling Zhou",
-        "Omar Farooq",
-        "Jessica Taylor",
-        "Rohan Gupta",
-        "Natalie Dubois",
-        "Kevin Park",
-        "Zainab Abdi",
-        "Alexander Wright",
-        "Sunita Rao",
-        "Daniel Morales",
-        "Leila Khoury",
-        "Andrew Doherty",
+    # 4. Remove all legacy/dummy students from previous test runs
+    dummy_names = [
+        "Sarah Jenkins", "Marcus Vance", "Priya Sharma", "David Chen",
+        "Elena Rostova", "James Wilson", "Aaliyah Patel", "Carlos Mendez",
+        "Rachel Green", "Vikram Malhotra", "Chloe Bennett", "Tariq Al-Mansoor",
+        "Stephanie Wong", "Michael Chang", "Fatima Zahra", "Liam O'Connor",
+        "Ananya Iyer", "Jonathan Brooks", "Mei-Ling Zhou", "Omar Farooq",
+        "Jessica Taylor", "Rohan Gupta", "Natalie Dubois", "Kevin Park",
+        "Zainab Abdi", "Alexander Wright", "Sunita Rao", "Daniel Morales",
+        "Leila Khoury", "Andrew Doherty",
     ]
-
-    for student_name in student_roster:
-        st_stmt = select(User).where(
-            and_(User.cohort_id == cohort.id, func.lower(User.display_name) == student_name.lower())
+    await db.execute(
+        delete(User).where(func.lower(User.display_name).in_([n.lower() for n in dummy_names]))
+    )
+    await db.execute(
+        delete(backend.app.db.models.AttemptLedger).where(
+            func.lower(backend.app.db.models.AttemptLedger.student_name).in_([n.lower() for n in dummy_names])
         )
-        student_user = (await db.execute(st_stmt)).scalar_one_or_none()
-        if not student_user:
-            student_user = User(
+    )
+
+    # 5. Seed Primary Administrator Accounts: Narendra & Uzair
+    # Both have super_admin role with dual participant + admin access:
+    # - Participant: Full curriculum scenario practice & dialogue testing
+    # - Administrator: Facilitator console, cohort management, roster additions, and progress tracking
+    admin_profiles = [
+        {"name": "Narendra", "role": "super_admin"},
+        {"name": "Uzair", "role": "super_admin"},
+    ]
+    for profile in admin_profiles:
+        u_stmt = select(User).where(func.lower(User.display_name) == profile["name"].lower())
+        admin_user = (await db.execute(u_stmt)).scalars().first()
+        if not admin_user:
+            admin_user = User(
                 cohort_id=cohort.id,
-                display_name=student_name,
-                role="trainee",
+                display_name=profile["name"],
+                role=profile["role"],
                 is_active=True,
             )
-            db.add(student_user)
+            db.add(admin_user)
         else:
-            student_user.is_active = True
+            admin_user.cohort_id = cohort.id
+            admin_user.role = profile["role"]
+            admin_user.is_active = True
 
     await db.commit()
-    print(f"Uzair Executive Training Cohort, passcodes (UZAIR-2026, NARENDRA-2026), and all 30 corporate students seeded successfully.")
+    print("Uzair Executive Training Cohort, passcodes (UZAIR-2026, NARENDRA-2026), and admin accounts (Narendra, Uzair) seeded successfully. Dummy student roster deleted.")
 
 
 

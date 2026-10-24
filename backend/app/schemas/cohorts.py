@@ -11,6 +11,7 @@ class CreateCohortRequest(BaseModel):
     track_access: str = Field(default="both")  # sales, leadership, both
     max_members: int = Field(default=50, ge=1)
     budget_cap_usd: float = Field(default=100.0, ge=0.0)
+    custom_passcode: Optional[str] = Field(None, min_length=4, max_length=50)
 
 
 class CohortResponse(BaseModel):

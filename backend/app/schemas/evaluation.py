@@ -91,3 +91,7 @@ class FeedbackReportSchema(BaseModel):
         False,
         description="Flag set if report was generated via deterministic fallback after repair retries",
     )
+    stage_timing_ms: Optional[dict] = Field(
+        default_factory=dict,
+        description="Detailed latency breakdown across database, AI evaluator, quote verification, and commit stages in milliseconds",
+    )

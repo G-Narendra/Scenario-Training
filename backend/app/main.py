@@ -68,15 +68,34 @@ app.include_router(admin_analytics_router)
 
 @app.middleware("http")
 async def request_context_middleware(request: Request, call_next):
+    import logging
     request_id = str(uuid.uuid4())
     request.state.request_id = request_id
-    start_time = time.time()
+    request.state.timings = {}
+    start_time = time.perf_counter()
 
     response = await call_next(request)
 
-    process_time = time.time() - start_time
+    process_time_sec = time.perf_counter() - start_time
+    process_time_ms = round(process_time_sec * 1000, 2)
     response.headers["X-Request-ID"] = request_id
-    response.headers["X-Process-Time"] = f"{process_time:.4f}"
+    response.headers["X-Process-Time"] = f"{process_time_sec:.4f}"
+    response.headers["X-Process-Time-Ms"] = f"{process_time_ms}"
+
+    # RFC Server-Timing header for browser DevTools and telemetry consumers
+    timing_parts = []
+    custom_timings = getattr(request.state, "timings", {})
+    if isinstance(custom_timings, dict):
+        for k, v in custom_timings.items():
+            timing_parts.append(f"{k};dur={v}")
+    timing_parts.append(f"total;dur={process_time_ms}")
+    response.headers["Server-Timing"] = ", ".join(timing_parts)
+
+    if process_time_ms > 1500 and not request.url.path.endswith(("/messages", "/ws")):
+        logging.getLogger("uvicorn.error").warning(
+            f"Slow API path detected: {request.method} {request.url.path} took {process_time_ms}ms"
+        )
+
     # Security headers
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"

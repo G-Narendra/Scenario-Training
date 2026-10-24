@@ -141,6 +141,7 @@ export interface FeedbackReport {
   improvement_steps: ImprovementStep[];
   overall_score: number;
   is_fallback?: boolean;
+  stage_timing_ms?: Record<string, number>;
 }
 
 export interface SkillAverage {

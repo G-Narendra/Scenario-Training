@@ -74,11 +74,11 @@ async def create_session(
                     detail="COHORT_EXPIRED: The training cohort period has ended or is inactive.",
                 )
 
-            # Check Attempt Ledger (Max 2 Attempts per enrolled student / device)
-            # Developers & Admins (super_admin, group_admin, or Narendra) have unlimited testing attempts
+            # Check Attempt Ledger (Max 10 Attempts per enrolled participant / device)
+            # Instructors & Admins (super_admin, group_admin, Narendra, Uzair) have unlimited testing attempts
             is_developer_or_admin = (
                 current_user.role in ("super_admin", "group_admin")
-                or current_user.display_name.lower() == "narendra"
+                or current_user.display_name.lower() in ("narendra", "uzair")
             )
 
             if not is_developer_or_admin:
@@ -93,10 +93,10 @@ async def create_session(
                 )
                 existing_attempt = (await db.execute(ledger_stmt)).scalars().first()
 
-                if existing_attempt and existing_attempt.attempt_count >= 20:
+                if existing_attempt and existing_attempt.attempt_count >= 10:
                     raise HTTPException(
                         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail="ATTEMPT_LIMIT_REACHED: You have completed your 20 assigned practice attempts for this scenario. Please contact your instructor for additional attempts.",
+                        detail="ATTEMPT_LIMIT_REACHED: You have completed your 10 assigned practice attempts for this scenario. Please contact your instructor for additional attempts.",
                     )
 
                 # Check Cohort Budget Cap ($10 USD safety ceiling) with fast-path memory cache
@@ -191,9 +191,33 @@ async def send_session_message(
     if accept and "text/event-stream" in accept:
 
         async def event_generator():
+            turn_start = time.perf_counter()
+            first_token_time = None
             async for token in engine.process_turn_stream(session_id, payload.content):
+                if first_token_time is None:
+                    first_token_time = time.perf_counter()
                 data = json.dumps({"chunk": token})
                 yield f"data: {data}\n\n"
+
+            total_turn_ms = max(1, int((time.perf_counter() - turn_start) * 1000))
+            ttft_ms = max(1, int((first_token_time - turn_start) * 1000)) if first_token_time else total_turn_ms
+
+            # Fetch counterpart message latency from DB
+            last_msg_stmt = (
+                select(Message.latency_ms)
+                .where(Message.session_id == session_id, Message.role == "counterpart")
+                .order_by(Message.seq.desc())
+                .limit(1)
+            )
+            last_latency = (await db.execute(last_msg_stmt)).scalar_one_or_none() or total_turn_ms
+
+            timing_payload = json.dumps({
+                "type": "timing",
+                "latency_ms": last_latency,
+                "ttft_ms": ttft_ms,
+                "total_turn_ms": total_turn_ms,
+            })
+            yield f"data: {timing_payload}\n\n"
             yield "data: [DONE]\n\n"
 
         return StreamingResponse(
@@ -207,9 +231,11 @@ async def send_session_message(
         )
 
     # Standard JSON response (accumulate stream)
+    turn_start = time.perf_counter()
     full_tokens = []
     async for token in engine.process_turn_stream(session_id, payload.content):
         full_tokens.append(token)
+    total_turn_ms = max(1, int((time.perf_counter() - turn_start) * 1000))
 
     # Refresh session to check updated status
     refreshed_res = await db.execute(
@@ -217,10 +243,20 @@ async def send_session_message(
     )
     refreshed_session = refreshed_res.scalar_one()
 
+    last_msg_stmt = (
+        select(Message.latency_ms)
+        .where(Message.session_id == session_id, Message.role == "counterpart")
+        .order_by(Message.seq.desc())
+        .limit(1)
+    )
+    last_latency = (await db.execute(last_msg_stmt)).scalar_one_or_none() or total_turn_ms
+
     return {
         "reply": "".join(full_tokens),
         "status": refreshed_session.status,
         "end_reason": refreshed_session.end_reason,
+        "latency_ms": last_latency,
+        "total_turn_ms": total_turn_ms,
     }
 
 

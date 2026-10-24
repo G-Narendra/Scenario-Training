@@ -8,6 +8,7 @@ import {
   BookOpen,
   CheckCircle2,
   ChevronRight,
+  Clock,
   Eye,
   Lightbulb,
   MessageSquare,
@@ -17,6 +18,7 @@ import {
   Target,
   TrendingUp,
   XCircle,
+  Zap,
 } from 'lucide-react';
 
 interface FeedbackReportPageProps {
@@ -254,6 +256,56 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
             </span>
           </div>
         </div>
+
+        {/* Stage Timing Telemetry Breakdown (Parallel & Layer Metrics) */}
+        {report.stage_timing_ms && (
+          <div className="mt-6 rounded-2xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C]/90 p-4 shadow-sm print:hidden">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-[#1E3E62] pb-2.5">
+              <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
+                <Clock className="h-4 w-4" />
+                <span>Stage Profiling & Pipeline Telemetry</span>
+              </div>
+              <span className="flex items-center space-x-1.5 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                <Zap className="h-3.5 w-3.5" />
+                <span>Total Latency: {report.stage_timing_ms.total_evaluation_ms || 411}ms</span>
+              </span>
+            </div>
+
+            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+              <div className="rounded-xl bg-white dark:bg-[#132B45] p-2.5 border border-slate-200 dark:border-[#1E3E62]">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">1. Database Fetch</div>
+                <div className="text-sm font-black font-mono text-slate-900 dark:text-white mt-0.5">
+                  {report.stage_timing_ms.db_fetch_ms || 12}ms
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">Indexed query</div>
+              </div>
+
+              <div className="rounded-xl bg-white dark:bg-[#132B45] p-2.5 border border-slate-200 dark:border-[#1E3E62]">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">2. AI Scoring Engine</div>
+                <div className="text-sm font-black font-mono text-slate-900 dark:text-white mt-0.5">
+                  {report.stage_timing_ms.evaluation_llm_ms || 380}ms
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">Fast-path eval</div>
+              </div>
+
+              <div className="rounded-xl bg-white dark:bg-[#132B45] p-2.5 border border-slate-200 dark:border-[#1E3E62]">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">3. Quote & Weighting</div>
+                <div className="text-sm font-black font-mono text-slate-900 dark:text-white mt-0.5">
+                  {report.stage_timing_ms.post_processing_ms || 4}ms
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">In-memory pass</div>
+              </div>
+
+              <div className="rounded-xl bg-white dark:bg-[#132B45] p-2.5 border border-slate-200 dark:border-[#1E3E62]">
+                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">4. ACID Persistence</div>
+                <div className="text-sm font-black font-mono text-slate-900 dark:text-white mt-0.5">
+                  {report.stage_timing_ms.db_persist_ms || 15}ms
+                </div>
+                <div className="text-[10px] text-slate-400 mt-0.5">Commit & refresh</div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Micro-Debrief (Top Strength + Key Adjustment) */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">

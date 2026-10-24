@@ -265,13 +265,14 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
             voiceClient.prefetchAudio(accumulatedReply.trim(), personaName).catch(() => {});
           }
         },
-        async () => {
+        async (_status, _endReason, latencyMs) => {
           setIsStreaming(false);
           const counterpartSeq = nextSeq + 1;
           const counterpartMsg: SessionMessage = {
             seq: counterpartSeq,
             role: 'counterpart',
             content: accumulatedReply,
+            latency_ms: latencyMs,
             created_at: new Date().toISOString(),
           };
           setMessages((prev) => [...prev, counterpartMsg]);
@@ -380,12 +381,13 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         accumulatedReply += chunk;
         setStreamingReply((prev) => prev + chunk);
       },
-      async () => {
+      async (_status, _endReason, latencyMs) => {
         setIsStreaming(false);
         const counterpartMsg: SessionMessage = {
           seq: nextSeq + 1,
           role: 'counterpart',
           content: accumulatedReply,
+          latency_ms: latencyMs,
           created_at: new Date().toISOString(),
         };
         setMessages((prev) => [...prev, counterpartMsg]);
@@ -1009,6 +1011,18 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                 <div className={`whitespace-pre-line text-base leading-relaxed ${isUser ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
                   {m.content}
                 </div>
+
+                {!isUser && m.latency_ms !== undefined && m.latency_ms > 0 && (
+                  <div className="mt-2 pt-2 border-t border-slate-200 dark:border-[#1E3E62]/60 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 font-mono">
+                    <span className="flex items-center space-x-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                      <span>Response time: {m.latency_ms}ms</span>
+                    </span>
+                    <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400">
+                      {m.latency_ms < 600 ? '⚡ Ultra-Fast' : m.latency_ms < 1500 ? '⚡ Calibrated' : '⚡ Streamed'}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           );
