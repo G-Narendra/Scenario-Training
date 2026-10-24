@@ -233,17 +233,12 @@ html:not(.dark) textarea::placeholder {
     print-color-adjust: exact !important;
   }
 
-  /* Prevent card severance across page breaks */
+  /* Prevent small individual leaf cards from severing across page breaks while letting parent sections flow naturally */
   .print-avoid-break,
-  .print-card,
-  article,
-  section,
-  blockquote,
   .rubric-card,
   .moment-card,
   .drill-card,
-  [class*="rounded-2xl"],
-  [class*="rounded-3xl"] {
+  blockquote {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
     page-break-after: auto;

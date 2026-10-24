@@ -16,6 +16,7 @@ import {
   Mic,
   MicOff,
   RefreshCw,
+  RotateCcw,
   Send,
   Sparkles,
   UserCheck,
@@ -963,91 +964,101 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         id="chat-messages-container"
         className="flex-1 overflow-y-auto px-4 py-6 sm:px-6 lg:px-8 space-y-5 max-w-4xl mx-auto w-full"
       >
-        {messages.map((m) => {
-          const isUser = m.role === 'trainee';
-          return (
-            <div
-              key={m.seq}
-              data-role={m.role}
-              className={`flex items-start space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}
-            >
-              {/* Avatar with pure crisp white text */}
+        {(() => {
+          const lastUserSeq = [...messages].reverse().find(m => m.role === 'trainee')?.seq;
+          return messages.map((m) => {
+            const isUser = m.role === 'trainee';
+            return (
               <div
-                className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-xs font-bold shadow-sm avatar-counterpart ${
-                  isUser
-                    ? 'bg-[#FF6500] text-white'
-                    : 'bg-[#0B192C] text-white border border-[#1E3E62]'
-                }`}
-                style={{ color: '#ffffff' }}
+                key={m.seq}
+                data-role={m.role}
+                className={`flex items-start space-x-3 ${isUser ? 'flex-row-reverse space-x-reverse' : ''}`}
               >
-                <span className="text-white font-bold text-xs" style={{ color: '#ffffff' }}>
-                  {isUser ? 'You' : counterpartInitials}
-                </span>
-              </div>
+                {/* Avatar with pure crisp white text */}
+                <div
+                  className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-xs font-bold shadow-sm avatar-counterpart ${
+                    isUser
+                      ? 'bg-[#FF6500] text-white'
+                      : 'bg-[#0B192C] text-white border border-[#1E3E62]'
+                  }`}
+                  style={{ color: '#ffffff' }}
+                >
+                  <span className="text-white font-bold text-xs" style={{ color: '#ffffff' }}>
+                    {isUser ? 'You' : counterpartInitials}
+                  </span>
+                </div>
 
-              {/* Message Bubble */}
-              <div
-                className={`max-w-[85%] sm:max-w-[78%] rounded-2xl p-4 shadow-sm ${
-                  isUser
-                    ? 'bg-[#FF6500] text-white rounded-tr-sm font-medium'
-                    : 'border border-slate-300 bg-white text-slate-900 rounded-tl-sm dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-white font-medium'
-                }`}
-              >
-                {/* Header inside bubble — counterpart only to prevent duplicate 'You' on user messages */}
-                {!isUser && (
-                  <div className="flex items-center justify-between text-[11px] font-bold mb-1.5 uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                    <span className="flex items-center space-x-2">
-                      <span>
-                        {personaName} · {personaRole}
-                      </span>
-                      {currentlySpeakingSeq === m.seq && (
-                        <span className="flex items-center space-x-1 text-[#FF6500] font-bold normal-case text-[10px] bg-[#FF6500]/10 px-2 py-0.5 rounded-full border border-[#FF6500]/25 animate-pulse">
-                          <Volume2 className="h-3 w-3 animate-bounce" />
-                          <span>Talking...</span>
+                {/* Message Bubble */}
+                <div
+                  className={`max-w-[85%] sm:max-w-[78%] rounded-2xl p-4 shadow-sm ${
+                    isUser
+                      ? 'bg-[#FF6500] text-white rounded-tr-sm font-medium'
+                      : 'border border-slate-300 bg-white text-slate-900 rounded-tl-sm dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-white font-medium'
+                  }`}
+                >
+                  {/* Header inside bubble — counterpart only to prevent duplicate 'You' on user messages */}
+                  {!isUser && (
+                    <div className="flex items-center justify-between text-[11px] font-bold mb-1.5 uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                      <span className="flex items-center space-x-2">
+                        <span>
+                          {personaName} · {personaRole}
                         </span>
+                        {currentlySpeakingSeq === m.seq && (
+                          <span className="flex items-center space-x-1 text-[#FF6500] font-bold normal-case text-[10px] bg-[#FF6500]/10 px-2 py-0.5 rounded-full border border-[#FF6500]/25 animate-pulse">
+                            <Volume2 className="h-3 w-3 animate-bounce" />
+                            <span>Talking...</span>
+                          </span>
+                        )}
+                      </span>
+                      {session.mode === 'voice' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (currentlySpeakingSeq === m.seq) {
+                              handleStopAudio();
+                            } else {
+                              handlePlayMessageAudio(m.content, m.seq);
+                            }
+                          }}
+                          title={currentlySpeakingSeq === m.seq ? 'Stop speaking' : 'Listen out loud'}
+                          className={`p-1 rounded transition ${
+                            currentlySpeakingSeq === m.seq
+                              ? 'bg-[#FF6500] text-white shadow-sm'
+                              : 'hover:bg-slate-200 dark:hover:bg-[#1E3E62] text-slate-500 hover:text-[#FF6500] dark:text-slate-400 dark:hover:text-[#FF6500]'
+                          }`}
+                        >
+                          {currentlySpeakingSeq === m.seq ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                        </button>
                       )}
-                    </span>
-                    {session.mode === 'voice' && (
+                    </div>
+                  )}
+                  <div className={`whitespace-pre-line text-base leading-relaxed ${isUser ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
+                    {m.content}
+                  </div>
+
+                  {/* Quick Edit/Clarify action on user's latest turn if session is active */}
+                  {isUser && !isSessionClosed && m.seq === lastUserSeq && (
+                    <div className="mt-2 pt-1.5 border-t border-white/20 flex items-center justify-end">
                       <button
                         type="button"
                         onClick={() => {
-                          if (currentlySpeakingSeq === m.seq) {
-                            handleStopAudio();
-                          } else {
-                            handlePlayMessageAudio(m.content, m.seq);
-                          }
+                          setInputText(m.content);
+                          const el = document.getElementById('chat-message-input');
+                          if (el) el.focus();
                         }}
-                        title={currentlySpeakingSeq === m.seq ? 'Stop speaking' : 'Listen out loud'}
-                        className={`p-1 rounded transition ${
-                          currentlySpeakingSeq === m.seq
-                            ? 'bg-[#FF6500] text-white shadow-sm'
-                            : 'hover:bg-slate-200 dark:hover:bg-[#1E3E62] text-slate-500 hover:text-[#FF6500] dark:text-slate-400 dark:hover:text-[#FF6500]'
-                        }`}
+                        className="text-[11px] text-white/90 hover:text-white underline decoration-white/40 hover:decoration-white transition font-medium flex items-center space-x-1"
+                        title="Draft an edit or clarification in the message input"
                       >
-                        {currentlySpeakingSeq === m.seq ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
+                        <RotateCcw className="h-3 w-3 inline mr-1" />
+                        <span>Edit / Clarify</span>
                       </button>
-                    )}
-                  </div>
-                )}
-                <div className={`whitespace-pre-line text-base leading-relaxed ${isUser ? 'text-white' : 'text-slate-900 dark:text-white'}`}>
-                  {m.content}
+                    </div>
+                  )}
                 </div>
-
-                {!isUser && m.latency_ms !== undefined && m.latency_ms > 0 && (
-                  <div className="mt-2 pt-2 border-t border-slate-200 dark:border-[#1E3E62]/60 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500 font-mono">
-                    <span className="flex items-center space-x-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                      <span>Response time: {m.latency_ms}ms</span>
-                    </span>
-                    <span className="text-[9px] uppercase tracking-wider font-bold text-slate-400">
-                      {m.latency_ms < 600 ? '⚡ Ultra-Fast' : m.latency_ms < 1500 ? '⚡ Calibrated' : '⚡ Streamed'}
-                    </span>
-                  </div>
-                )}
               </div>
-            </div>
-          );
-        })}
+            );
+          });
+        })()}
 
         {/* Live Streaming Bubble for Text mode */}
         {isStreaming && (
@@ -1097,7 +1108,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                     handleSendMessage();
                   }
                 }}
-                disabled={isStreaming || isSessionClosed}
+                disabled={isSessionClosed}
                 placeholder={
                   isSessionClosed
                     ? 'Practice session has ended. Review your evaluation report above.'
@@ -1139,8 +1150,17 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                     disabled={!inputText.trim() || isStreaming || isSessionClosed}
                     className="flex items-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2 text-sm font-bold text-white shadow-md shadow-[#FF6500]/25 transition disabled:opacity-40"
                   >
-                    <span>Send</span>
-                    <Send className="h-4 w-4" />
+                    {isStreaming ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        <span>Responding...</span>
+                      </>
+                    ) : (
+                      <>
+                        <span>Send</span>
+                        <Send className="h-4 w-4" />
+                      </>
+                    )}
                   </button>
                 </div>
               </div>

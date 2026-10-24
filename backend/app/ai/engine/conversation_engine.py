@@ -252,7 +252,7 @@ class ConversationEngine:
         start_time = time.perf_counter()
         full_reply_parts = []
         try:
-            async for chunk in self.llm_provider.stream_chat(llm_messages, system_prompt, max_tokens=100):
+            async for chunk in self.llm_provider.stream_chat(llm_messages, system_prompt, max_tokens=80):
                 full_reply_parts.append(chunk)
                 yield chunk
         except Exception as e:
@@ -260,11 +260,22 @@ class ConversationEngine:
 
         if not full_reply_parts:
             persona_name = scenario_persona.get("name", "Marcus")
-            fallback_reply = (
-                "Look, I understand where you're coming from, but we have to prioritize what actually moves the needle for the client. What's your concrete recommendation?"
-                if "marcus" in persona_name.lower()
-                else "I hear what you're saying. From my perspective, we need to balance team process with our delivery milestones. How do you propose we handle this?"
-            )
+            t_lower = trainee_message.lower().strip()
+            
+            # Dynamic contextual fallback reflecting what the trainee actually communicated
+            if any(w in t_lower for w in ["bye", "byr", "later", "cya", "see you", "continue with it", "touch base"]):
+                fallback_reply = "Sounds good. Keep me updated after your discussion with the client, and we'll take it from there."
+            elif any(w in t_lower for w in ["plan", "what is your", "what's your", "how do you"]):
+                fallback_reply = "My priority is delivering top-quality creative work without burnout. If we can adjust the standup cadence or allow asynchronous updates, that would solve the friction."
+            elif any(w in t_lower for w in ["meeting", "inperson", "in person", "schedule", "discuss"]):
+                fallback_reply = "I'm willing to talk through it, provided we keep it focused on finding a practical workflow rather than rigid clock-watching."
+            elif any(w in t_lower for w in ["agree", "take care", "don't worry", "dont worry", "i will talk"]):
+                fallback_reply = "Understood. As long as our client deliverables remain top-tier, I'm confident we can work through any scheduling logistics."
+            elif "marcus" in persona_name.lower():
+                fallback_reply = "I hear your point. Let's figure out a middle ground that protects both sprint visibility and our creative execution."
+            else:
+                fallback_reply = "I hear what you're saying. From my perspective, we need to balance team process with our delivery milestones. How do you propose we handle this?"
+                
             full_reply_parts.append(fallback_reply)
             yield fallback_reply
 

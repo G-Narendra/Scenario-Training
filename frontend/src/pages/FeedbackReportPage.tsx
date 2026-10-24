@@ -207,18 +207,18 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
       </div>
 
       {/* Hero Scorecard */}
-      <div className="print-section print-card print-avoid-break mt-6 rounded-3xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-6 sm:p-8 shadow-xl">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+      <div className="print-section mt-6 rounded-3xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-6 sm:p-8 shadow-xl print:p-4 print:mt-2 print:border-slate-300">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 print:block">
           <div>
             <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
               <Award className="h-4 w-4" />
               <span>Performance Summary</span>
             </div>
-            <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900 dark:text-white font-heading sm:text-3xl">
+            <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900 dark:text-white font-heading sm:text-3xl print:hidden">
               {session?.scenario_title || 'Scenario Performance Report'}
             </h1>
 
-            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-[#0B192C] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-[#1E3E62] w-fit">
+            <div className="mt-3 flex flex-wrap items-center gap-3 text-xs font-semibold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-[#0B192C] px-3.5 py-2 rounded-xl border border-slate-200 dark:border-[#1E3E62] w-fit print:hidden">
               <span className="flex items-center space-x-1.5">
                 <span className="text-slate-400">Participant:</span>
                 <span className="text-slate-900 dark:text-white font-bold">{session?.trainee_name || 'You'}</span>
@@ -235,13 +235,13 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
               </span>
             </div>
 
-            <p className="mt-4 text-base text-slate-700 dark:text-slate-200 max-w-2xl leading-relaxed font-medium">
+            <p className="mt-4 text-base text-slate-700 dark:text-slate-200 max-w-2xl leading-relaxed font-medium print:mt-1 print:max-w-none">
               {report.overall_summary}
             </p>
           </div>
 
-          {/* Radial Score Gauge */}
-          <div className="print-avoid-break flex flex-col items-center justify-center rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-slate-50 dark:bg-[#0B192C] p-6 shadow-inner text-center min-w-[190px]">
+          {/* Radial Score Gauge (Screen only - print uses unified printable header gauge) */}
+          <div className="print:hidden flex flex-col items-center justify-center rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-slate-50 dark:bg-[#0B192C] p-6 shadow-inner text-center min-w-[190px]">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
               Overall Score
             </span>
@@ -384,7 +384,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
       </div>
 
       {/* Competency Scores */}
-      <div className="print-section mt-8 print-avoid-break">
+      <div className="print-section mt-8">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center space-x-2 font-heading">
           <Target className="h-5 w-5 text-[#FF6500]" />
           <span>Competency Assessment</span>
@@ -435,7 +435,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
       </div>
 
       {/* Strengths & Adjustments Grounded in Dialogue */}
-      <div className="print-section mt-8 grid grid-cols-1 md:grid-cols-2 gap-6 print-avoid-break">
+      <div className="print-section mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Strengths */}
         <div className="print-card print-avoid-break rounded-3xl border-2 border-emerald-500/40 bg-white dark:bg-[#132B45] p-6 shadow-md">
           <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-emerald-700 dark:text-emerald-400">
@@ -482,7 +482,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
       </div>
 
       {/* Key Moments */}
-      <div className="print-section mt-8 print-avoid-break">
+      <div className="print-section mt-8">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center space-x-2 font-heading">
           <Sparkles className="h-5 w-5 text-[#FF6500]" />
           <span>Key Conversation Moments</span>
@@ -536,7 +536,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
       </div>
 
       {/* Action Plan */}
-      <div className="print-section print-card print-avoid-break mt-8 rounded-3xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-8 shadow-xl">
+      <div className="print-section mt-8 rounded-3xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-8 shadow-xl print:p-4">
         <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
           <TrendingUp className="h-4 w-4" />
           <span>Action Plan</span>
@@ -587,7 +587,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
 
       {/* Complete Transcript */}
       {session && session.messages && session.messages.length > 0 && (
-        <div className="print-section print-card mt-8 rounded-3xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-8 shadow-xl">
+        <div className="print-section mt-8 rounded-3xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-8 shadow-xl print:p-4">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#1E3E62] pb-4">
             <div>
               <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">

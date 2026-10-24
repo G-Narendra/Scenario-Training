@@ -171,36 +171,49 @@ class ScoringService:
                     }
                 ]
 
-        skill_score_val = 1 if is_trivial else 3
-        overall_score_val = 0 if is_trivial else 68
-
         skill_scores = []
         for s in skills:
+            s_key = s.get("key", "").lower()
+            s_name = s.get("name", "Competency")
+            s_rubric = s.get("rubric", {})
+
+            if is_trivial:
+                score_val = 1
+                rubric_text = s_rubric.get("1", f"Level 1: Minimal demonstration of {s_name.lower()} during preliminary exchange.")
+                just_text = f"Session concluded early ('{first_quote}') before demonstrating {s_name.lower()}."
+            elif any(k in s_key for k in ["clarity", "directness", "communication"]):
+                score_val = 2
+                rubric_text = s_rubric.get("2", s_rubric.get("3", "Level 2: Raised topic directly but lost clarity as discussion progressed."))
+                just_text = f"You initiated dialogue directly with '{m1.get('content', first_quote)}', but subsequent turns became overly brief or vague regarding resolution."
+            elif any(k in s_key for k in ["accountability", "boundary", "assertive"]):
+                score_val = 2
+                rubric_text = s_rubric.get("2", s_rubric.get("1", "Level 2: Conceded to counterpart resistance without securing firm boundaries."))
+                just_text = f"Conceded to counterpart pushback ('{m2.get('content', first_quote)}') rather than securing a clear mutual agreement."
+            elif any(k in s_key for k in ["empathy", "listening", "rapport"]):
+                score_val = 3
+                rubric_text = s_rubric.get("3", "Level 3: Acknowledged counterpart perspective but did not probe underlying motivations.")
+                just_text = f"Maintained a constructive tone under pushback, but did not ask open discovery questions to uncover why schedule adherence felt stifling."
+            else:
+                score_val = 3
+                rubric_text = s_rubric.get("3", f"Level 3: Competent baseline demonstration of {s_name.lower()}.")
+                just_text = f"Demonstrated basic professional capability for {s_name.lower()} across conversational exchanges."
+
             skill_scores.append(
                 SkillScoreItem(
                     skill=s.get("key", "communication"),
-                    score=skill_score_val,
-                    rubric_level_reached=s.get("rubric", {}).get(
-                        str(skill_score_val),
-                        "Level 1: Minimal demonstration of skill during preliminary exchange."
-                        if is_trivial
-                        else "Level 3: Competent execution with balanced inquiry and response."
-                    ),
-                    justification=(
-                        f"Brief input ('{first_quote}') concluded before exploring counterpart requirements."
-                        if is_trivial
-                        else f"Demonstrated active listening and professional demeanor in response to counterpart friction."
-                    ),
+                    score=score_val,
+                    rubric_level_reached=rubric_text,
+                    justification=just_text,
                 )
             )
 
         if not skill_scores:
             skill_scores.append(
                 SkillScoreItem(
-                    skill="communication",
-                    score=skill_score_val,
-                    rubric_level_reached="Level 3: Competent execution with balanced inquiry and response.",
-                    justification="Demonstrated professional communication during the session.",
+                    skill="clarity",
+                    score=2,
+                    rubric_level_reached="Level 2: Raised topic directly but lacked structured resolution.",
+                    justification="Initiated the discussion but concluded before establishing a concrete action plan.",
                 )
             )
 
@@ -208,14 +221,14 @@ class ScoringService:
             WhatWorkedItem(
                 moment_seq=m1.get("seq", first_seq),
                 quote=m1.get("content", first_quote),
-                why_it_worked="Initiated conversation professionally and maintained constructive tone under friction.",
+                why_it_worked="Initiated the conversation with professional composure and maintained an open, non-combative posture.",
             )
         ]
         what_didnt = [
             WhatDidntItem(
                 moment_seq=m2.get("seq", first_seq),
                 quote=m2.get("content", first_quote),
-                why_it_missed="Could have asked an open calibration question to uncover root constraints before proposing next actions.",
+                why_it_missed="Yielded conversational initiative rather than using an open calibration question to uncover the operational root cause.",
             )
         ]
         key_moments = [
@@ -278,6 +291,10 @@ class ScoringService:
                 "success_criteria", ["Demonstrate constructive communication"]
             )
         ]
+        assessed_list = scenario_data.get("skills_assessed", [])
+        overall_score_val = cls.compute_deterministic_overall_score(skill_scores, assessed_list)
+        if is_trivial:
+            overall_score_val = min(overall_score_val, 25)
 
         return FeedbackReportSchema(
             overall_summary=(
@@ -437,10 +454,10 @@ class ScoringService:
                     llm_provider.complete(
                         messages=[LLMMessage(role="user", content=prompt_text)],
                         system_prompt=EVALUATOR_SYSTEM_PROMPT + "\nIMPORTANT: Return ONLY raw, valid JSON starting with '{' and ending with '}'. Never include markdown codeblocks or conversational preamble.",
-                        max_tokens=1000,
+                        max_tokens=850,
                         temperature=0.2,
                     ),
-                    timeout=25.0,
+                    timeout=50.0,
                 )
                 evaluation_llm_ms = max(1, int((time.perf_counter() - t_llm0) * 1000))
                 raw_text = response.content.strip()

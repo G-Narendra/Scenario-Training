@@ -112,8 +112,8 @@ class NVIDIAProvider(LLMProvider):
 
             try:
                 logger.info(f"[NVIDIA Multi-Key Pool] Routing stream turn to key #{attempt + 1}/{len(candidate_keys)} ({masked_key})")
-                # Snappy 5.0s per-key streaming timeout with 3.5s connect gate for instant failover across keys
-                async with client.stream("POST", self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(5.0, connect=3.5, read=5.0)) as response:
+                # Resilient per-key streaming timeout with 3.5s connect gate and 15s read runway to prevent false timeout cascades
+                async with client.stream("POST", self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(15.0, connect=3.5, read=15.0)) as response:
                     if response.status_code != 200:
                         body = await response.aread()
                         logger.warning(
@@ -214,7 +214,7 @@ class NVIDIAProvider(LLMProvider):
             }
 
             try:
-                response = await client.post(self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(10.0, connect=6.0, read=10.0))
+                response = await client.post(self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(45.0, connect=5.0, read=40.0))
                 if response.status_code != 200:
                     logger.warning(
                         f"[NVIDIA Multi-Key Pool] Key #{attempt + 1} ({masked_key}) returned {response.status_code}. Failing over..."

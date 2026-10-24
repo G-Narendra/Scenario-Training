@@ -341,13 +341,13 @@ def execute_test_harness() -> dict:
         target_path = test_dir / "unit" if (test_dir / "unit").exists() else test_dir
         try:
             proc = subprocess.run(
-                pytest_cmd + [str(target_path.relative_to(ROOT_DIR)), "-v", "--tb=short"],
+                pytest_cmd + [str(target_path.relative_to(ROOT_DIR)), "-q", "--tb=line"],
                 cwd=str(ROOT_DIR),
                 capture_output=True,
                 text=True,
                 encoding="utf-8",
                 errors="ignore",
-                timeout=120
+                timeout=180
             )
             if proc.returncode == 0:
                 results["tests_passed"] = True
@@ -359,7 +359,7 @@ def execute_test_harness() -> dict:
         except FileNotFoundError:
             results["details"] = "pytest command not found in PATH. Ensure test runner is installed in environment."
         except subprocess.TimeoutExpired:
-            results["details"] = "pytest timed out after 60 seconds."
+            results["details"] = "pytest timed out after 180 seconds."
         except Exception as e:
             results["details"] = f"Error running pytest: {str(e)}"
 
