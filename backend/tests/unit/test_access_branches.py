@@ -110,13 +110,16 @@ async def test_access_service_authenticate_branches():
             .scalars()
             .first()
         )
+        from backend.app.services.access_service import invalidate_passcode_cache
+
         passcode_rec.max_uses = 1
         passcode_rec.uses_count = 1
         await db.commit()
+        invalidate_passcode_cache()
 
         with pytest.raises(HTTPException) as exc_max:
             await AccessService.authenticate_passcode(
-                db=db, passcode_plain=code, display_name="New Trainee", ip="198.51.100.22"
+                db=db, passcode_plain=code, display_name="Valid Trainee", ip="198.51.100.22"
             )
         assert exc_max.value.status_code == 401
 
@@ -124,10 +127,11 @@ async def test_access_service_authenticate_branches():
         passcode_rec.max_uses = None
         passcode_rec.valid_until = datetime.now(timezone.utc) - timedelta(hours=1)
         await db.commit()
+        invalidate_passcode_cache()
 
         with pytest.raises(HTTPException) as exc_past:
             await AccessService.authenticate_passcode(
-                db=db, passcode_plain=code, display_name="New Trainee", ip="198.51.100.23"
+                db=db, passcode_plain=code, display_name="Valid Trainee", ip="198.51.100.23"
             )
         assert exc_past.value.status_code == 401
 

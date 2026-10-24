@@ -121,7 +121,7 @@ async def test_conversation_engine_sanitizes_and_defends_injection():
         session_id = session.id
 
     async with async_session_factory() as db:
-        engine = ConversationEngine(db=db)
+        engine = ConversationEngine(db=db, llm_provider=MockLLMProvider())
 
         # Process adversarial turn
         adversarial_utterance = (

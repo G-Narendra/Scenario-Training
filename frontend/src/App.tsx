@@ -44,6 +44,28 @@ const AppContent: React.FC = () => {
     setCurrentView(targetView);
     window.history.replaceState({ view: targetView, selectedTrack }, '', '#' + targetView);
 
+    // If refreshing on #evaluation and no evalSessionId in memory, restore from sessionStorage or recent completed session
+    if (targetView === 'evaluation' && !evalSessionId) {
+      const storedEvalId = sessionStorage.getItem('scenariolab_eval_session_id');
+      if (storedEvalId) {
+        setEvalSessionId(storedEvalId);
+      } else {
+        const restoreEval = async () => {
+          try {
+            const mySessions = await api.listMySessions();
+            const completed = mySessions.find((s) => s.status === 'completed');
+            if (completed) {
+              sessionStorage.setItem('scenariolab_eval_session_id', completed.id);
+              setEvalSessionId(completed.id);
+            }
+          } catch (err) {
+            console.warn('Could not auto-restore completed session evaluation', err);
+          }
+        };
+        restoreEval();
+      }
+    }
+
     // If refreshing on #chat and no activeSession in memory, restore from sessionStorage or recent active session
     if (targetView === 'chat' && !activeSession) {
       const storedSessionId = sessionStorage.getItem('scenariolab_active_session_id');
@@ -57,6 +79,7 @@ const AppContent: React.FC = () => {
               setActiveSession(sessionData);
               return;
             } else if (sessionData && sessionData.status === 'completed') {
+              sessionStorage.setItem('scenariolab_eval_session_id', sessionData.id);
               setEvalSessionId(sessionData.id);
               navigateTo('evaluation', undefined, true);
               return;
@@ -151,7 +174,7 @@ const AppContent: React.FC = () => {
       const msg = errorObj?.message || 'Unable to start scenario.';
       if (errorObj?.status === 429 || msg.includes('ATTEMPT_LIMIT_REACHED')) {
         setAttemptLimitMessage(
-          'You have completed your 5 assigned scenario practice runs for this cohort. Please wait for the trainer’s next instruction or review your past debrief.'
+          'You have completed your 10 assigned scenario practice attempts for this cohort. Please contact your instructor for additional attempts.'
         );
       } else {
         alert(msg);
@@ -169,6 +192,7 @@ const AppContent: React.FC = () => {
   };
 
   const handleViewEvaluation = (sessionId: string) => {
+    sessionStorage.setItem('scenariolab_eval_session_id', sessionId);
     setEvalSessionId(sessionId);
     navigateTo('evaluation');
   };
@@ -218,13 +242,39 @@ const AppContent: React.FC = () => {
           )
         )}
 
-        {currentView === 'evaluation' && (evalSessionId || activeSession) && (
-          <FeedbackReportPage
-            sessionId={evalSessionId || activeSession!.id}
-            onBackToScenarios={() => navigateTo('scenarios')}
-            onRetryScenario={(scenId) => handleLaunchSimulation(scenId, 'text')}
-            onNavigateProgress={() => navigateTo('progress')}
-          />
+        {currentView === 'evaluation' && (
+          (evalSessionId || activeSession) ? (
+            <FeedbackReportPage
+              sessionId={evalSessionId || activeSession!.id}
+              onBackToScenarios={() => navigateTo('scenarios')}
+              onRetryScenario={(scenId) => handleLaunchSimulation(scenId, 'text')}
+              onNavigateProgress={() => navigateTo('progress')}
+            />
+          ) : (
+            <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100 p-6 text-center">
+              <div className="h-12 w-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-500 flex items-center justify-center text-2xl mb-4">
+                📊
+              </div>
+              <p className="text-base font-bold text-slate-900 dark:text-white mb-2">No Evaluation Selected</p>
+              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6">
+                Complete a practice scenario or choose a completed session from your progress page to review your detailed rubric feedback.
+              </p>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => navigateTo('scenarios')}
+                  className="px-5 py-2.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] text-white text-sm font-bold shadow-md transition"
+                >
+                  Go to Scenarios
+                </button>
+                <button
+                  onClick={() => navigateTo('progress')}
+                  className="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                >
+                  View My Progress
+                </button>
+              </div>
+            </div>
+          )
         )}
 
         {currentView === 'progress' && (

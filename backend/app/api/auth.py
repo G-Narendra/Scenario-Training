@@ -15,7 +15,7 @@ from backend.app.db.models import (
 )
 from backend.app.db.session import get_db
 from backend.app.schemas.auth import LoginResponse, PasscodeLoginRequest, UserResponse
-from backend.app.security.deps import get_current_user, security
+from backend.app.security.deps import get_current_user, invalidate_all_user_tokens, security
 from backend.app.security.passcodes import hash_token
 from backend.app.services.access_service import AccessService
 
@@ -149,10 +149,13 @@ async def delete_my_account(
     )
     db.add(audit)
 
-    # Anonymize user record
-    current_user.display_name = "Anonymized Trainee"
-    current_user.email = None
-    current_user.is_active = False
+    # Anonymize user record in active db session
+    user = await db.get(User, current_user.id)
+    if user:
+        user.display_name = "Anonymized Trainee"
+        user.email = None
+        user.is_active = False
 
+    invalidate_all_user_tokens(current_user.id)
     await db.commit()
     return {"message": "User personal data successfully anonymized and session revoked."}

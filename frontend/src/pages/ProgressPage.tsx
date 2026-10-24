@@ -52,9 +52,24 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
       if (activeTab === 'me') {
         const data = await api.getMyProgress();
         setTraineeData(data);
-      } else if (activeTab === 'cohort' && user?.cohort_id) {
-        const cData = await api.getCohortProgress(user.cohort_id);
-        setCohortData(cData);
+      } else if (activeTab === 'cohort') {
+        let cohortIdToFetch = user?.cohort_id;
+        if (!cohortIdToFetch && canViewCohort) {
+          try {
+            const adminCohorts = await api.listAdminCohorts();
+            if (adminCohorts && adminCohorts.length > 0) {
+              cohortIdToFetch = adminCohorts[0].id;
+            }
+          } catch (e) {
+            console.warn('Could not auto-lookup admin cohorts for progress tab', e);
+          }
+        }
+        if (cohortIdToFetch) {
+          const cData = await api.getCohortProgress(cohortIdToFetch);
+          setCohortData(cData);
+        } else {
+          setCohortData(null);
+        }
       }
     } catch (err: unknown) {
       console.error('Failed to load progress data', err);
@@ -66,14 +81,15 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
   };
 
   const handleExportCsv = async () => {
-    if (!user?.cohort_id) return;
+    const targetCohortId = cohortData?.cohort_id || user?.cohort_id;
+    if (!targetCohortId) return;
     setExportingCsv(true);
     try {
-      const blob = await api.exportCohortCsv(user.cohort_id);
+      const blob = await api.exportCohortCsv(targetCohortId);
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `cohort_${user.cohort_id}_progress.csv`;
+      a.download = `cohort_${targetCohortId}_progress.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
@@ -800,6 +816,19 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* Cohort Empty State Fallback */}
+      {!loading && !error && activeTab === 'cohort' && !cohortData && (
+        <div className="mt-8 rounded-2xl border-2 border-dashed border-slate-300 dark:border-[#2D5B8D] p-12 text-center bg-white dark:bg-[#132B45]/50">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FF6500]/15 text-[#FF6500] mb-4 border border-[#FF6500]/30 text-2xl">
+            👥
+          </div>
+          <h3 className="text-xl font-black text-slate-900 dark:text-white">No Cohort Progress Data Available</h3>
+          <p className="mt-2 text-sm text-slate-500 dark:text-slate-400 max-w-md mx-auto">
+            No active student cohort was found. Visit the Facilitator Console to manage cohorts or enroll participants to track cohort-wide analytics.
+          </p>
         </div>
       )}
     </div>

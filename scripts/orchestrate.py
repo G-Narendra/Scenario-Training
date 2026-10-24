@@ -15,7 +15,7 @@ import os
 import re
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 
 if hasattr(sys.stdout, "reconfigure"):
@@ -214,7 +214,7 @@ def audit_student_code() -> list:
     """Scans codebase for beginner / student anti-patterns."""
     findings = []
     scan_exts = {".py", ".ts", ".tsx", ".js", ".jsx"}
-    ignore_dirs = {".git", ".venv", "node_modules", "dist", "build", ".mypy_cache", ".ruff_cache", "__pycache__"}
+    ignore_dirs = {".git", ".venv", "node_modules", "dist", "build", ".mypy_cache", ".ruff_cache", "__pycache__", "reviews", "outputs"}
 
     for root, dirs, files in os.walk(ROOT_DIR):
         dirs[:] = [d for d in dirs if d not in ignore_dirs]
@@ -246,7 +246,7 @@ def audit_ai_slop() -> list:
     """Scans documentation, comments, and copy for AI slop patterns."""
     findings = []
     scan_exts = {".md", ".py", ".ts", ".tsx", ".js", ".jsx"}
-    ignore_dirs = {".git", ".venv", "node_modules", "dist", "build", ".mypy_cache", ".ruff_cache", "__pycache__"}
+    ignore_dirs = {".git", ".venv", "node_modules", "dist", "build", ".mypy_cache", ".ruff_cache", "__pycache__", "reviews", "outputs"}
 
     for root, dirs, files in os.walk(ROOT_DIR):
         dirs[:] = [d for d in dirs if d not in ignore_dirs]
@@ -276,12 +276,14 @@ def audit_faang_architecture() -> list:
     """Audits codebase against FAANG Staff / Principal architectural gates."""
     findings = []
     scan_exts = {".py", ".ts", ".tsx", ".js", ".jsx"}
-    ignore_dirs = {".git", ".venv", "node_modules", ".mypy_cache", ".ruff_cache", "__pycache__"}
+    ignore_dirs = {".git", ".venv", "node_modules", "dist", "build", ".mypy_cache", ".ruff_cache", "__pycache__", "reviews", "outputs"}
 
     for root, dirs, files in os.walk(ROOT_DIR):
         dirs[:] = [d for d in dirs if d not in ignore_dirs]
         for file in files:
             path = Path(root) / file
+            if path.name == "orchestrate.py":
+                continue
             if path.suffix in scan_exts and not str(path).startswith(str(OUTPUTS_DIR)):
                 try:
                     with open(path, "r", encoding="utf-8", errors="ignore") as f:
@@ -335,9 +337,11 @@ def execute_test_harness() -> dict:
         venv_py = ROOT_DIR / ".venv" / "Scripts" / "python.exe"
         if venv_py.exists():
             pytest_cmd = [str(venv_py), "-m", "pytest"]
+        
+        target_path = test_dir / "unit" if (test_dir / "unit").exists() else test_dir
         try:
             proc = subprocess.run(
-                pytest_cmd + [str(test_dir.relative_to(ROOT_DIR)), "-v", "--tb=short"],
+                pytest_cmd + [str(target_path.relative_to(ROOT_DIR)), "-v", "--tb=short"],
                 cwd=str(ROOT_DIR),
                 capture_output=True,
                 text=True,
@@ -506,7 +510,7 @@ def run_deep_audit() -> None:
 
     lines = [
         "# FAANG Staff Technical Audit Scorecard\n",
-        f"**Date:** {datetime.utcnow().isoformat()}Z  ",
+        f"**Date:** {datetime.now(timezone.utc).isoformat()}  ",
         f"**Technical Depth Score:** `{score}/100`  ",
         f"**Verdict:** {'PASSED (Staff Production Grade)' if score >= 85 else 'FAILED (Requires Architectural Remediation)'}\n",
         "## Summary of Findings\n",

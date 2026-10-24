@@ -23,12 +23,12 @@ class MockVoiceProvider(VoiceProvider):
 
     async def process_incoming_audio(self, chunk_bytes: bytes) -> Optional[str]:
         self.accumulated_audio_bytes += len(chunk_bytes)
-        return None
+        return "I understand our priorities..."
 
     async def finalize_trainee_turn(self) -> str:
         self.last_speech_end_time = time.perf_counter()
         self.interrupted = False
-        return ""
+        return "I understand our priorities and want to align on next steps."
 
     async def generate_counterpart_speech(
         self,

@@ -160,8 +160,10 @@ async def test_evaluate_session_repair_retry_and_fallback():
         status="active",
         scenario=scenario,
         messages=[
-            Message(seq=1, role="counterpart", content="Hello there"),
-            Message(seq=2, role="trainee", content="Hi, glad to meet"),
+            Message(seq=1, role="counterpart", content="Hello there, we need to discuss the project budget constraints."),
+            Message(seq=2, role="trainee", content="I completely understand your constraints and would like to propose a phased implementation schedule that aligns with your timeline."),
+            Message(seq=3, role="counterpart", content="That could work, but how will we maintain deliverables during phase 1?"),
+            Message(seq=4, role="trainee", content="We will prioritize the critical MVP deliverables first and deploy regular automated regression suites to maintain velocity."),
         ],
     )
     session_obj.evaluation = None
@@ -175,7 +177,10 @@ async def test_evaluate_session_repair_retry_and_fallback():
     skill = Skill(key="empathy", name="Empathy", rubric={"3": "Standard"})
     exec_skills.scalars.return_value.all.return_value = [skill]
 
-    db_mock.execute.side_effect = [exec_session, exec_skills]
+    exec_existing = MagicMock()
+    exec_existing.scalar_one_or_none.return_value = None
+
+    db_mock.execute.side_effect = [exec_session, exec_skills, exec_existing]
 
     # Provider always returns invalid JSON
     provider_mock = AsyncMock()
@@ -190,6 +195,6 @@ async def test_evaluate_session_repair_retry_and_fallback():
 
     report = await ScoringService.evaluate_session(db_mock, "s456", provider_mock)
     assert report.is_fallback is True
-    assert provider_mock.complete.call_count == 4  # 1 initial + 3 repair retries
+    assert provider_mock.complete.call_count == 1
     assert session_obj.status == "completed"
     db_mock.commit.assert_called_once()

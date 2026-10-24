@@ -453,11 +453,33 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       return;
     }
 
+    interface SpeechAlternativeItem {
+      transcript: string;
+    }
+    interface SpeechResultItem {
+      [index: number]: SpeechAlternativeItem;
+    }
+    interface DictationSpeechEvent {
+      results: {
+        length: number;
+        [index: number]: SpeechResultItem;
+      };
+    }
+    interface DictationRecognition {
+      continuous: boolean;
+      interimResults: boolean;
+      lang: string;
+      onresult: ((event: DictationSpeechEvent) => void) | null;
+      onerror: (() => void) | null;
+      onend: (() => void) | null;
+      start: () => void;
+      stop: () => void;
+    }
+    type DictationConstructor = new () => DictationRecognition;
+
     const windowWithSpeech = window as unknown as {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      SpeechRecognition?: any;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      webkitSpeechRecognition?: any;
+      SpeechRecognition?: DictationConstructor;
+      webkitSpeechRecognition?: DictationConstructor;
     };
     const SpeechRec = windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
 
@@ -472,8 +494,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       rec.interimResults = true;
       rec.lang = selectedVoiceLang || 'en-IN';
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      rec.onresult = (event: any) => {
+      rec.onresult = (event: DictationSpeechEvent) => {
         let transcript = '';
         for (let i = 0; i < event.results.length; i++) {
           transcript += event.results[i][0].transcript + ' ';

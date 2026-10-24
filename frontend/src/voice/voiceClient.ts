@@ -22,30 +22,67 @@ export interface VoiceServerMessage {
   message?: string;
 }
 
+interface ISpeechAlternative {
+  transcript: string;
+  confidence?: number;
+}
+
+interface ISpeechResult {
+  isFinal?: boolean;
+  length: number;
+  [index: number]: ISpeechAlternative;
+}
+
+interface ISpeechResultList {
+  length: number;
+  [index: number]: ISpeechResult;
+}
+
+interface ISpeechRecognitionEvent {
+  results: ISpeechResultList;
+  resultIndex?: number;
+}
+
+interface ISpeechRecognitionErrorEvent {
+  error: string;
+  message?: string;
+}
+
+interface ISpeechRecognition {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  maxAlternatives?: number;
+  onresult: ((event: ISpeechRecognitionEvent) => void) | null;
+  onerror: ((event: ISpeechRecognitionErrorEvent) => void) | null;
+  onend: (() => void) | null;
+  onspeechend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+}
+
+type SpeechRecognitionConstructor = new () => ISpeechRecognition;
+
 export class VoiceClient {
   private ws: WebSocket | null = null;
   private audioContext: AudioContext | null = null;
   private currentBufferSource: AudioBufferSourceNode | null = null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private recognition: any = null;
+  private recognition: ISpeechRecognition | null = null;
   private latestUtterance = '';
   private isCommitting = false;
   public isConnected = false;
   private isRecording = false;
   private isMuted = false;
   private isSpeaking = false;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private silenceTimer: any = null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private restartTimeout: any = null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private watchdogTimer: any = null;
+  private silenceTimer: ReturnType<typeof setTimeout> | null = null;
+  private restartTimeout: ReturnType<typeof setTimeout> | null = null;
+  private watchdogTimer: ReturnType<typeof setTimeout> | null = null;
   /**
    * Hard-deadline timer: forces a turn commit N seconds after the user first
    * silence timer on mobile.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private hardCommitTimer: any = null;
+  private hardCommitTimer: ReturnType<typeof setTimeout> | null = null;
   public isContinuousCall = true;
   public sessionPersonaName = '';
   public sessionVoiceGender: 'male' | 'female' = 'male';
@@ -374,10 +411,8 @@ export class VoiceClient {
     }
 
     const windowWithSpeech = window as unknown as {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      SpeechRecognition?: any;
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      webkitSpeechRecognition?: any;
+      SpeechRecognition?: SpeechRecognitionConstructor;
+      webkitSpeechRecognition?: SpeechRecognitionConstructor;
     };
     const SpeechRecognitionClass =
       windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
@@ -405,8 +440,7 @@ export class VoiceClient {
       recog.lang = this.recognitionLanguage || 'en-IN';
       recog.maxAlternatives = 1;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recog.onresult = (event: any) => {
+      recog.onresult = (event: ISpeechRecognitionEvent) => {
         // If muted, assistant is speaking, or currently committing turn, ignore incoming audio
         if (this.isMuted || this.isSpeaking || this.isCommitting) return;
 
@@ -481,8 +515,7 @@ export class VoiceClient {
         }
       };
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      recog.onerror = (event: any) => {
+      recog.onerror = (event: ISpeechRecognitionErrorEvent) => {
         if (event.error === 'not-allowed') {
           this.callbacks.onError?.('Microphone permission denied. Please allow microphone in your browser address bar.');
           this.isRecording = false;

@@ -142,6 +142,35 @@ class ScoringService:
             m2 = {"content": "Let's explore common ground.", "seq": 4}
             m3 = {"content": "Here is what we can agree on next.", "seq": 6}
 
+        # Ensure skills is never empty to prevent validation failure on FeedbackReportSchema
+        if not skills:
+            assessed = scenario_data.get("skills_assessed", [])
+            if assessed:
+                skills = [
+                    {
+                        "key": item.get("skill", "communication"),
+                        "name": item.get("skill", "communication").replace("_", " ").title(),
+                        "rubric": {
+                            "1": "Level 1: Minimal demonstration of skill.",
+                            "3": "Level 3: Competent execution with balanced inquiry and response.",
+                            "5": "Level 5: Masterful strategic execution.",
+                        },
+                    }
+                    for item in assessed
+                ]
+            else:
+                skills = [
+                    {
+                        "key": "communication",
+                        "name": "Executive Communication",
+                        "rubric": {
+                            "1": "Level 1: Developing communication.",
+                            "3": "Level 3: Competent execution with balanced inquiry and response.",
+                            "5": "Level 5: Masterful communication.",
+                        },
+                    }
+                ]
+
         skill_score_val = 1 if is_trivial else 3
         overall_score_val = 0 if is_trivial else 68
 
@@ -149,7 +178,7 @@ class ScoringService:
         for s in skills:
             skill_scores.append(
                 SkillScoreItem(
-                    skill=s["key"],
+                    skill=s.get("key", "communication"),
                     score=skill_score_val,
                     rubric_level_reached=s.get("rubric", {}).get(
                         str(skill_score_val),
@@ -162,6 +191,16 @@ class ScoringService:
                         if is_trivial
                         else f"Demonstrated active listening and professional demeanor in response to counterpart friction."
                     ),
+                )
+            )
+
+        if not skill_scores:
+            skill_scores.append(
+                SkillScoreItem(
+                    skill="communication",
+                    score=skill_score_val,
+                    rubric_level_reached="Level 3: Competent execution with balanced inquiry and response.",
+                    justification="Demonstrated professional communication during the session.",
                 )
             )
 

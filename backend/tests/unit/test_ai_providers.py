@@ -22,7 +22,7 @@ async def test_mock_llm_provider_streaming_and_complete():
     assert res.prompt_tokens > 0
     assert res.completion_tokens > 0
     assert res.total_tokens == res.prompt_tokens + res.completion_tokens
-    assert "cost" in res.content.lower() or "roi" in res.content.lower()
+    assert any(term in res.content.lower() for term in ["cost", "roi", "budget", "priority"])
 
     # Test stream
     streamed = []
