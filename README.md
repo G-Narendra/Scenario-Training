@@ -1,10 +1,15 @@
 ---
-title: ScenarioLab Unified
-emoji: ⚡
-colorFrom: blue
-colorTo: indigo
-sdk: docker
-app_port: 7860
+title: Scenario Training Backend
+emoji: 🏃
+colorFrom: pink
+colorTo: blue
+sdk: gradio
+sdk_version: 6.30.0
+python_version: "3.12"
+app_file: app.py
+pinned: false
+license: mit
+short_description: 3H Solutions Executive Scenario Training API Engine
 ---
 
 # ScenarioLab — Workplace Scenario Training
