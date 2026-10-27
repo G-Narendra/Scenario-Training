@@ -1,9 +1,16 @@
-import { build } from 'file:///C:/Users/naren/Downloads/Scenario-Training/frontend/node_modules/vite/dist/node/index.js';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-console.log('Starting Vite build via JS API...');
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const frontendDir = path.resolve(__dirname, '..', 'frontend');
+process.chdir(frontendDir);
+
+import { build } from '../frontend/node_modules/vite/dist/node/index.js';
+
+console.log('Starting Vite build in:', frontendDir);
 try {
   await build({
-    root: 'C:/Users/naren/Downloads/Scenario-Training/frontend',
+    root: frontendDir,
   });
   console.log('Vite build completed successfully!');
 } catch (err) {
