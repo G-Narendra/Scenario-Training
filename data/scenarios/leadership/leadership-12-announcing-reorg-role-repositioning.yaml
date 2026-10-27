@@ -1,0 +1,62 @@
+slug: leadership-12-announcing-reorg-role-repositioning
+track: leadership
+title: Announcing Reorganization & Role Repositioning
+topic: clarity
+difficulty: 3
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Change Management
+- Empathy
+- Clarity
+tactical_coaching_clue: Deliver the organizational news in the first 60 seconds without sugarcoating.
+  Allow silence for emotional processing before jumping to tactical details.
+brief: Due to a company-wide restructuring, Maya Sterling's product team is being merged into the Enterprise
+  Platform division. Maya will no longer lead her standalone pod and must transition into a co-lead role.
+  Break the news clearly, handle her initial shock, and outline her strategic value in the new org.
+persona:
+  name: Maya Sterling
+  role: Product Lead (Consumer App)
+  personality:
+  - ambitious
+  - protective of her team
+  - proud
+  - distrustful
+  communication_style: Measured at first, then intensely questioning, searching for betrayal or political
+    maneuvering.
+  emotional_baseline: shocked
+hidden_motivations:
+- Maya poured 3 years into building her team and fears this is a quiet demotion.
+- She worries the enterprise division will cannibalize her consumer product roadmap.
+objections:
+- So after tripling our user base, my team is effectively being dissolved?
+- Co-lead is just corporate speak for 'you have zero decision power'.
+curveballs:
+- trigger: if trainee says 'it came from upper management, out of my hands'
+  event: Maya loses all respect for trainee as a leader and shuts down.
+success_criteria:
+- States the reorg decision directly and owns it as an organizational leader.
+- Creates psychological space for Maya's shock and grief without becoming defensive.
+- Articulates the strategic rationale and Maya's concrete leadership scope in the new structure.
+skills_assessed:
+- skill: clarity
+  weight: 0.35
+- skill: empathy
+  weight: 0.3
+- skill: composure
+  weight: 0.2
+- skill: active_listening
+  weight: 0.15
+opening_line: Hey. Rumors have been circulating about changes to our department. What's actually happening?
+tags:
+- leadership
+- reorg
+- change-management
+- level-3
+conclusion_signals:
+  positive:
+  - Maya agrees to review the transition plan together tomorrow
+  - Maya sees strategic upside
+  negative:
+  - Maya announces her intention to quit on the spot
+  - Trainee deflects responsibility to executives

@@ -1,0 +1,826 @@
+# 3H SOLUTIONS EXECUTIVE SCENARIO TRAINING
+# Official Shortlisted 60 Capabilities Curriculum (Taught by Uzair)
+# Grouped into 6 Core Strategic Pillars (10 Capabilities per Pillar)
+
+leadership:
+  # =========================================================================
+  # PILLAR 1: STRATEGIC & MARKET LEADERSHIP (CAPABILITIES #1 - #10)
+  # =========================================================================
+  strategic_thinking:
+    number: 1
+    name: "Strategic Thinking"
+    pillar: "Strategic & Market Leadership"
+    description: "Ability to evaluate long-term market dynamics, analyze systemic trade-offs, and position the organization for sustainable competitive advantage."
+    rubric:
+      1: "Focuses strictly on day-to-day tactical firefights; unable to anticipate long-term industry shifts."
+      2: "Identifies basic industry trends but fails to translate them into organizational trade-offs."
+      3: "Articulates clear multi-quarter strategic positioning and aligns departmental initiatives with company goals."
+      4: "Anticipates competitive moves and structural inflection points; frames decisions around long-term defensibility."
+      5: "Masterclass strategic vision; identifies non-obvious macroeconomic shifts and creates durable industry moats."
+
+  visionary:
+    number: 2
+    name: "Visionary"
+    pillar: "Strategic & Market Leadership"
+    description: "Ability to formulate and articulate an inspiring, aspirational future state that rallies disparate teams around a shared purpose."
+    rubric:
+      1: "Lacks a clear future direction; communicates only immediate operational demands."
+      2: "Describes high-level goals without a compelling narrative or emotional resonance."
+      3: "Articulates a clear, inspiring future state that connects daily work to an overarching mission."
+      4: "Paints a vivid, persuasive roadmap of the future that energizes cross-functional teams during ambiguity."
+      5: "Transforms organizational culture by mobilizing thousands around a bold, transformative industry vision."
+
+  strategy_formulation:
+    number: 3
+    name: "Strategy Formulation"
+    pillar: "Strategic & Market Leadership"
+    description: "Designing coherent, differentiated business and operating strategies that bridge aspirational vision with concrete commercial reality."
+    rubric:
+      1: "Produces fragmented, contradictory plans with no clear prioritization or strategic differentiation."
+      2: "Copies competitor playbooks without tailoring to the company's unique strengths and resource constraints."
+      3: "Formulates a structured strategy outlining where to play, how to win, and explicit trade-offs."
+      4: "Develops robust, defensible strategic plans supported by quantitative market models and resource commitments."
+      5: "Architects breakthrough corporate strategies that redefine market categories and unlock exponential value."
+
+  strategy_execution:
+    number: 4
+    name: "Strategy Execution"
+    pillar: "Strategic & Market Leadership"
+    description: "Translating strategic blueprints into disciplined operational rhythms, resource allocation, and measurable milestones."
+    rubric:
+      1: "Leaves strategy as abstract slide decks; fails to track progress or enforce operational deliverables."
+      2: "Launches initiatives with enthusiasm but loses momentum when operational roadblocks appear."
+      3: "Establishes disciplined operating cadences, milestone reviews, and cross-functional accountability."
+      4: "Systematically drives complex execution across silos, removing bottlenecks and maintaining delivery velocity."
+      5: "Flawlessly operationalizes complex enterprise strategies ahead of schedule, setting new benchmarks for execution."
+
+  big_picture_thinker:
+    number: 5
+    name: "Big Picture Thinker"
+    pillar: "Strategic & Market Leadership"
+    description: "Stepping back from operational minutiae to comprehend enterprise-wide interdependencies and ecosystem effects."
+    rubric:
+      1: "Gets bogged down in trivial details; misses major systemic implications of decisions."
+      2: "Understands own department's workflow but overlooks broader cross-silo interconnections."
+      3: "Consistently evaluates how local choices impact downstream teams, customers, and enterprise margins."
+      4: "Synthesizes complex multi-dimensional signals into clear, holistic frameworks for executive decision-makers."
+      5: "Sees the entire chess board; predicts systemic ripple effects across products, partners, and market ecosystems."
+
+  forward_thinking:
+    number: 6
+    name: "Forward Thinking"
+    pillar: "Strategic & Market Leadership"
+    description: "Anticipating future trends, disruptions, and second-order consequences before they impact the organization."
+    rubric:
+      1: "Purely reactive; consistently surprised by foreseeable operational and market developments."
+      2: "Identifies imminent problems only when they are already causing visible organizational friction."
+      3: "Routinely plans 2-3 quarters ahead, anticipating talent, tech, and market requirements."
+      4: "Proactively hedges against second- and third-order risks while establishing first-mover market advantages."
+      5: "Demonstrates prophetic organizational foresight; prepares enterprise infrastructure years ahead of industry shifts."
+
+  market_acumen:
+    number: 7
+    name: "Market Acumen"
+    pillar: "Strategic & Market Leadership"
+    description: "Understanding market sizing, customer segments, regulatory shifts, and economic dynamics that dictate industry profitability."
+    rubric:
+      1: "Unaware of broader market forces; assumes current internal reality will persist indefinitely."
+      2: "Follows market news casually but fails to correlate economic indicators with organizational strategy."
+      3: "Possesses a solid grasp of market share, pricing dynamics, and segment-specific customer behaviors."
+      4: "Leverages deep market intelligence to identify underserved niches and optimize go-to-market motions."
+      5: "Recognized industry authority; accurately forecasts regulatory, macroeconomic, and supply chain shifts."
+
+  competitor_awareness:
+    number: 8
+    name: "Competitor Awareness"
+    pillar: "Strategic & Market Leadership"
+    description: "Continuously analyzing competitor positioning, product capabilities, and weaknesses to outmaneuver rivals."
+    rubric:
+      1: "Dismissive or ignorant of competitor offerings; blindsided by competitor product launches."
+      2: "Tracks competitors superficially without understanding their unit economics or core value propositions."
+      3: "Maintains accurate battlecards, understands rival strengths, and coaches teams on differentiation."
+      4: "Preempts competitive counter-attacks and effectively displaces entrenched legacy incumbents."
+      5: "Systematically orchestrates market moves that render competitor advantages obsolete."
+
+  change_management:
+    number: 9
+    name: "Change Management"
+    pillar: "Strategic & Market Leadership"
+    description: "Navigating large-scale organizational transformations, restructuring, and technology adoptions while sustaining morale."
+    rubric:
+      1: "Imposes top-down edicts without explanation, generating intense cynicism and organizational resistance."
+      2: "Communicates the need for change but ignores emotional anxiety and fails to provide transitional support."
+      3: "Applies structured change frameworks, communicates the rationale transparently, and addresses concerns."
+      4: "Builds broad coalitions of change champions, maintaining operational stability through turbulent pivots."
+      5: "Instills institutional adaptability as a core organizational reflex, turning disruptive change into a competitive moat."
+
+  customer_focus:
+    number: 10
+    name: "Customer Focus"
+    pillar: "Strategic & Market Leadership"
+    description: "Centering executive decisions, product roadmaps, and service delivery around acute customer pain and value creation."
+    rubric:
+      1: "Prioritizes internal convenience over customer satisfaction; dismissive of customer feedback."
+      2: "Considers customer needs only when complaints escalate to executive leadership."
+      3: "Routinely engages with customers, integrating Net Promoter insights into continuous improvements."
+      4: "Champions customer-centric transformations that reduce churn and dramatically expand account lifetime value."
+      5: "Builds a legendary customer-obsessed culture where every employee directly connects daily work to buyer delight."
+
+  # =========================================================================
+  # PILLAR 2: COGNITIVE AGILITY & PROBLEM SOLVING (CAPABILITIES #11 - #20)
+  # =========================================================================
+  critical_thinking:
+    number: 11
+    name: "Critical Thinking"
+    pillar: "Cognitive Agility & Problem Solving"
+    description: "Rigorously evaluating arguments, dissecting data validity, challenging assumptions, and rejecting intellectual complacency."
+    rubric:
+      1: "Accepts superficial assertions without scrutiny; confuses correlation with causation."
+      2: "Asks basic questions but accepts dubious consensus when pressed by higher-ranking colleagues."
+      3: "Dissects business cases objectively, identifying unstated assumptions and empirical gaps."
+      4: "Applies razor-sharp analytical rigor, stress-testing complex proposals against contradictory hypotheses."
+      5: "Serves as the ultimate intellectual anchor; dismantles flawed institutional orthodoxy and elevates decision quality."
+
+  decision_making:
+    number: 12
+    name: "Decision-making"
+    pillar: "Cognitive Agility & Problem Solving"
+    description: "Making timely, balanced, high-conviction decisions in ambiguous environments with incomplete data."
+    rubric:
+      1: "Suffers from chronic analysis paralysis; stalls decisions until crises force involuntary action."
+      2: "Makes hasty, impulsive decisions without considering downstream operational trade-offs."
+      3: "Makes structured, timely decisions under 70% information availability; communicates reasoning clearly."
+      4: "Thrives in high-stakes ambiguity; makes bold, calibrated bets with built-in reversal mechanisms."
+      5: "Executes flawless decision governance across the enterprise, mastering speed vs quality trade-offs."
+
+  problem_solving:
+    number: 13
+    name: "Problem Solving"
+    pillar: "Cognitive Agility & Problem Solving"
+    description: "Diagnosing complex root causes using systematic frameworks (5 Whys, First Principles) to implement lasting solutions."
+    rubric:
+      1: "Treats superficial symptoms repeatedly without investigating systemic underlying causes."
+      2: "Proposes generic solutions that fail to address the core bottleneck or recur after several weeks."
+      3: "Applies structured root-cause analysis (Ishikawa, 5 Whys) to eliminate recurrent operational failures."
+      4: "Deconstructs highly intricate multi-variable problems into solvable, high-impact component solutions."
+      5: "Solves seemingly intractable enterprise dilemmas, turning systemic breakdowns into breakthrough efficiencies."
+
+  personal_bias_awareness:
+    number: 14
+    name: "Personal Bias Awareness"
+    pillar: "Cognitive Agility & Problem Solving"
+    description: "Recognizing and neutralizing personal cognitive biases (confirmation, sunk-cost, affinity, status-quo) in executive judgment."
+    rubric:
+      1: "Blind to own biases; defends pet projects defensively despite overwhelming counter-evidence."
+      2: "Acknowledges biases conceptually but falls victim to confirmation bias when evaluating team proposals."
+      3: "Actively solicits disconfirming evidence and encourages dissenting viewpoints before finalizing choices."
+      4: "Institutes rigorous decision guardrails (pre-mortems, red teams) to systematically counter cognitive blind spots."
+      5: "Exhibits exceptional intellectual humility, modeling transparent bias correction across the leadership team."
+
+  ability_to_connect_unrelated_things:
+    number: 15
+    name: "Ability to Connect Unrelated Things"
+    pillar: "Cognitive Agility & Problem Solving"
+    description: "Cross-pollinating insights across disparate industries, disciplines, and business models to unlock non-linear innovation."
+    rubric:
+      1: "Rigidly siloed; unable to apply insights outside of their narrow domain or historical comfort zone."
+      2: "Notices occasional parallels across functions but struggles to translate them into practical initiatives."
+      3: "Draws effective analogies from other sectors to solve recurring company operational challenges."
+      4: "Cross-pollinates technological, logistical, and behavioral models to create novel commercial solutions."
+      5: "Possesses polymathic cognitive agility; pioneers game-changing business model innovations by synthesizing unrelated fields."
+
+  creativity:
+    number: 16
+    name: "Creativity"
+    pillar: "Cognitive Agility & Problem Solving"
+    description: "Generating original, out-of-the-box approaches and unconstrained solutions when conventional strategies stall."
+    rubric:
+      1: "Relies solely on rigid bureaucratic formulas; shuts down novel suggestions from colleagues."
+      2: "Experiments with minor variations of existing ideas but retreats when creative proposals face friction."
+      3: "Facilitates effective lateral thinking sessions that produce viable unconventional solutions."
+      4: "Consistently challenges conventional assumptions, pioneering creative go-to-market and operational paradigms."
+      5: "Fosters an organizational laboratory of continuous breakthrough innovation, transforming industry expectations."
+
+  challenge_the_process:
+    number: 17
+    name: "Challenge the Process"
+    pillar: "Cognitive Agility & Problem Solving"
+    description: "Respectfully disrupting inefficient organizational orthodoxies, legacy bureaucracy, and obsolete standard operating procedures."
+    rubric:
+      1: "Complacently defends broken procedures with 'that's how we've always done it here.'"
+      2: "Complains informally about bureaucratic waste but takes zero initiative to reform the process."
+      3: "Identifies obsolete workflows and proposes concrete, lean alternatives backed by business rationale."
+      4: "Fearlessly yet diplomatically challenges entrenched organizational sacred cows to unlock efficiency."
+      5: "Ignites enterprise-wide operational revolutions that permanently strip away paralyzing corporate red tape."
+
+  risk_management:
+    number: 18
+    name: "Risk Management"
+    pillar: "Cognitive Agility & Problem Solving"
+    description: "Anticipating, evaluating, and mitigating operational, legal, reputational, and financial risks without paralyzing innovation."
+    rubric:
+      1: "Recklessly ignores compliance, infosec, or balance sheet risks; or paralyzes teams through extreme risk aversion."
+      2: "Identifies risks superficially on compliance checklists without evaluating probability or severity."
+      3: "Maintains structured risk registers, implements pragmatic contingency plans, and calibrates acceptable risk."
+      4: "Designs robust enterprise resilience frameworks that absorb shocks without slowing commercial momentum."
+      5: "Turns crisis preparedness into a decisive competitive advantage during systemic market disruptions."
+
+  situational_awareness:
+    number: 19
+    name: "Situational Awareness"
+    pillar: "Cognitive Agility & Problem Solving"
+    description: "Accurately perceiving unspoken emotional currents, political dynamics, and power shifts in high-stakes environments."
+    rubric:
+      1: "Completely tone-deaf; oblivious to stakeholder tensions, hidden agendas, or shifting power dynamics."
+      2: "Notices social friction after the fact but misinterprets the root political causes."
+      3: "Reads room dynamics accurately, identifying key decision influencers and unspoken counterpart hesitations."
+      4: "Navigates intricate boardroom and executive politics with impeccable timing and social finesse."
+      5: "Instinctively decodes complex human dynamics, neutralizing explosive organizational conflicts before they erupt."
+
+  resourcefulness:
+    number: 20
+    name: "Resourcefulness"
+    pillar: "Cognitive Agility & Problem Solving"
+    description: "Achieving ambitious outcomes under severe budget, headcount, or timeline constraints through ingenuity and leverage."
+    rubric:
+      1: "Halts progress instantly when ideal resources are unavailable; complains about budget limitations."
+      2: "Makes minimal attempts to improvise before escalating resource shortages to executive leadership."
+      3: "Finds creative, cost-effective workarounds to keep projects on track despite resource shortfalls."
+      4: "Extracts maximum leverage from available assets, turning scarcity into a driver of lean innovation."
+      5: "Legendary ability to build high-impact enterprise capabilities from scratch with fractional budgets."
+
+  # =========================================================================
+  # PILLAR 3: PEOPLE LEADERSHIP & CULTURE (CAPABILITIES #21 - #30)
+  # =========================================================================
+  emotional_intelligence:
+    number: 21
+    name: "Emotional Intelligence"
+    pillar: "People Leadership & Culture"
+    description: "Mastery of emotional self-regulation, empathy, social perceptiveness, and constructive interpersonal dynamics."
+    rubric:
+      1: "Volatile or callous; ignores human emotions, belittles team stress, and sparks unnecessary defensiveness."
+      2: "Recognizes basic emotions but reacts defensively when personal competence or authority is challenged."
+      3: "Accurately names emotions, manages personal triggers, and creates psychological safety for colleagues."
+      4: "Deeply empathic; navigates high-stakes personal crises and de-escalates acute emotional tension with ease."
+      5: "Exemplifies emotional mastery; inspires profound trust and loyalty across diverse organizational tiers."
+
+  building_trust:
+    number: 22
+    name: "Building Trust"
+    pillar: "People Leadership & Culture"
+    description: "Establishing unshakeable credibility, psychological safety, and vulnerability-based trust across teams and stakeholders."
+    rubric:
+      1: "Breaks promises, hoards information, or shifts blame, creating widespread cynicism and distrust."
+      2: "Builds transactional credibility but struggles to establish authentic, vulnerability-based trust."
+      3: "Delivers consistently on commitments, communicates transparently, and supports team members publicly."
+      4: "Creates an environment of total candor where mistakes are admitted openly without fear of reprisal."
+      5: "Builds enduring trust capital that enables radical organizational agility and unwavering team devotion."
+
+  talent_development:
+    number: 23
+    name: "Talent Development"
+    pillar: "People Leadership & Culture"
+    description: "Systematically identifying high-potential associates, structuring developmental challenges, and accelerating career paths."
+    rubric:
+      1: "Treats employees as interchangeable cogs; provides zero career mentorship or developmental feedback."
+      2: "Delegates tasks without developmental intent; discusses growth only during annual reviews."
+      3: "Constructs individualized development plans, pairs associates with stretch assignments, and tracks growth."
+      4: "Consistently promotes internally, cultivating a self-sustaining bench of future organizational leaders."
+      5: "Revered as an exceptional talent multiplier who has developed dozens of industry executives and founders."
+
+  coaching:
+    number: 24
+    name: "Coaching"
+    pillar: "People Leadership & Culture"
+    description: "Guiding associates to unpack their own mental models and discover solutions through targeted, developmental inquiry."
+    rubric:
+      1: "Acts as an advice monster; dictates exact actions and asks zero developmental questions."
+      2: "Asks leading or rhetorical questions that disguise commands; rushes to provide the answer."
+      3: "Asks open-ended coaching questions that stimulate self-reflection and personal accountability."
+      4: "Masterfully helps associates challenge their own assumptions and discover breakthrough solutions independently."
+      5: "Inspires profound personal transformation through transformative developmental dialogue and presence."
+
+  delegation:
+    number: 25
+    name: "Delegation"
+    pillar: "People Leadership & Culture"
+    description: "Entrusting complete task and outcome ownership to direct reports with clear scope, guardrails, and decision authority."
+    rubric:
+      1: "Micromanages every step or abdicates responsibility entirely without context or standards."
+      2: "Delegates low-value grunt work while hoarding critical strategic decisions and execution."
+      3: "Delegates high-stakes responsibilities with clear definitions of done, check-in cadences, and authority."
+      4: "Empowers leads with full architectural and operational autonomy while providing invisible safety nets."
+      5: "Multiplies organizational velocity by orchestrating a high-trust, decentralized execution engine."
+
+  empowerment:
+    number: 26
+    name: "Empowerment"
+    pillar: "People Leadership & Culture"
+    description: "Granting front-line teams genuine autonomy, resources, and authority to solve problems and make decisive calls."
+    rubric:
+      1: "Forces all decisions through a suffocating central bottleneck; penalizes independent initiative."
+      2: "Tells teams they are empowered but reverses their decisions whenever minor friction arises."
+      3: "Explicitly delineates decision boundaries, backing team choices and encouraging calculated risks."
+      4: "Creates an environment where front-line staff proactively solve customer and operational bottlenecks."
+      5: "Unleashes extraordinary grassroots innovation by systematically eliminating managerial gatekeeping."
+
+  collaboration_and_team_building:
+    number: 27
+    name: "Collaboration and Team Building"
+    pillar: "People Leadership & Culture"
+    description: "Fostering cohesive, high-performing team dynamics, breaking down cross-silo rivalries, and celebrating collective wins."
+    rubric:
+      1: "Fosters toxic internal competition, pits team members against each other, and builds organizational fiefdoms."
+      2: "Coordinates polite meetings but fails to build genuine camaraderie or cross-functional synergy."
+      3: "Establishes shared team rituals, aligns incentives, and builds mutual accountability across peers."
+      4: "Transforms disparate, contentious groups into cohesive, high-velocity squads that outperform expectations."
+      5: "Builds world-class, purpose-driven cultures renowned for unselfish cross-functional collaboration."
+
+  team_alignment:
+    number: 28
+    name: "Team Alignment"
+    pillar: "People Leadership & Culture"
+    description: "Unifying cross-functional stakeholders around shared OKRs, clear milestones, and mutual commitments."
+    rubric:
+      1: "Allows teams to pull in conflicting directions; communicates ambiguous, competing organizational priorities."
+      2: "Secures superficial verbal agreement during meetings, but teams diverge immediately upon departure."
+      3: "Explicitly aligns deliverables, dependencies, and success metrics across all participating departments."
+      4: "Proactively surfaces and resolves hidden jurisdictional misalignments before they compromise release dates."
+      5: "Maintains laser-sharp enterprise alignment across thousands of employees through shifting market conditions."
+
+  effective_feedback:
+    number: 29
+    name: "Effective Feedback"
+    pillar: "People Leadership & Culture"
+    description: "Delivering timely, behavioral, high-impact feedback (Situation-Behavior-Impact) that inspires growth rather than defensiveness."
+    rubric:
+      1: "Delivers sweeping personal attacks ('you have a bad attitude') or hoards negative critiques until reviews."
+      2: "Uses the 'sandwich technique' to soften criticism, muddying the message and confusing the recipient."
+      3: "Delivers objective, behavioral feedback using the SBI model within 48 hours of observation."
+      4: "Delivers difficult, uncomfortable truths with profound empathy that inspires immediate personal ownership."
+      5: "Master feedback architect; builds a culture of continuous radical candor and developmental growth."
+
+  conflict_management:
+    number: 30
+    name: "Conflict Management"
+    pillar: "People Leadership & Culture"
+    description: "De-escalating acute interpersonal and inter-departmental friction, facilitating principled resolution and shared ground."
+    rubric:
+      1: "Avoids conflict until it explodes into open hostility, or takes sides prematurely without hearing facts."
+      2: "Forces superficial, fragile truces without addressing the underlying emotional and resource divides."
+      3: "Facilitates structured mediation sessions, uncovering common ground and refocusing parties on shared goals."
+      4: "Skillfully navigates deep political feuds, turning interpersonal friction into collaborative breakthroughs."
+      5: "Transforms intense institutional conflict into lasting partnerships and structural innovations."
+
+  # =========================================================================
+  # PILLAR 4: OPERATIONAL EXECUTION & PERFORMANCE (CAPABILITIES #31 - #40)
+  # =========================================================================
+  result_orientation:
+    number: 31
+    name: "Result Orientation"
+    pillar: "Operational Execution & Performance"
+    description: "Relentless commitment to achieving concrete, measurable business outcomes rather than confusing effort with results."
+    rubric:
+      1: "Celebrates busywork and hours logged while consistently missing core business deliverables."
+      2: "Understands targets but accepts excuses easily when performance falls short of expectations."
+      3: "Maintains rigorous focus on KPIs, unblocking execution hurdles and delivering promised metrics."
+      4: "Consistently outperforms aggressive targets, driving high output while maintaining team health."
+      5: "Sets industry-defining benchmarks of operational excellence and commercial triumph."
+
+  prioritization:
+    number: 32
+    name: "Prioritization"
+    pillar: "Operational Execution & Performance"
+    description: "Ruthlessly distinguishing high-leverage 20% initiatives from distracting 80% busywork across team bandwidth."
+    rubric:
+      1: "Treats everything as top priority (P0); burns out teams chasing dozens of conflicting tasks."
+      2: "Struggles to say no to ad-hoc executive requests, allowing core strategic deliverables to slip."
+      3: "Applies clear prioritization matrices (Eisenhower, RICE), shielding teams from non-critical distractions."
+      4: "Ruthlessly prunes backlogs, focusing entire departmental resources on the single highest-leverage lever."
+      5: "Demonstrates surgical prioritization that multiplies organizational velocity and EBITDA impact."
+
+  accountability_and_integrity:
+    number: 33
+    name: "Accountability and Integrity"
+    pillar: "Operational Execution & Performance"
+    description: "Modeling unwavering ethical standards, honoring commitments, and enforcing mutual accountability without exception."
+    rubric:
+      1: "Blames subordinates for failures, cuts ethical corners, or makes commitments with no intention of follow-through."
+      2: "Holds others accountable strictly but excuses personal missteps and delays."
+      3: "Owns personal and team mistakes openly, follows through on promises, and upholds corporate ethics."
+      4: "Creates an empowering accountability culture where team members hold each other to the highest standards."
+      5: "The ethical and operational beacon of the enterprise; inspires absolute trust across boards and industry."
+
+  performance_management:
+    number: 34
+    name: "Performance Management"
+    pillar: "Operational Execution & Performance"
+    description: "Establishing clear performance baselines, conducting fair evaluations, and taking decisive action on chronic underperformance."
+    rubric:
+      1: "Tolerates toxic or chronically underperforming team members, destroying team morale and standards."
+      2: "Addresses performance issues only during formal annual reviews, surprising employees with criticism."
+      3: "Sets clear benchmarks, provides transparent continuous coaching, and manages PIPs with fairness."
+      4: "Decisively turns around struggling performers or executes compassionate, legally airtight exits."
+      5: "Builds a legendary high-performance culture that attracts and retains the top 1% of industry talent."
+
+  goal_setting:
+    number: 35
+    name: "Goal Setting"
+    pillar: "Operational Execution & Performance"
+    description: "Formulating ambitious, calibrated, and measurable objectives (OKRs / SMART goals) that stretch team capabilities."
+    rubric:
+      1: "Sets vague, unmeasurable aspirations ('improve customer happiness') with no timeline or success metrics."
+      2: "Sets sandbagged goals that guarantee 100% completion without challenging team capability."
+      3: "Crafts balanced OKRs with measurable leading and lagging key results that drive meaningful performance."
+      4: "Establishes audacious, visionary moonshot goals balanced with realistic operational milestones."
+      5: "Aligns enterprise goal cascades that galvanize thousands of employees to achieve market leadership."
+
+  managing_resources:
+    number: 36
+    name: "Managing Resources"
+    pillar: "Operational Execution & Performance"
+    description: "Allocating capital, human headcount, technical infrastructure, and vendor spend with maximum financial discipline."
+    rubric:
+      1: "Squanders budget on redundant software and misallocated headcount; consistently overspends."
+      2: "Hoards resources within own department regardless of broader enterprise strategic priorities."
+      3: "Allocates budget and headcount pragmatically, aligning investments directly with business milestones."
+      4: "Optimizes resource productivity, reallocating capital dynamically to high-performing growth bets."
+      5: "Maximizes capital efficiency, driving exceptional return on invested capital (ROIC) across the organization."
+
+  set_clear_expectations:
+    number: 37
+    name: "Set Clear Expectations"
+    pillar: "Operational Execution & Performance"
+    description: "Defining explicit standards, definitions of done, timelines, and role responsibilities before work commences."
+    rubric:
+      1: "Assigns tasks vaguely; assumes direct reports can read minds; gets frustrated by missed expectations."
+      2: "Communicates the task but fails to specify quality criteria, review dates, or decision authority."
+      3: "Delineates clear definitions of done, deliverable formats, milestones, and explicit review cadences."
+      4: "Ensures complete mutual understanding by having stakeholders paraphrase expectations back before launch."
+      5: "Establishes crystalline operational clarity that completely eliminates downstream rework and confusion."
+
+  metrics:
+    number: 38
+    name: "Metrics"
+    pillar: "Operational Execution & Performance"
+    description: "Defining, tracking, and diagnosing leading and lagging indicators that reflect the true health of operations."
+    rubric:
+      1: "Operates by gut feeling alone; uses vanity metrics to conceal underlying operational deterioration."
+      2: "Tracks lagging indicators (revenue) but ignores leading indicators (pipeline velocity, customer churn)."
+      3: "Builds comprehensive operational dashboards that track both leading and lagging performance drivers."
+      4: "Uncovers non-obvious statistical correlations between operational inputs and financial performance."
+      5: "Institutes real-time data governance that empowers instantaneous, automated operational course corrections."
+
+  bottleneck_awareness:
+    number: 39
+    name: "Bottleneck Awareness"
+    pillar: "Operational Execution & Performance"
+    description: "Applying Theory of Constraints to pinpoint and resolve throughput blockers in operational, sales, or technical workflows."
+    rubric:
+      1: "Attempts to optimize non-bottleneck processes, wasting capital while overall throughput remains stagnant."
+      2: "Identifies bottlenecks only after severe delivery delays or customer escalations occur."
+      3: "Systematically analyzes end-to-end value streams to identify and widen the critical throughput constraint."
+      4: "Re-architects workflows around primary constraints, multiplying organizational delivery capacity."
+      5: "Builds self-healing operational pipelines that dynamically adjust resources before bottlenecks form."
+
+  financial_acumen:
+    number: 40
+    name: "Financial Acumen"
+    pillar: "Operational Execution & Performance"
+    description: "Mastery of P&L dynamics, unit economics, gross margins, payback periods, cash burn, and EBITDA impact."
+    rubric:
+      1: "Financially illiterate; ignores cost structures and cannot read a basic income statement or budget."
+      2: "Understands departmental expense lines but fails to connect decisions to gross margin or cash runway."
+      3: "Routinely models ROI, understands CAC/LTV dynamics, and defends capital requests with sound financial rigor."
+      4: "Surgically optimizes departmental unit economics, unlocking multi-million dollar margin improvements."
+      5: "Possesses elite corporate finance prowess; structures sophisticated commercial deals that maximize shareholder value."
+
+  # =========================================================================
+  # PILLAR 5: PERSONAL MASTERY & RESILIENCE (CAPABILITIES #41 - #50)
+  # =========================================================================
+  self_awareness:
+    number: 41
+    name: "Self Awareness"
+    pillar: "Personal Mastery & Resilience"
+    description: "Deep comprehension of one's own behavioral triggers, leadership strengths, blind spots, and interpersonal impact."
+    rubric:
+      1: "Complete lack of self-reflection; defensive when challenged; oblivious to how behavior impacts others."
+      2: "Acknowledges strengths readily but rationalizes personal weaknesses and avoids introspection."
+      3: "Actively solicits 360-degree feedback, recognizes personal triggers, and self-corrects in real time."
+      4: "Demonstrates exceptional maturity; transparent about limitations and surrounds self with complementary talent."
+      5: "Exemplifies profound personal enlightenment; continuously evolves leadership style to serve the mission."
+
+  adaptability_and_resilience:
+    number: 42
+    name: "Adaptability and Resilience"
+    pillar: "Personal Mastery & Resilience"
+    description: "Pivoting smoothly during sudden market shocks, absorbing severe setbacks, and rebounding with renewed vigor."
+    rubric:
+      1: "Crumbles under unexpected adversity; paralyzed by fear or complains bitterly during disruptions."
+      2: "Adapts reluctantly after prolonged resistance; carries resentment after organizational pivots."
+      3: "Maintains emotional equilibrium during major crises, quickly adapting tactics to new operational realities."
+      4: "Inspires teams to view severe disruptions as developmental catalysts and growth opportunities."
+      5: "Antifragile leadership; consistently turns catastrophic industry downturns into market-dominating breakthroughs."
+
+  managing_self:
+    number: 43
+    name: "Managing Self"
+    pillar: "Personal Mastery & Resilience"
+    description: "Regulating personal energy, cognitive load, executive presence, and work-life stamina for sustained high performance."
+    rubric:
+      1: "Chronically burned out, disorganized, and reactive; spreads stress and panic across the team."
+      2: "Manages schedule adequately during calm periods but loses personal discipline when workload spikes."
+      3: "Maintains disciplined personal habits, protects deep work blocks, and manages executive stress effectively."
+      4: "Models sustainable high performance, maintaining peak cognitive clarity during grueling multi-month campaigns."
+      5: "Radiates unshakeable vitality, balance, and centered presence regardless of external chaos."
+
+  face_pressure_with_grace:
+    number: 44
+    name: "Face Pressure with Grace"
+    pillar: "Personal Mastery & Resilience"
+    description: "Maintaining tranquil composure, respectful communication, and laser focus during high-stakes board, client, or legal crises."
+    rubric:
+      1: "Loses temper, lashes out, panics, or becomes visibly combative during high-stakes pressure."
+      2: "Freezes or becomes passive-aggressive when interrogated by aggressive executives or hostile stakeholders."
+      3: "Stays grounded, calm, and articulate even when subjected to intense cross-examination or friction."
+      4: "Anchors the entire room; absorbs intense stakeholder anxiety and projects serene, commanding authority."
+      5: "Legendary crisis demeanor; turns hostile executive grills into unanimous trust and partnership."
+
+  courageous_conversations:
+    number: 45
+    name: "Courageous Conversations"
+    pillar: "Personal Mastery & Resilience"
+    description: "Facing difficult, uncomfortable organizational truths and interpersonal tensions head-on without delay or avoidance."
+    rubric:
+      1: "Avoids tough conversations entirely; lets toxic behaviors fester or uses passive-aggressive email channels."
+      2: "Delivers tough messages clumsily or backs down at the first sign of counterpart pushback."
+      3: "Initiates necessary difficult dialogues promptly, delivering hard truths with clear evidence and respect."
+      4: "Fearlessly addresses boardroom misalignments, founder friction, and executive misconduct with moral clarity."
+      5: "Catalyzes profound institutional renewal by speaking truth to power with irresistible integrity."
+
+  assertiveness:
+    number: 46
+    name: "Assertiveness"
+    pillar: "Personal Mastery & Resilience"
+    description: "Stating convictions, boundaries, and executive decisions firmly and respectfully without passive compliance or aggression."
+    rubric:
+      1: "Submissive push-over who caves to aggressive demands; or aggressive bully who steamrolls colleagues."
+      2: "Expresses opinions timidly, easily swayed by louder voices in executive meetings."
+      3: "Advocates positions clearly and firmly while actively listening to alternative perspectives."
+      4: "Commands the room with calm conviction, defending team boundaries and strategic priorities under pressure."
+      5: "Master of assertive diplomacy; wins complex cross-functional battles while strengthening relationships."
+
+  growth_mindset:
+    number: 47
+    name: "Growth Mindset"
+    pillar: "Personal Mastery & Resilience"
+    description: "Belief that capability and intelligence expand through deliberate practice; treating failures as learning experiments."
+    rubric:
+      1: "Fixed mindset; views feedback as personal insults; conceals mistakes to protect ego."
+      2: "Accepts easy praise but shies away from difficult challenges that might expose skill deficits."
+      3: "Welcomes constructive criticism openly, treats operational failures as developmental learning loops."
+      4: "Instills a relentless growth culture across the team, encouraging calculated risks and rapid iteration."
+      5: "Perpetual student of mastery; drives continuous organizational reinvention through insatiable curiosity."
+
+  self_accountability:
+    number: 48
+    name: "Self Accountability"
+    pillar: "Personal Mastery & Resilience"
+    description: "Taking full personal ownership of outcomes, honoring standards, and refusing to make external excuses."
+    rubric:
+      1: "Blames market conditions, vendors, or colleagues for every setback; never accepts personal fault."
+      2: "Takes responsibility only when forced by indisputable evidence; looks for partial scapegoats."
+      3: "Voluntarily owns team shortfalls publicly, outlines corrective steps, and implements preventive fixes."
+      4: "Demonstrates radical ownership, setting an inspiring example of personal accountability for the organization."
+      5: "Epitome of extreme ownership; holds self to standards far higher than anyone else would ever demand."
+
+  discipline:
+    number: 49
+    name: "Discipline"
+    pillar: "Personal Mastery & Resilience"
+    description: "Maintaining rigorous consistency, punctuality, and unwavering adherence to professional standards day in and day out."
+    rubric:
+      1: "Erratic, unreliable, and disorganized; lets commitments slip and treats schedules casually."
+      2: "Maintains discipline when monitored closely but slacks off when executive scrutiny subsides."
+      3: "Exhibits steadfast personal rigor, punctuality, and adherence to operational standards every single day."
+      4: "Instills institutional discipline across the department, creating dependable, repeatable execution rhythms."
+      5: "Flawless operational discipline that makes excellence look effortless and sets the enterprise standard."
+
+  agility:
+    number: 50
+    name: "Agility"
+    pillar: "Personal Mastery & Resilience"
+    description: "Rapidly absorbing new feedback, shifting operational gears swiftly, and iterating tactics without losing momentum."
+    rubric:
+      1: "Slow, bureaucratic, and resistant to change; clings to obsolete plans long after they fail."
+      2: "Acknowledges the need to pivot but takes weeks to alter team workflows and deliverables."
+      3: "Pivots tactics smoothly within days based on empirical customer data and performance metrics."
+      4: "Builds agile operating models that outpace competitors through rapid sprint iterations."
+      5: "Moves at lightning speed; reconfigures organizational resources overnight to capitalize on market opportunities."
+
+  # =========================================================================
+  # PILLAR 6: INFLUENCE, COMMUNICATION & PRESENCE (CAPABILITIES #51 - #60)
+  # =========================================================================
+  communication_skills:
+    number: 51
+    name: "Communication Skills"
+    pillar: "Influence, Communication & Executive Presence"
+    description: "Delivering crisp, persuasive, highly structured verbal and written messaging that drives clarity and action."
+    rubric:
+      1: "Rambling, disorganized, and jargon-heavy; leaves audiences confused about next steps or core takeaways."
+      2: "Communicates basic details adequately but lacks rhetorical structure, executive polish, or brevity."
+      3: "Applies executive communication principles (BLUF - Bottom Line Up Front), delivering crisp, clear messages."
+      4: "Tailors messages masterfully across boards, engineering teams, and press with compelling lucidity."
+      5: "World-class orator and communicator; sways industry consensus through unforgettable clarity and power."
+
+  influencing_skills:
+    number: 52
+    name: "Influencing Skills"
+    pillar: "Influence, Communication & Executive Presence"
+    description: "Persuading peers, senior executives, and external partners to take action without relying on formal positional authority."
+    rubric:
+      1: "Relies solely on positional rank to force compliance; powerless when influencing cross-functional peers."
+      2: "Presents facts mechanically without framing ideas around counterpart self-interest or incentives."
+      3: "Aligns stakeholder incentives, builds coalitions, and influences outcomes through logical persuasion."
+      4: "Masterfully guides senior leaders and skeptical partners to enthusiastically adopt complex initiatives."
+      5: "Peerless influencer; orchestrates unanimous board and industry consensus on contentious strategic decisions."
+
+  ability_to_inspire:
+    number: 53
+    name: "Ability to Inspire"
+    pillar: "Influence, Communication & Executive Presence"
+    description: "Igniting authentic passion, commitment, and discretionary effort in teams through charismatic purpose and belief."
+    rubric:
+      1: "Drains room energy; treats work as dull compliance; cynical attitude that dampens team enthusiasm."
+      2: "Delivers scripted motivational speeches that ring hollow and fail to connect with real employee struggles."
+      3: "Connects daily work to meaningful human outcomes, energizing teams through authentic conviction."
+      4: "Inspires extraordinary resilience and high performance during grueling, high-pressure campaigns."
+      5: "Transformational leader who permanently elevates the aspirations, belief, and character of everyone they lead."
+
+  stakeholder_management:
+    number: 54
+    name: "Stakeholder Management"
+    pillar: "Influence, Communication & Executive Presence"
+    description: "Proactively managing expectations, communications, and governance across boards, investors, clients, and partners."
+    rubric:
+      1: "Ignores key stakeholders until crises erupt; blindsides boards or clients with unexpected disasters."
+      2: "Communicates with stakeholders sporadically without understanding their governance requirements or priorities."
+      3: "Maintains transparent, proactive communication rhythms, managing stakeholder expectations with rigor."
+      4: "Anticipates stakeholder anxieties, building deep alignment across complex multi-party governance boards."
+      5: "Trusted executive counselor to boards, institutional investors, and Tier-1 enterprise clients."
+
+  listening_skills:
+    number: 55
+    name: "Listening Skills"
+    pillar: "Influence, Communication & Executive Presence"
+    description: "Deep active listening, synthesizing nuance, validating counterpart concerns, and hearing unspoken subtext."
+    rubric:
+      1: "Interrupts frequently; merely waits for turn to speak; dismisses counterpart explanations."
+      2: "Listens passively without demonstrating comprehension or validating counterpart constraints."
+      3: "Paraphrases accurately, reflects emotional subtext, and asks clarifying questions before responding."
+      4: "Uncovers deep unspoken motivations and hidden organizational risks through patient, disciplined listening."
+      5: "Master of tactical empathy; creates profound psychological safety that surfaces critical institutional truths."
+
+  negotiation_skills:
+    number: 56
+    name: "Negotiation Skills"
+    pillar: "Influence, Communication & Executive Presence"
+    description: "Protecting enterprise value, trading concessions strategically, expanding the bargaining envelope, and defending margins."
+    rubric:
+      1: "Caves unilaterally to counterpart demands; gives away discounts with zero trade-offs."
+      2: "Haggles awkwardly on single numbers; treats negotiation as hostile zero-sum combat."
+      3: "Trades concessions effectively (payment terms for price), expanding the envelope to preserve deal value."
+      4: "Outmaneuvers sophisticated procurement teams, securing win-win agreements that defend gross margins."
+      5: "Master deal architect; closes multi-million dollar landmark contracts that set industry precedents."
+
+  digital_savvy:
+    number: 57
+    name: "Digital Savvy"
+    pillar: "Influence, Communication & Executive Presence"
+    description: "Leveraging modern AI, automation, cloud infrastructure, and data tooling to accelerate business velocity."
+    rubric:
+      1: "Technologically illiterate; resists digital modernization and insists on manual legacy spreadsheets."
+      2: "Uses basic digital tools but fails to leverage automation, AI, or system integrations."
+      3: "Champions modern productivity tooling, AI workflows, and data pipelines to optimize team efficiency."
+      4: "Architects digital transformation initiatives that fundamentally streamline customer journeys and operations."
+      5: "Pioneering technological visionary; harnesses frontier AI and digital platforms to disrupt industry cost structures."
+
+  vision_into_reality:
+    number: 58
+    name: "Vision into Reality"
+    pillar: "Influence, Communication & Executive Presence"
+    description: "The ultimate executive bridge: converting abstract strategic visions into operational workflows, products, and revenue."
+    rubric:
+      1: "Daydreams abstract concepts but never produces a working prototype, workflow, or financial result."
+      2: "Initiates vision projects but gets bogged down in transition from theory to operational reality."
+      3: "Constructs practical bridges from vision to reality: milestones, team ownership, and tangible deliverables."
+      4: "Consistently translates ambitious, complex visions into highly profitable market-ready products and services."
+      5: "Legendary builder who manifests transformative ideas into reality, reshaping industries and creating enduring institutions."
+
+  proactivity:
+    number: 59
+    name: "Proactivity"
+    pillar: "Influence, Communication & Executive Presence"
+    description: "Taking bold, calculated initiative before being instructed; identifying and solving problems before they escalate."
+    rubric:
+      1: "Waits passively for explicit instructions; ignores brewing problems until directed by senior management."
+      2: "Acts proactively on minor tasks but hesitates to take initiative on high-impact strategic matters."
+      3: "Consistently anticipates operational needs, taking independent action to solve emerging bottlenecks."
+      4: "Drives proactive innovations and risk mitigations that save millions in preventable losses."
+      5: "Sets an infectious enterprise standard of autonomous proactivity that eliminates bureaucratic inertia."
+
+  lead_by_example:
+    number: 60
+    name: "Lead by Example"
+    pillar: "Influence, Communication & Executive Presence"
+    description: "Embodying the highest standards of integrity, work ethic, humility, and cultural excellence in every personal action."
+    rubric:
+      1: "Demands high standards from others while excusing personal laziness, arrogance, or ethical lapses ('do as I say, not as I do')."
+      2: "Acts professionally in public meetings but cuts corners and complains informally behind closed doors."
+      3: "Consistently models the punctuality, respect, work ethic, and integrity expected from the entire team."
+      4: "Inspires teams by rolling up sleeves during critical moments, displaying unmatched humility and dedication."
+      5: "The ultimate cultural benchmark; embodies company values so deeply that their personal character defines the brand."
+
+# =========================================================================
+# COMMERCIAL SALES DISCIPLINES (ENTERPRISE DEAL-MAKING)
+# =========================================================================
+sales:
+  discovery_questions:
+    name: "Discovery Questions"
+    description: "Ability to ask open-ended, probing questions that uncover underlying needs and constraints."
+    rubric:
+      1: "Asks only closed yes/no questions; jumps into pitching without diagnosing problems."
+      2: "Asks surface-level questions but misses obvious clues; sticks rigidly to a script."
+      3: "Asks competent open-ended questions; uncovers basic business challenges."
+      4: "Asks insightful second-order questions; uncovers hidden priorities and decision criteria."
+      5: "Masterfully diagnoses emotional, political, and financial drivers through targeted inquiry."
+
+  active_listening:
+    name: "Active Listening"
+    description: "Demonstrating deep comprehension, summarizing prospect concerns, and building on their words."
+    rubric:
+      1: "Interrupts frequently; ignores prospect statements; waiting for turn to speak."
+      2: "Acknowledges statements superficially without validating emotions or constraints."
+      3: "Paraphrases prospect concerns accurately before transitioning to solutions."
+      4: "Reflects nuance and emotion; uncovers unstated implications; confirms agreement."
+      5: "Creates profound rapport by mirroring tone, synthesizing complex concerns, and validating risk."
+
+  objection_handling:
+    name: "Objection Handling"
+    description: "Responding constructively to resistance, price pushback, or competitive threats."
+    rubric:
+      1: "Becomes defensive, dismissive, or caves instantly with unnecessary discounts."
+      2: "Offers canned, generic counter-arguments that fail to address the core objection."
+      3: "Validates the objection and provides logical counter-evidence or clarifications."
+      4: "Isolates the root concern; reframes objection into a value conversation."
+      5: "Turns objections into partnership opportunities; aligns incentives without sacrificing margin."
+
+  value_articulation:
+    name: "Value Articulation"
+    description: "Communicating business outcomes, ROI, and differentiation rather than feature lists."
+    rubric:
+      1: "Recites product features and tech jargon with no link to customer outcomes."
+      2: "Claims high-level benefits without proof or relevance to this specific buyer."
+      3: "Connects capabilities to tangible business metrics and operational outcomes."
+      4: "Tailors tailored ROI models and case studies directly addressing buyer's metrics."
+      5: "Articulates strategic enterprise value that elevates the conversation to board level."
+
+  negotiation:
+    name: "Negotiation"
+    description: "Protecting contract value, trading concessions, and managing procurement demands."
+    rubric:
+      1: "Gives away price concessions unilaterally without asking for anything in return."
+      2: "Haggles awkwardly on single numbers; fails to explore alternative terms."
+      3: "Trades concessions (e.g. multi-year commitment for price discount) effectively."
+      4: "Expands the bargaining envelope (payment terms, scope, SLA, timing) to preserve deal value."
+      5: "Negotiates win-win agreements with sophisticated procurement teams while defending price integrity."
+
+  closing_next_steps:
+    name: "Closing & Next Steps"
+    description: "Securing concrete commitments, timelines, and decision milestones."
+    rubric:
+      1: "Leaves the call with vague platitudes ('we'll be in touch') and no calendar commitment."
+      2: "Proposes weak next steps without securing mutual accountability."
+      3: "Secures a definite scheduled meeting with clear agenda and attendee expectations."
+      4: "Creates a mutual action plan with milestones and executive sign-off deadlines."
+      5: "Drives urgent momentum and clear procurement pathway through decisive closing discipline."
+
+  rapport_adaptation:
+    name: "Rapport & Adaptation"
+    description: "Matching communication style and pacing to the buyer's personality and generational preference."
+    rubric:
+      1: "Tone-deaf to buyer's energy; uses a one-size-fits-all persona."
+      2: "Notices buyer communication style but struggles to adjust pacing or formality."
+      3: "Adapts tone and pace to match buyer's preference (e.g., concise with analyticals)."
+      4: "Seamlessly calibrates language, depth, and formality to distinct buyer demographics."
+      5: "Builds instant, authentic trust across vastly divergent stakeholder styles."
+
+  tone_confidence:
+    name: "Tone & Confidence"
+    description: "Projecting calm authority, executive presence, and steady composure under pressure."
+    rubric:
+      1: "Sounds nervous, hesitant, overly apologetic, or insecure."
+      2: "Fluctuates under pressure; speaks too fast or fills pauses with filler words."
+      3: "Maintains professional, steady, and clear vocal delivery."
+      4: "Projects executive gravitas; comfortable with deliberate pauses and stillness."
+      5: "Radiates unshakeable composure, empathetic warmth, and trusted advisor status."

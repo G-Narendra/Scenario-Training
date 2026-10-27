@@ -3,7 +3,7 @@ import json
 from datetime import datetime, timedelta, timezone
 
 import pytest
-from starlette.testclient import TestClient
+from fastapi.testclient import TestClient
 
 from backend.app.db.models import AuthSession, Cohort, Scenario, SimulationSession, Track, User
 from backend.app.db.session import async_session_factory

@@ -1,0 +1,63 @@
+slug: sales-22-unionized-workplace-tech-replacement
+track: sales
+title: Hostile Vendor Replacement in a Unionized Enterprise
+topic: conflict_navigation
+difficulty: 5
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Political Acumen
+- Change Management
+- Empathy
+tactical_coaching_clue: In union environments, automated software is viewed as a strike-breaking weapon.
+  Position the tool as an ergonomic worker protection device that eliminates dangerous physical strain.
+brief: You are selling automated fleet tracking software to a national transit authority. Union Steward
+  Frank O'Connor has threatened an immediate wildcat strike if the software is installed, claiming it
+  is punitive electronic surveillance. Win Frank's buy-in and restructure the rollout.
+persona:
+  name: Frank O'Connor
+  role: Chief Union Steward & Transit Lead
+  personality:
+  - militant
+  - protective
+  - suspicious
+  - fiercely loyal to workers
+  communication_style: Gruff, booming voice, talks over suits, appeals to worker solidarity and strike
+    history.
+  emotional_baseline: hostile
+hidden_motivations:
+- Frank is terrified that biometric telematics will be used to fire senior drivers 2 years before pension
+  vesting.
+- He will support safety tracking if data cannot be used for disciplinary actions without union presence.
+objections:
+- This isn't 'fleet optimization', this is 24/7 digital surveillance of working men and women.
+- If one black box goes in these buses, the union walks out on Monday morning.
+curveballs:
+- trigger: if trainee threatens to report Frank to transit management
+  event: Frank calls a strike vote on the spot.
+success_criteria:
+- Listens patiently to Frank's legitimate fears regarding pension protection and punitive surveillance.
+- Structures a joint Union-Management Data Privacy Charter with anonymized driver logs.
+- Secures Frank's agreement to a driver safety pilot.
+skills_assessed:
+- skill: conflict_navigation
+  weight: 0.4
+- skill: empathy
+  weight: 0.3
+- skill: composure
+  weight: 0.3
+opening_line: I don't care how many management executives you had dinner with. You bring electronic spy
+  boxes into my members' cabs, and this city does not move an inch on Monday.
+tags:
+- sales
+- crisis
+- labor-unions
+- change-management
+- level-5
+conclusion_signals:
+  positive:
+  - Frank signs the Joint Driver Safety & Privacy Charter
+  - Union endorses pilot rollout
+  negative:
+  - Transit system paralyzed by wildcat strike
+  - Vendor contract terminated by city mayor

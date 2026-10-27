@@ -25,7 +25,7 @@ export const BACKEND_FALLBACK_URLS: string[] = [
   ((import.meta as any).env?.VITE_HF_BACKEND_URL || '').replace(/\/+$/, ''),
   ((import.meta as any).env?.VITE_KOYEB_BACKEND_URL || '').replace(/\/+$/, ''),
   ((import.meta as any).env?.VITE_ORACLE_BACKEND_URL || '').replace(/\/+$/, ''),
-  'https://scenariolab-api.onrender.com/api',
+  'https://mrdev444-scenario-training-backend.hf.space/api',
 ].filter(Boolean);
 
 function resolveUrl(endpoint: string, attempt: number): string {
@@ -79,8 +79,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
         },
       });
 
-      // Break if successful or not a transient gateway/proxy error
-      const isTransient = [502, 503, 504].includes(response.status) || (response.status === 401 && !endpoint.includes('/auth/login'));
+      // Break if successful or not a transient gateway/proxy error (502, 503, 504)
+      const isTransient = [502, 503, 504].includes(response.status);
       if (response.ok || !isTransient || attempt === maxRetries) {
         break;
       }
@@ -224,8 +224,9 @@ export const api = {
     return request<SimulationSession[]>('/sessions?mine=true');
   },
 
-  async listCohortSessions(): Promise<SimulationSession[]> {
-    return request<SimulationSession[]>('/sessions?mine=false');
+  async listCohortSessions(cohortId?: string): Promise<SimulationSession[]> {
+    const url = cohortId ? `/sessions?mine=false&cohort_id=${encodeURIComponent(cohortId)}` : '/sessions?mine=false';
+    return request<SimulationSession[]>(url);
   },
 
   // Evaluation

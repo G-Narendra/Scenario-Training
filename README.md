@@ -1,3 +1,12 @@
+---
+title: ScenarioLab Unified
+emoji: ⚡
+colorFrom: blue
+colorTo: indigo
+sdk: docker
+app_port: 7860
+---
+
 # ScenarioLab — Workplace Scenario Training
 
 > An enterprise-grade, conversational scenario-training platform designed to help professionals master high-stakes interpersonal situations—negotiations, executive pushback, performance reviews, and conflict de-escalation—through realistic AI counterparts and multidimensional feedback.

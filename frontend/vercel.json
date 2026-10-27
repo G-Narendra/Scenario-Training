@@ -41,7 +41,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://scenariolab-api.onrender.com/api/$1"
+      "destination": "https://mrdev444-scenario-training-backend.hf.space/api/$1"
     },
     {
       "source": "/(.*)",

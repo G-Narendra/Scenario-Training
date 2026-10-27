@@ -9,6 +9,7 @@ interface ScenarioBriefingModalProps {
   onClose: () => void;
   onStartSimulation: (scenarioId: string, mode: 'text' | 'voice') => void;
   isStarting: boolean;
+  completedAttemptsCount?: number;
 }
 
 export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
@@ -16,8 +17,10 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
   onClose,
   onStartSimulation,
   isStarting,
+  completedAttemptsCount = 0,
 }) => {
   const [selectedMode, setSelectedMode] = useState<'text' | 'voice'>('text');
+  const remainingAttempts = Math.max(0, 10 - completedAttemptsCount);
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -255,7 +258,12 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
         {/* Footer CTA */}
         <div className="border-t border-slate-300 dark:border-[#1E3E62] p-4 sm:p-6 bg-slate-50 dark:bg-[#0B192C] flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-xs text-slate-600 dark:text-slate-400 font-medium text-center sm:text-left">
-            10 practice attempts allocated per scenario
+            <span className="font-bold text-slate-900 dark:text-white">{completedAttemptsCount} of 10</span> attempts completed
+            {remainingAttempts > 0 ? (
+              <span className="ml-1 text-[#FF6500] font-bold">({remainingAttempts} remaining)</span>
+            ) : (
+              <span className="ml-1 text-rose-500 font-bold">(Attempt limit reached)</span>
+            )}
           </div>
 
           <button

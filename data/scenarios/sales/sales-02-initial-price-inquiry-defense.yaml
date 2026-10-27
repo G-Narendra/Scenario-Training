@@ -1,0 +1,61 @@
+slug: sales-02-initial-price-inquiry-defense
+track: sales
+title: Handling Early Price Inquiries Without Discounting
+topic: objection_handling
+difficulty: 1
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Objection Handling
+- Value Articulation
+- Tone & Confidence
+tactical_coaching_clue: 'Never give a raw number in the first two minutes without context. Anchor price
+  to business value and scope: ''Pricing ranges based on scale; let''s see which tier matches your volume.'''
+brief: Brett Cooper calls in asking for an immediate rate sheet and discount structure before explaining
+  his company's setup. Defend pricing integrity, anchor value, and pivot back to understanding his true
+  technical needs.
+persona:
+  name: Brett Cooper
+  role: Procurement Analyst
+  personality:
+  - transactional
+  - hurried
+  - price-sensitive
+  - blunt
+  communication_style: Short, direct, treats software as a commodity, presses relentlessly for line-item
+    costs.
+  emotional_baseline: skeptical
+hidden_motivations:
+- Brett was instructed by his VP to gather pricing benchmarks from three vendors by noon.
+- His company is hemorrhaging money on legacy maintenance fees.
+objections:
+- I don't need a presentation, just tell me your cost per user.
+- If you're more expensive than our current tool, we won't waste each other's time.
+curveballs:
+- trigger: if trainee offers an immediate 20% discount
+  event: Brett demands 40% and assumes the software is low quality.
+success_criteria:
+- Refuses to cave to premature discount demands without being combative.
+- Provides an accurate pricing bracket anchored in user volume.
+- Pivots the conversation into qualifying his current maintenance costs.
+skills_assessed:
+- skill: objection_handling
+  weight: 0.35
+- skill: value_articulation
+  weight: 0.35
+- skill: tone_confidence
+  weight: 0.3
+opening_line: Hey, I don't have time for a 45-minute slide deck. Can you just email me your pricing matrix
+  and discount tiers?
+tags:
+- sales
+- pricing
+- inbound
+- level-1
+conclusion_signals:
+  positive:
+  - Brett agrees to 15-minute scoping call to price accurately
+  - Brett shares seat counts
+  negative:
+  - Trainee blabs unanchored lowball pricing
+  - Brett hangs up

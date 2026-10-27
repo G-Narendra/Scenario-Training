@@ -3,7 +3,6 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/Navbar';
 import { LoginPage } from './pages/LoginPage';
-import { TrackPickerPage } from './pages/TrackPickerPage';
 import { ScenarioLibraryPage } from './pages/ScenarioLibraryPage';
 import { SimulationChatPage } from './pages/SimulationChatPage';
 import { FeedbackReportPage } from './pages/FeedbackReportPage';
@@ -40,9 +39,12 @@ const AppContent: React.FC = () => {
   React.useEffect(() => {
     const validViews: ViewMode[] = ['tracks', 'scenarios', 'chat', 'evaluation', 'progress', 'admin'];
     const hashView = window.location.hash.replace('#', '') as ViewMode;
-    const targetView = hashView && validViews.includes(hashView) ? hashView : 'scenarios';
+    const defaultForRole: ViewMode = user?.role === 'group_admin' || user?.role === 'super_admin' ? 'admin' : 'scenarios';
+    const targetView = hashView && validViews.includes(hashView) ? hashView : defaultForRole;
     setCurrentView(targetView);
-    window.history.replaceState({ view: targetView, selectedTrack }, '', '#' + targetView);
+    if (isAuthenticated) {
+      window.history.replaceState({ view: targetView, selectedTrack }, '', '#' + targetView);
+    }
 
     // If refreshing on #evaluation and no evalSessionId in memory, restore from sessionStorage or recent completed session
     if (targetView === 'evaluation' && !evalSessionId) {
@@ -157,11 +159,13 @@ const AppContent: React.FC = () => {
     return <LoginPage />;
   }
 
-  const handleSelectTrack = (trackKey: string) => {
-    navigateTo('scenarios', trackKey);
-  };
-
   const handleLaunchSimulation = async (scenarioId: string, mode: 'text' | 'voice') => {
+    if (mode === 'voice') {
+      try {
+        const unlock = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+        unlock.play().catch(() => {});
+      } catch {}
+    }
     setIsStartingSimulation(true);
     try {
       const session = await api.createSession(scenarioId, mode);
@@ -179,6 +183,21 @@ const AppContent: React.FC = () => {
       } else {
         alert(msg);
       }
+    } finally {
+      setIsStartingSimulation(false);
+    }
+  };
+
+  const handleResumeSession = async (sessionId: string) => {
+    setIsStartingSimulation(true);
+    try {
+      const session = await api.getSessionDetail(sessionId);
+      sessionStorage.setItem('scenariolab_active_session_id', session.id);
+      setActiveSession(session);
+      navigateTo('chat');
+    } catch (err: unknown) {
+      console.error('Failed to resume practice session', err);
+      alert('Unable to resume practice session. Please try again.');
     } finally {
       setIsStartingSimulation(false);
     }
@@ -202,14 +221,10 @@ const AppContent: React.FC = () => {
       <Navbar currentView={currentView} onNavigate={(v) => navigateTo(v as ViewMode)} />
 
       <main className="flex-1">
-        {currentView === 'tracks' && (
-          <TrackPickerPage onSelectTrack={handleSelectTrack} />
-        )}
-
-        {currentView === 'scenarios' && (
+        {(currentView === 'tracks' || currentView === 'scenarios') && (
           <ScenarioLibraryPage
             selectedTrack={selectedTrack}
-            onBackToTracks={() => navigateTo('tracks')}
+            onBackToTracks={() => navigateTo('scenarios')}
             onLaunchSimulation={handleLaunchSimulation}
             isStarting={isStartingSimulation}
           />
@@ -280,6 +295,7 @@ const AppContent: React.FC = () => {
         {currentView === 'progress' && (
           <ProgressPage
             onSelectScenario={(scenId) => handleLaunchSimulation(scenId, 'text')}
+            onResumeSession={handleResumeSession}
             onViewSessionEvaluation={handleViewEvaluation}
           />
         )}

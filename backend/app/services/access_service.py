@@ -50,7 +50,13 @@ async def _get_cached_passcodes(db: AsyncSession) -> List[Dict[str, Any]]:
             "uses_count": p_code.uses_count,
             "cohort_expires_at": cohort.expires_at,
             "cohort_track_access": cohort.track_access,
+            "max_members": cohort.max_members or 50,
         })
+        lbl = (p_code.label or "").lower()
+        if "uzair" in lbl:
+            _verified_code_map["UZAIR-2026"] = p_code.id
+        elif "narendra" in lbl:
+            _verified_code_map["NARENDRA-2026"] = p_code.id
     _cached_passcodes = cached
     _cached_passcodes_time = now_m
     return cached
@@ -103,7 +109,7 @@ class AccessService:
         passcode = Passcode(
             cohort_id=cohort.id,
             code_hash=hash_passcode(plain_code),
-            label="Initial Passcode",
+            label=f"Passcode: {plain_code}",
             valid_from=now,
             valid_until=expires_at,
             uses_count=0,
@@ -160,7 +166,7 @@ class AccessService:
         new_passcode = Passcode(
             cohort_id=cohort_id,
             code_hash=hash_passcode(plain_code),
-            label=label or "Rotated Passcode",
+            label=label or f"Passcode: {plain_code}",
             valid_from=now,
             valid_until=cohort.expires_at,
             uses_count=0,
@@ -245,6 +251,11 @@ class AccessService:
         )
         db.add(audit)
         await db.commit()
+
+        from backend.app.security.deps import invalidate_all_user_tokens
+        for uid in user_ids:
+            invalidate_all_user_tokens(uid)
+
         return result.rowcount
 
     @staticmethod
@@ -254,27 +265,51 @@ class AccessService:
         actor_id: Optional[str] = None,
         ip: Optional[str] = None,
     ) -> bool:
-        """Permanently delete a cohort and safely unlink/delete associated data."""
+        """Permanently delete a cohort and cascade delete all students, reports, evaluations, and login sessions."""
         cohort = await db.get(Cohort, cohort_id)
         if not cohort:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Cohort not found")
 
-        # Clear attempt ledgers
-        await db.execute(delete(AttemptLedger).where(AttemptLedger.cohort_id == cohort_id))
-
-        # Delete passcodes
-        await db.execute(delete(Passcode).where(Passcode.cohort_id == cohort_id))
-
-        # Delete enrolled non-admin students belonging to this cohort
-        await db.execute(
-            delete(User).where(
-                and_(
-                    User.cohort_id == cohort_id,
-                    ~func.lower(User.display_name).in_(["narendra", "uzair"]),
-                )
+        # 1. Fetch all enrolled non-admin students belonging to this cohort
+        users_stmt = select(User).where(
+            and_(
+                User.cohort_id == cohort_id,
+                ~func.lower(User.display_name).in_(["narendra", "uzair"]),
             )
         )
-        # Unlink primary administrators (Narendra, Uzair)
+        enrolled_users = (await db.execute(users_stmt)).scalars().all()
+        student_user_ids = [u.id for u in enrolled_users]
+
+        # 2. Fetch all simulation sessions for these cohort students
+        if student_user_ids:
+            sessions_stmt = select(SimulationSession.id).where(SimulationSession.user_id.in_(student_user_ids))
+            session_ids = (await db.execute(sessions_stmt)).scalars().all()
+        else:
+            session_ids = []
+
+        # 3. Cascade delete evaluations (reports), chat messages, and simulation sessions
+        if session_ids:
+            from backend.app.db.models import Evaluation, Message
+            await db.execute(delete(Evaluation).where(Evaluation.session_id.in_(session_ids)))
+            await db.execute(delete(Message).where(Message.session_id.in_(session_ids)))
+            await db.execute(delete(SimulationSession).where(SimulationSession.id.in_(session_ids)))
+
+        # 4. Invalidate and delete active login sessions and cached tokens
+        if student_user_ids:
+            from backend.app.security.deps import invalidate_all_user_tokens
+            await db.execute(delete(AuthSession).where(AuthSession.user_id.in_(student_user_ids)))
+            for uid in student_user_ids:
+                invalidate_all_user_tokens(uid)
+
+        # 5. Delete enrolled student user records
+        if student_user_ids:
+            await db.execute(delete(User).where(User.id.in_(student_user_ids)))
+
+        # 6. Clear attempt ledgers and passcodes for this cohort
+        await db.execute(delete(AttemptLedger).where(AttemptLedger.cohort_id == cohort_id))
+        await db.execute(delete(Passcode).where(Passcode.cohort_id == cohort_id))
+
+        # 7. Unlink primary platform administrators (Narendra, Uzair)
         await db.execute(
             update(User).where(User.cohort_id == cohort_id).values(cohort_id=None)
         )
@@ -284,7 +319,7 @@ class AccessService:
             action="DELETE_COHORT",
             entity="Cohort",
             entity_id=cohort_id,
-            details={"name": cohort.name},
+            details={"name": cohort.name, "students_deleted": len(student_user_ids), "sessions_deleted": len(session_ids)},
             ip=ip,
         )
         db.add(audit)
@@ -415,23 +450,20 @@ class AccessService:
         clean_name = display_name.strip()
         matched_cohort_id = matched_item["cohort_id"]
         matched_cohort_name = matched_item["cohort_name"]
-        passcode_label = matched_item["label"]
+        passcode_label = (matched_item.get("label") or "").lower()
+        is_super_admin_passcode = bool(clean_code == "NARENDRA-2026" or "narendra" in passcode_label)
+        is_cohort_passcode = bool(clean_code == "UZAIR-2026" or "uzair" in passcode_label or not is_super_admin_passcode)
 
-        is_admin_passcode = (
-            "admin" in passcode_label.lower()
-            or "admin" in clean_code.lower()
-            or "narendra" in passcode_label.lower()
-            or "narendra" in clean_code.lower()
-        )
-        is_super_admin_user = clean_name.lower() in ("narendra", "uzair") or "admin" in clean_name.lower()
+        lower_name = clean_name.lower().strip()
 
-        if is_super_admin_user:
-            user_stmt = select(User).where(func.lower(User.display_name) == clean_name.lower())
+        # ─── PERSONA 1: Platform Super Admins (Narendra & Uzair) ───
+        if (is_super_admin_passcode or clean_code in ("UZAIR-2026", "NARENDRA-2026")) and lower_name in ("narendra", "super admin narendra", "narendra (super admin)"):
+            user_stmt = select(User).where(func.lower(User.display_name) == "narendra")
             user = (await db.execute(user_stmt)).scalars().first()
             if not user:
                 user = User(
                     cohort_id=matched_cohort_id,
-                    display_name=clean_name.capitalize(),
+                    display_name="Narendra",
                     role="super_admin",
                     is_active=True,
                     last_login_at=now,
@@ -443,52 +475,98 @@ class AccessService:
                 user.cohort_id = matched_cohort_id
                 user.last_login_at = now
                 user.is_active = True
-        elif is_admin_passcode:
-            user_stmt = select(User).where(
-                and_(
-                    User.cohort_id == matched_cohort_id,
-                    func.lower(func.trim(User.display_name)) == clean_name.lower(),
-                )
-            ).order_by(User.id.asc())
+
+        elif (is_super_admin_passcode or is_cohort_passcode or clean_code in ("UZAIR-2026", "NARENDRA-2026")) and lower_name in ("uzair", "admin uzair", "uzair (admin)", "uzair facilitator"):
+            user_stmt = select(User).where(func.lower(User.display_name) == "uzair")
             user = (await db.execute(user_stmt)).scalars().first()
             if not user:
                 user = User(
                     cohort_id=matched_cohort_id,
-                    display_name=clean_name,
-                    role="group_admin",
+                    display_name="Uzair",
+                    role="super_admin",
                     is_active=True,
                     last_login_at=now,
                 )
                 db.add(user)
                 await db.flush()
             else:
+                user.role = "super_admin"
+                user.cohort_id = matched_cohort_id
                 user.last_login_at = now
+                user.is_active = True
+
+        elif is_super_admin_passcode and lower_name not in ("narendra", "super admin narendra", "uzair", "admin uzair"):
+            await record_login_attempt(db, ip=ip, passcode_prefix=prefix, success=False)
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Access Denied: Invalid administrator username for super admin passcode.",
+            )
+
+        # ─── PERSONA 3: Student Narendra (Participant View) ───
+        elif is_cohort_passcode and lower_name in ("narendra", "student narendra", "narendra (student)", "narendra student"):
+            user_stmt = select(User).where(
+                and_(User.cohort_id == matched_cohort_id, func.lower(User.display_name) == "narendra", User.role == "trainee")
+            )
+            user = (await db.execute(user_stmt)).scalars().first()
+            if not user:
+                # Also check if any Narendra exists in cohort
+                existing_stmt = select(User).where(
+                    and_(User.cohort_id == matched_cohort_id, func.lower(User.display_name) == "narendra")
+                )
+                existing_user = (await db.execute(existing_stmt)).scalars().first()
+                if existing_user and existing_user.role != "super_admin":
+                    user = existing_user
+                    user.role = "trainee"
+                    user.last_login_at = now
+                else:
+                    user = User(
+                        cohort_id=matched_cohort_id,
+                        display_name="Narendra",
+                        role="trainee",
+                        is_active=True,
+                        last_login_at=now,
+                    )
+                    db.add(user)
+                    await db.flush()
+            else:
+                user.role = "trainee"
+                user.last_login_at = now
+                user.is_active = True
+
+        # ─── PERSONA 4: Verified Cohort Participant Roster ───
         else:
+            # Query enrolled members for this cohort
             user_stmt = select(User).where(
                 and_(
                     User.cohort_id == matched_cohort_id,
-                    func.lower(func.trim(User.display_name)) == clean_name.lower(),
+                    func.lower(func.trim(User.display_name)) == lower_name,
                 )
             ).order_by(User.id.asc())
             user = (await db.execute(user_stmt)).scalars().first()
 
             if not user:
-                roster_count_stmt = select(func.count(User.id)).where(
-                    and_(User.cohort_id == matched_cohort_id, User.role == "trainee")
-                )
-                roster_count = (await db.execute(roster_count_stmt)).scalar() or 0
-
-                if roster_count > 0:
+                # If this is specifically Uzair's main training cohort (UZAIR-2026), enforce strict roster:
+                # Disallow fake un-enrolled names like 'fox'.
+                if clean_code == "UZAIR-2026":
                     await record_login_attempt(db, ip=ip, passcode_prefix=prefix, success=False)
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
                         detail=(
-                            f"ACCESS_DENIED: '{clean_name}' is not an enrolled student in {matched_cohort_name}. "
-                            "Only registered trainees of Uzair / 3H Solutions can log in. "
-                            "Please verify your exact name spelling or contact your instructor."
+                            f"Access Denied: Participant '{clean_name}' is not enrolled in cohort '{matched_cohort_name}'. "
+                            "Please contact your facilitator (Uzair) to be enrolled on the official roster."
                         ),
                     )
                 else:
+                    # For dynamic test cohorts or external cohorts, check capacity and auto-enroll
+                    max_members = matched_item.get("max_members") or 50
+                    count_stmt = select(func.count(User.id)).where(User.cohort_id == matched_cohort_id)
+                    current_count = (await db.execute(count_stmt)).scalar() or 0
+                    if current_count >= max_members:
+                        await record_login_attempt(db, ip=ip, passcode_prefix=prefix, success=False)
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Cohort capacity reached. Please contact your facilitator.",
+                        )
                     user = User(
                         cohort_id=matched_cohort_id,
                         display_name=clean_name,
@@ -499,6 +577,11 @@ class AccessService:
                     db.add(user)
                     await db.flush()
             else:
+                if not user.is_active:
+                    raise HTTPException(
+                        status_code=status.HTTP_403_FORBIDDEN,
+                        detail=f"Access Denied: Account for '{clean_name}' has been deactivated.",
+                    )
                 user.last_login_at = now
 
         token_str, jti, token_expires_at = create_access_token(

@@ -1,0 +1,60 @@
+slug: sales-01-discovery-polite-prospect
+track: sales
+title: Initial Discovery with a Polite but Guarded Prospect
+topic: discovery_questions
+difficulty: 1
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Discovery Questions
+- Active Listening
+- Rapport & Adaptation
+tactical_coaching_clue: Polite prospects often give short, surface answers to get off the phone. Avoid
+  launching into a product pitch; ask second-order questions about daily operational friction.
+brief: You are holding a 15-minute introductory call with Rachel Green, Director of Operations at a 400-person
+  logistics firm. She agreed to the call out of courtesy but has her guard up. Uncover at least one operational
+  bottleneck and secure commitment for a technical deep dive.
+persona:
+  name: Rachel Green
+  role: Director of Operations
+  personality:
+  - polite
+  - guarded
+  - busy
+  - risk-averse
+  communication_style: Friendly but non-committal. Gives short answers ('everything is fine really').
+  emotional_baseline: guarded
+hidden_motivations:
+- Rachel's warehouse dispatchers lose 2 hours daily doing manual reconciliation in Excel.
+- She fears adopting complex software that requires retraining 80 drivers.
+objections:
+- We have internal spreadsheets that work well enough for now.
+- I'm pretty booked this quarter, so just send me some brochures.
+curveballs:
+- trigger: if trainee pitches software features before asking about workflow
+  event: Rachel politely says she has to jump to another call.
+success_criteria:
+- Asks at least two open-ended questions about daily dispatch bottlenecks.
+- Uncovers the Excel spreadsheet manual reconciliation pain.
+- Secures a confirmed calendar invite for a workflow walkthrough.
+skills_assessed:
+- skill: discovery_questions
+  weight: 0.4
+- skill: active_listening
+  weight: 0.3
+- skill: closing_next_steps
+  weight: 0.3
+opening_line: Hi there. Thanks for reaching out. I only have about ten minutes before a team standup,
+  but what did you want to show me?
+tags:
+- sales
+- discovery
+- inbound
+- level-1
+conclusion_signals:
+  positive:
+  - Rachel agrees to Thursday at 2 PM deep dive
+  - Rachel confirms demo invite
+  negative:
+  - Rachel asks for brochures and ends call
+  - Prospect ghosts

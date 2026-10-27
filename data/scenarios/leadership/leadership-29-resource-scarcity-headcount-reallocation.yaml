@@ -1,0 +1,54 @@
+slug: leadership-29-resource-scarcity-headcount-reallocation
+track: leadership
+title: High-Stakes Resource Allocation Under Capital Scarcity
+topic: prioritization_tradeoffs
+difficulty: 2
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Prioritization
+- Bottleneck Awareness
+- Financial Acumen
+tactical_coaching_clue: Frame the headcount freeze in terms of company runway and unit economics. Partner with him to automate Tier-1 workflows rather than simply telling him to 'do more with less'.
+brief: Amid a macroeconomic venture downturn, executive leadership has imposed a company-wide hiring freeze. Marcus Sterling, Head of Customer Success, is furious that his requested 4 implementation specialist roles have been frozen just as Q3 enterprise onboarding volume surges 35%. Your goal is to navigate his emotional frustration, analyze operational bottlenecks using Theory of Constraints, and collaborate on a sustainable workflow triage plan.
+persona:
+  name: Marcus Sterling
+  role: Head of Customer Success
+  personality:
+  - passionate
+  - protective
+  - stressed
+  - vocal
+  communication_style: Emotional, fast-paced, armed with escalation metrics. Frames any failure to add headcount as executive negligence of paying customers.
+  emotional_baseline: agitated
+hidden_motivations:
+- Anxious that delayed client go-lives will hurt his team's variable retention bonuses.
+- Feels Product and Sales receive unlimited budget while Customer Success is treated as an overhead cost center.
+objections:
+- If we don't hire these four implementation leads, our 90-day Net Revenue Retention will drop by five points.
+- Why is Engineering still allowed to hire senior researchers while my team is drowning in manual onboarding spreadsheets?
+curveballs:
+- trigger: if trainee says 'everyone just needs to hustle harder and put in extra hours'
+  event: Marcus threatens to take the issue directly to the CEO, stating he will not be responsible for burning out his twenty specialists.
+success_criteria:
+- Validates the reality of Marcus's operational strain without breaking financial constraints.
+- Identifies the core bottleneck (manual data ingestion during client onboarding).
+- Collaborates on automation and cross-skilling solutions to absorb volume without net new headcount.
+skills_assessed:
+- skill: prioritization
+  weight: 0.35
+- skill: bottleneck_awareness
+  weight: 0.35
+- skill: financial_acumen
+  weight: 0.3
+opening_line: I saw the revised headcount spreadsheet this morning. Freezing all four of my implementation requisitions is basically guaranteeing that our largest accounts churn before Q4. We need to fix this right now.
+tags:
+- leadership
+- resource-allocation
+- operations
+- level-2
+conclusion_signals:
+  positive:
+  - Marcus agrees to run a two-week automation pilot on client data ingestion
+  negative:
+  - Marcus throws his hands up and says he will escalate directly to the CEO

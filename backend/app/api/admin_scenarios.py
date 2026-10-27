@@ -5,6 +5,7 @@ from typing import List, Optional
 import yaml
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
 from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.app.db.models import Scenario, ScenarioVersion, User
@@ -20,6 +21,37 @@ from backend.app.services.scenario_service import ScenarioService
 router = APIRouter(prefix="/api/admin/scenarios", tags=["Admin Scenarios"])
 
 
+def to_admin_scenario_response(s: Scenario) -> AdminScenarioResponse:
+    track_key = "sales" if (s.slug and s.slug.startswith("sales")) else "leadership"
+    if "track" in s.__dict__ and s.track:
+        track_key = s.track.key
+    return AdminScenarioResponse(
+        id=s.id,
+        track_id=s.track_id,
+        track=track_key,
+        slug=s.slug,
+        title=s.title,
+        status=s.status,
+        difficulty=s.difficulty,
+        topic=s.topic,
+        version=s.version,
+        duration_limit_seconds=s.duration_limit_seconds,
+        turn_limit=s.turn_limit,
+        brief=s.brief,
+        persona=s.persona,
+        hidden_motivations=s.hidden_motivations,
+        objections=s.objections,
+        curveballs=s.curveballs,
+        success_criteria=s.success_criteria,
+        skills_assessed=s.skills_assessed,
+        opening_line=s.opening_line,
+        tags=s.tags,
+        tactical_coaching_clue=s.tactical_coaching_clue,
+        target_capabilities=s.target_capabilities,
+        conclusion_signals=s.conclusion_signals,
+    )
+
+
 @router.get("", response_model=List[AdminScenarioResponse])
 async def admin_list_scenarios(
     track: Optional[str] = Query(None),
@@ -27,21 +59,29 @@ async def admin_list_scenarios(
     current_admin: User = Depends(require_group_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    stmt = select(Scenario).order_by(Scenario.created_at.desc())
+    stmt = (
+        select(Scenario)
+        .options(selectinload(Scenario.track))
+        .order_by(Scenario.created_at.desc())
+    )
     if status_filter:
         stmt = stmt.where(Scenario.status == status_filter)
     scenarios = (await db.execute(stmt)).scalars().all()
-    return scenarios
+    results = [to_admin_scenario_response(s) for s in scenarios]
+    if track:
+        results = [r for r in results if r.track and r.track.lower() == track.lower()]
+    return results
 
 
 @router.get("/{id}", response_model=AdminScenarioResponse)
 async def admin_get_scenario(
     id: str, current_admin: User = Depends(require_group_admin), db: AsyncSession = Depends(get_db)
 ):
-    scen = await db.get(Scenario, id)
+    stmt = select(Scenario).options(selectinload(Scenario.track)).where(Scenario.id == id)
+    scen = (await db.execute(stmt)).scalar_one_or_none()
     if not scen:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Scenario not found")
-    return scen
+    return to_admin_scenario_response(scen)
 
 
 @router.delete("/{id}", status_code=status.HTTP_204_NO_CONTENT)
@@ -71,7 +111,9 @@ async def admin_create_scenario(
         changed_by=current_admin.id,
         change_note="Created via Admin API",
     )
-    return scen
+    stmt = select(Scenario).options(selectinload(Scenario.track)).where(Scenario.id == scen.id)
+    refreshed = (await db.execute(stmt)).scalar_one_or_none() or scen
+    return to_admin_scenario_response(refreshed)
 
 
 @router.post("/validate")
@@ -115,7 +157,7 @@ async def admin_import_scenario(
         changed_by=current_admin.id,
         change_note="Imported from YAML",
     )
-    return scen
+    return to_admin_scenario_response(scen)
 
 
 @router.get("/{id}/export")
@@ -239,7 +281,7 @@ async def admin_duplicate_scenario(
     )
     await db.commit()
     await db.refresh(dup_scen)
-    return dup_scen
+    return to_admin_scenario_response(dup_scen)
 
 
 @router.get("/{id}/versions", response_model=List[ScenarioVersionResponse])
@@ -262,9 +304,10 @@ async def admin_restore_version(
     current_admin: User = Depends(require_group_admin),
     db: AsyncSession = Depends(get_db),
 ):
-    return await ScenarioService.admin_restore_version(
+    scen = await ScenarioService.admin_restore_version(
         db=db, scenario_id=id, target_version=version_num, admin_id=current_admin.id
     )
+    return to_admin_scenario_response(scen)
 
 
 @router.post("/ai-draft", response_model=ScenarioConfigSchema)

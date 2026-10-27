@@ -21,8 +21,8 @@ class NVIDIAProvider(LLMProvider):
         api_key: Optional[str] = None,
         api_keys: Optional[Union[str, List[str]]] = None,
         base_url: str = "https://integrate.api.nvidia.com/v1/chat/completions",
-        model: str = "meta/llama-3.2-11b-vision-instruct",
-        timeout: float = 30.0,
+        model: str = "nvidia/nemotron-3.5-bolt-e4b",
+        timeout: float = 10.0,
     ):
         # Resolve all provided API keys into a clean list
         resolved_keys: List[str] = []
@@ -112,8 +112,8 @@ class NVIDIAProvider(LLMProvider):
 
             try:
                 logger.info(f"[NVIDIA Multi-Key Pool] Routing stream turn to key #{attempt + 1}/{len(candidate_keys)} ({masked_key})")
-                # Resilient per-key streaming timeout with 3.5s connect gate and 15s read runway to prevent false timeout cascades
-                async with client.stream("POST", self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(15.0, connect=3.5, read=15.0)) as response:
+                # Fast per-key streaming timeout: 3.0s connect, 4.5s read runway for sub-second TTFT failover
+                async with client.stream("POST", self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(connect=3.0, read=4.5, write=5.0, pool=5.0)) as response:
                     if response.status_code != 200:
                         body = await response.aread()
                         logger.warning(
@@ -214,7 +214,7 @@ class NVIDIAProvider(LLMProvider):
             }
 
             try:
-                response = await client.post(self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(45.0, connect=5.0, read=40.0))
+                response = await client.post(self.base_url, headers=headers, json=payload, timeout=httpx.Timeout(connect=5.0, read=70.0, write=10.0, pool=10.0))
                 if response.status_code != 200:
                     logger.warning(
                         f"[NVIDIA Multi-Key Pool] Key #{attempt + 1} ({masked_key}) returned {response.status_code}. Failing over..."

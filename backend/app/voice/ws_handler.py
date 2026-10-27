@@ -175,18 +175,18 @@ async def voice_websocket_endpoint(websocket: WebSocket, session_id: str):
                         async for chunk in engine.process_turn_stream(session_id, final_trainee_text):
                             reply_text += chunk
                 except Exception as turn_err:
-                    logger.warning(f"Voice turn recovered gracefully from exception ({turn_err})")
+                    logger.warning(f"Voice turn recovered gracefully from exception ({turn_err})", exc_info=True)
                     if not reply_text:
-                        counterpart = voice_config.counterpart_name or "Marcus"
-                        reply_text = (
-                            "Look, I understand where you're coming from, but we have to prioritize what actually moves the needle for the client. What's your concrete recommendation?"
-                            if "marcus" in counterpart.lower()
-                            else "I hear what you're saying. From my perspective, we need to balance team process with our delivery milestones. How do you propose we handle this?"
-                        )
-
-                if not reply_text:
-                    counterpart = voice_config.counterpart_name or "Marcus"
-                    reply_text = "I hear what you're saying. How do you propose we move forward from here?"
+                        from backend.app.ai.providers.mock_provider import MockLLMProvider
+                        try:
+                            mock_prov = MockLLMProvider()
+                            reply_text = mock_prov._generate_contextual_reply(
+                                last_user_message=final_trainee_text,
+                                system_prompt=f"Roleplay as {voice_config.counterpart_name}. Style: {voice_config.style_prompt}",
+                                messages=[],
+                            )
+                        except Exception:
+                            reply_text = f"I hear your point regarding this situation. As {voice_config.counterpart_name}, how specifically do you propose we address this next?"
 
                 await websocket.send_text(
                     json.dumps({

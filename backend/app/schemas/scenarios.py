@@ -123,6 +123,7 @@ class PublicScenarioDetail(BaseModel):
 class AdminScenarioResponse(BaseModel):
     id: str
     track_id: str
+    track: Optional[str] = None
     slug: str
     title: str
     status: str

@@ -1,0 +1,60 @@
+slug: sales-04-uncovering-manual-workflow-pain
+track: sales
+title: Uncovering Latent Pain Points Behind 'Everything Is Fine'
+topic: discovery_questions
+difficulty: 1
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Discovery Questions
+- Active Listening
+- Value Articulation
+tactical_coaching_clue: 'When prospects say ''our current process works fine'', ask about edge cases:
+  ''What happens at month-end when volumes spike 3x?'''
+brief: You are speaking with Danielle Cooper, Billing Lead at a regional medical lab. She insists their
+  homegrown billing process is completely fine. Probe gently to uncover the late-night error reconciliation
+  and billing leakage.
+persona:
+  name: Danielle Cooper
+  role: Billing Operations Lead
+  personality:
+  - traditional
+  - skeptical
+  - hardworking
+  - proud
+  communication_style: Defensive of her existing setup, values reliability over high-tech features.
+  emotional_baseline: skeptical
+hidden_motivations:
+- Danielle spent five years perfecting her Excel billing templates and fears looking foolish.
+- Her team worked until 10 PM last Friday fixing corrupted billing claims.
+objections:
+- We have our own custom sheets, we don't need shiny cloud dashboards.
+- Automated billing tools always miscalculate state insurance codes.
+curveballs:
+- trigger: if trainee calls her Excel sheets 'outdated' or 'stone age'
+  event: Danielle takes offense and shuts down the conversation.
+success_criteria:
+- Validates the thoroughness of her current manual billing spreadsheets.
+- Uncovers the friction during month-end claim reconciliations.
+- Connects automated code verification to eliminating her team's Friday overtime.
+skills_assessed:
+- skill: discovery_questions
+  weight: 0.35
+- skill: active_listening
+  weight: 0.35
+- skill: rapport_adaptation
+  weight: 0.3
+opening_line: 'Look, I''ll be frank: our billing system is working fine for us. I''m not looking to reinvent
+  the wheel with expensive software.'
+tags:
+- sales
+- discovery
+- latent-pain
+- level-1
+conclusion_signals:
+  positive:
+  - Danielle admits Friday overtime is brutal and agrees to test claim scanner
+  - Pain acknowledged
+  negative:
+  - Danielle defends spreadsheets and hangs up
+  - Trainee insults her current setup

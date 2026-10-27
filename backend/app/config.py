@@ -21,7 +21,7 @@ class Settings(BaseSettings):
     LOCKOUT_DURATION_MINUTES: int = Field(default=15)
 
     # Database
-    DATABASE_URL: str = Field(default="sqlite+aiosqlite:///./data.db")
+    DATABASE_URL: str = Field(default="sqlite+aiosqlite:///./data/training.db")
 
     # AI & Voice Providers
     DEFAULT_LLM_PROVIDER: str = Field(default="nvidia")
@@ -52,7 +52,7 @@ class Settings(BaseSettings):
         return []
 
     NVIDIA_BASE_URL: str = Field(default="https://integrate.api.nvidia.com/v1/chat/completions")
-    NVIDIA_MODEL: str = Field(default="meta/llama-3.2-11b-vision-instruct")
+    NVIDIA_MODEL: str = Field(default="nvidia/nemotron-3.5-bolt-e4b")
     ANTHROPIC_API_KEY: Optional[str] = Field(default=None)
     OPENAI_API_KEY: Optional[str] = Field(default=None)
     DEFAULT_VOICE_PROVIDER: str = Field(default="mock")
@@ -70,7 +70,7 @@ class Settings(BaseSettings):
     )
 
     # Budget & Cost Limits
-    DEFAULT_COHORT_BUDGET_CAP_USD: float = Field(default=100.0)
+    DEFAULT_COHORT_BUDGET_CAP_USD: float = Field(default=10.0)
     SESSION_TOKEN_LIMIT: int = Field(default=4000)
     SESSION_AUDIO_MINUTES_LIMIT: float = Field(default=15.0)
 

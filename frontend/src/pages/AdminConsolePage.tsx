@@ -4,6 +4,7 @@ import {
   AdminCohort,
   CohortMember,
   CohortProgress,
+  FeedbackReport,
   SimulationSession,
 } from '../types';
 import {
@@ -16,6 +17,7 @@ import {
   FileText,
   Key,
   Plus,
+  Printer,
   RefreshCw,
   Search,
   ShieldCheck,
@@ -44,7 +46,7 @@ interface AdminConsolePageProps {
   onViewEvaluation?: (sessionId: string) => void;
 }
 
-export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvaluation }) => {
+export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvaluation: _onViewEvaluation }) => {
   const [activeTab, setActiveTab] = useState<'roster' | 'cohort' | 'curriculum'>('roster');
   const [loading, setLoading] = useState(true);
   const [feedbackMsg, setFeedbackMsg] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
@@ -56,14 +58,12 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
   const [cohortProgress, setCohortProgress] = useState<CohortProgress | null>(null);
   const [completedSessions, setCompletedSessions] = useState<SimulationSession[]>([]);
 
-  // Telemetry Performance State
-  const [telemetryTiming, setTelemetryTiming] = useState<{
-    totalMs: number;
-    cohortCount: number;
-    memberCount: number;
-    sessionCount: number;
-    scenarioCount: number;
-  } | null>(null);
+  // 1-Pager Executive Evaluation Report Modal State (Scoped within Admin Console)
+  const [reportSessionId, setReportSessionId] = useState<string | null>(null);
+  const [reportData, setReportData] = useState<FeedbackReport | null>(null);
+  const [reportSession, setReportSession] = useState<SimulationSession | null>(null);
+  const [isLoadingReport, setIsLoadingReport] = useState<boolean>(false);
+
 
   // Add Member State
   const [newMemberName, setNewMemberName] = useState('');
@@ -108,7 +108,6 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
 
   const loadAdminData = async (targetCohortId?: string) => {
     setLoading(true);
-    const t0 = performance.now();
     try {
       // 1. Parallel Load: Cohorts List and Scenarios
       const [cohortsList, scenData] = await Promise.all([
@@ -124,31 +123,17 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
 
       setCohort(selectedCohort);
 
-      let memberCount = 0;
-      let sessionCount = 0;
-
       if (selectedCohort) {
-        // 2. Parallel Load: Members, Progress Telemetry, and Completed Sessions
+        // 2. Parallel Load: Members, Progress Telemetry, and Completed Sessions (Strictly scoped to selected cohort)
         const [membersData, progressData, sessionsData] = await Promise.all([
           api.listCohortMembers(selectedCohort.id).catch(() => []),
           api.getCohortProgress(selectedCohort.id).catch(() => null),
-          api.listCohortSessions().catch(() => []),
+          api.listCohortSessions(selectedCohort.id).catch(() => []),
         ]);
         setCohortMembers(membersData);
         setCohortProgress(progressData);
         setCompletedSessions(sessionsData.filter((s) => s.status === 'completed'));
-        memberCount = membersData.length;
-        sessionCount = sessionsData.length;
       }
-
-      const elapsedMs = Math.round(performance.now() - t0);
-      setTelemetryTiming({
-        totalMs: elapsedMs,
-        cohortCount: cohortsList.length,
-        memberCount,
-        sessionCount,
-        scenarioCount: scenData.length,
-      });
     } catch (err: unknown) {
       console.error('Error loading admin portal', err);
       const msg = err instanceof Error ? err.message : 'Failed to load admin data';
@@ -158,12 +143,35 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
     }
   };
 
+  const handleOpenOnePagerReport = async (sessionId: string) => {
+    setReportSessionId(sessionId);
+    setIsLoadingReport(true);
+    try {
+      const [evalReport, sessionDetail] = await Promise.all([
+        api.getSessionEvaluation(sessionId),
+        api.getSessionDetail(sessionId).catch(() => null),
+      ]);
+      setReportData(evalReport);
+      setReportSession(sessionDetail);
+    } catch (err: unknown) {
+      console.error('Failed to load 1-pager report', err);
+      showFeedback('Failed to load performance report for this session', 'error');
+      setReportSessionId(null);
+    } finally {
+      setIsLoadingReport(false);
+    }
+  };
+
   useEffect(() => {
     loadAdminData();
   }, []);
 
   const handleCopyPasscode = () => {
-    const code = cohort?.initial_passcode || 'UZAIR-2026';
+    const code = cohort?.initial_passcode || (cohort?.name?.toLowerCase().includes('uzair') ? 'UZAIR-2026' : '');
+    if (!code) {
+      showFeedback('No active passcode found for this cohort', 'error');
+      return;
+    }
     navigator.clipboard.writeText(code);
     setHasCopiedPasscode(true);
     showFeedback(`Passcode "${code}" copied to clipboard!`);
@@ -413,7 +421,8 @@ conclusion_signals:
   const filteredScenarios = scenarios.filter((s) => {
     const matchesSearch = s.title.toLowerCase().includes(curriculumSearch.toLowerCase()) ||
       (s.topic && s.topic.toLowerCase().includes(curriculumSearch.toLowerCase()));
-    const matchesTrack = curriculumTrackFilter === 'all' || s.track === curriculumTrackFilter;
+    const sTrack = (s.track || (s.slug?.startsWith('sales') ? 'sales' : 'leadership')).toLowerCase();
+    const matchesTrack = curriculumTrackFilter === 'all' || sTrack === curriculumTrackFilter;
     return matchesSearch && matchesTrack;
   });
 
@@ -436,7 +445,7 @@ conclusion_signals:
       )}
 
       {/* Top Executive Header */}
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 border-b border-slate-300 dark:border-[#1E3E62] pb-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-300 dark:border-[#1E3E62] pb-6">
         <div>
           <div className="flex items-center space-x-2">
             <span className="rounded-md bg-[#FF6500]/10 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-[#FF6500] border border-[#FF6500]/30">
@@ -451,25 +460,71 @@ conclusion_signals:
           </p>
         </div>
 
-        {/* Tab Controls */}
-        <div className="flex rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-slate-100 dark:bg-[#0B192C] p-1.5 shadow-sm">
+        {/* Cohort Selector & Quick Actions */}
+        <div className="flex items-center space-x-3">
+          <div className="flex items-center space-x-2 bg-white dark:bg-[#132B45] border-2 border-slate-300 dark:border-[#1E3E62] rounded-xl px-3.5 py-2 shadow-sm">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Cohort:</span>
+            <select
+              id="admin-cohort-selector"
+              value={cohort?.id || ''}
+              onChange={(e) => {
+                const selectedId = e.target.value;
+                if (selectedId === '__new__') {
+                  setShowCreateCohortModal(true);
+                } else if (selectedId) {
+                  loadAdminData(selectedId);
+                }
+              }}
+              className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-2"
+            >
+              {allCohorts.map((c) => (
+                <option key={c.id} value={c.id} className="dark:bg-[#0B192C]">
+                  {c.name} ({c.initial_passcode || 'Passcode'})
+                </option>
+              ))}
+              <option value="__new__" className="text-[#FF6500] font-bold">
+                + Create New Cohort...
+              </option>
+            </select>
+          </div>
+
+          <button
+            id="admin-quick-enroll-btn"
+            onClick={() => {
+              setActiveTab('roster');
+              setTimeout(() => {
+                const el = document.getElementById('enroll-student-input');
+                if (el) el.focus();
+              }, 50);
+            }}
+            className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-[#FF6500]/25 transition flex-shrink-0"
+          >
+            <UserPlus className="h-4 w-4" />
+            <span>+ Enroll Student</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Dedicated Clean Sub-Navigation Tab Bar */}
+      <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 dark:border-[#1E3E62] pb-4">
+        <div className="flex rounded-xl border-2 border-slate-300 dark:border-[#1E3E62] bg-slate-100 dark:bg-[#0B192C] p-1 shadow-sm">
           <button
             id="admin-tab-roster"
             onClick={() => setActiveTab('roster')}
-            className={`flex items-center space-x-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+            className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
               activeTab === 'roster'
                 ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/25'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Users className="h-4 w-4" />
-            <span>Participant Roster & Debriefs</span>
+            <span>Participant Roster</span>
           </button>
 
           <button
             id="admin-tab-cohort"
             onClick={() => setActiveTab('cohort')}
-            className={`flex items-center space-x-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+            className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
               activeTab === 'cohort'
                 ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/25'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -482,105 +537,106 @@ conclusion_signals:
           <button
             id="admin-tab-curriculum"
             onClick={() => setActiveTab('curriculum')}
-            className={`flex items-center space-x-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+            className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
               activeTab === 'curriculum'
                 ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/25'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <BookOpen className="h-4 w-4" />
-            <span>Scenario Curriculum ({scenarios.length})</span>
+            <span>Scenarios</span>
           </button>
         </div>
-      </div>
 
-      {/* Parallel Execution Telemetry Pill */}
-      {telemetryTiming && (
-        <div className="mt-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-100 dark:bg-[#0B192C]/90 px-4 py-2 text-xs font-mono">
-          <div className="flex items-center space-x-2 text-slate-700 dark:text-slate-300">
-            <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse flex-shrink-0" />
-            <span className="font-bold text-slate-900 dark:text-white">Parallel Engine Telemetry:</span>
-            <span>
-              Loaded {telemetryTiming.cohortCount} cohort{telemetryTiming.cohortCount === 1 ? '' : 's'}, {telemetryTiming.memberCount} participant{telemetryTiming.memberCount === 1 ? '' : 's'}, {telemetryTiming.sessionCount} session{telemetryTiming.sessionCount === 1 ? '' : 's'}, {telemetryTiming.scenarioCount} scenarios
-            </span>
+        {cohort && (
+          <div className="flex items-center space-x-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
+            <span>Active Cohort:</span>
+            <span className="font-bold text-slate-900 dark:text-slate-200">{cohort.name}</span>
           </div>
-          <span className="text-[#FF6500] font-bold">
-            ⚡ Parallel Load: {telemetryTiming.totalMs}ms
-          </span>
-        </div>
-      )}
+        )}
+      </div>
 
       {/* KPI Stat Cards Strip */}
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Passcode Card with Quick Copy */}
-        <div className="rounded-2xl border-2 border-[#FF6500]/40 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-[#132B45] dark:to-[#0B192C] p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wider text-[#B45309] dark:text-[#FF6500]">
-              Active Cohort Passcode
-            </span>
-            <Key className="h-4 w-4 text-[#FF6500]" />
+        <div className="rounded-2xl border-2 border-[#FF6500]/40 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-[#132B45] dark:to-[#0B192C] p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#B45309] dark:text-[#FF6500]">
+                Active Cohort Passcode
+              </span>
+              <Key className="h-4 w-4 text-[#FF6500]" />
+            </div>
+            <div className="mt-3 flex items-center justify-between">
+              <span className="font-mono text-xl font-black text-slate-900 dark:text-white tracking-wider">
+                {cohort?.initial_passcode || (cohort?.name?.toLowerCase().includes('uzair') ? 'UZAIR-2026' : '—')}
+              </span>
+              <button
+                onClick={handleCopyPasscode}
+                className="flex items-center space-x-1 rounded-lg bg-[#FF6500] hover:bg-[#E05A00] px-2.5 py-1 text-xs font-bold text-white shadow transition"
+                title="Copy passcode to clipboard"
+              >
+                {hasCopiedPasscode ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+                <span>{hasCopiedPasscode ? 'Copied' : 'Copy'}</span>
+              </button>
+            </div>
           </div>
-          <div className="mt-2 flex items-center justify-between">
-            <span className="font-mono text-xl font-black text-slate-900 dark:text-white tracking-wider">
-              {cohort?.initial_passcode || 'UZAIR-2026'}
-            </span>
-            <button
-              onClick={handleCopyPasscode}
-              className="flex items-center space-x-1 rounded-lg bg-[#FF6500] hover:bg-[#E05A00] px-2.5 py-1 text-xs font-bold text-white shadow transition"
-              title="Copy passcode to clipboard"
-            >
-              {hasCopiedPasscode ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-              <span>{hasCopiedPasscode ? 'Copied' : 'Copy'}</span>
-            </button>
-          </div>
-          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+          <div className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">
             Share this with participants on your table
           </div>
         </div>
 
         {/* Trainees Enrolled */}
-        <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-5 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-            <span>Enrolled Participants</span>
-            <Users className="h-4 w-4 text-emerald-500" />
+        <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+              <span>Enrolled Participants</span>
+              <Users className="h-4 w-4 text-emerald-500" />
+            </div>
+            <div className="mt-3 text-3xl font-black text-slate-900 dark:text-white">
+              {cohortMembers.filter((m) => m.role === 'trainee').length}
+              <span className="text-sm font-semibold text-slate-400 ml-1.5">participants</span>
+            </div>
           </div>
-          <div className="mt-2 text-3xl font-black text-slate-900 dark:text-white">
-            {cohortMembers.filter((m) => m.role === 'trainee').length}
-            <span className="text-sm font-semibold text-slate-400 ml-1.5">participants</span>
-          </div>
-          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+          <div className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">
             Whitelisted for cohort login
           </div>
         </div>
 
         {/* Completed Scenarios */}
-        <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-5 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-            <span>Completed Scenarios</span>
-            <Award className="h-4 w-4 text-[#FF6500]" />
+        <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+              <span>Completed Scenarios</span>
+              <Award className="h-4 w-4 text-[#FF6500]" />
+            </div>
+            <div className="mt-3 text-3xl font-black text-slate-900 dark:text-white">
+              {completedSessions.length}
+              <span className="text-sm font-semibold text-slate-400 ml-1.5">attempts</span>
+            </div>
           </div>
-          <div className="mt-2 text-3xl font-black text-slate-900 dark:text-white">
-            {completedSessions.length}
-            <span className="text-sm font-semibold text-slate-400 ml-1.5">attempts</span>
-          </div>
-          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
-            10 practice attempts allocated per participant
+          <div className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">
+            {cohortMembers.filter((m) => m.role === 'trainee').length > 0
+              ? `${completedSessions.length} completed of ${cohortMembers.filter((m) => m.role === 'trainee').length * 10} total attempts capacity`
+              : 'Completed in this cohort'}
           </div>
         </div>
 
         {/* Cohort Average Score */}
-        <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-5 shadow-sm">
-          <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
-            <span>Cohort Average Rating</span>
-            <TrendingUp className="h-4 w-4 text-emerald-500" />
+        <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-5 shadow-sm flex flex-col justify-between">
+          <div>
+            <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
+              <span>Cohort Average Rating</span>
+              <TrendingUp className="h-4 w-4 text-emerald-500" />
+            </div>
+            <div className="mt-3 flex items-baseline">
+              <span className="text-3xl font-black text-slate-900 dark:text-white">
+                {cohortProgress?.cohort_average_score || (completedSessions.length > 0 ? '78' : '--')}
+              </span>
+              <span className="text-sm font-bold text-slate-400 ml-1">/ 100</span>
+            </div>
           </div>
-          <div className="mt-2 flex items-baseline">
-            <span className="text-3xl font-black text-slate-900 dark:text-white">
-              {cohortProgress?.cohort_average_score || (completedSessions.length > 0 ? '78' : '--')}
-            </span>
-            <span className="text-sm font-bold text-slate-400 ml-1">/ 100</span>
-          </div>
-          <div className="mt-2 text-[11px] text-slate-500 dark:text-slate-400">
+          <div className="mt-3 text-[11px] text-slate-500 dark:text-slate-400">
             Executive 3H Competency Rubric
           </div>
         </div>
@@ -598,118 +654,16 @@ conclusion_signals:
       {/* ======================================================== */}
       {!loading && activeTab === 'roster' && (
         <div className="mt-8 space-y-8">
-          {/* Top 3 Group Weaknesses Card (Requested by Uzair for Live Group Debriefs) */}
-          <div className="rounded-2xl border-2 border-[#FF6500]/60 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-6 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#FF6500]/30 pb-3">
-              <div>
-                <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#FF6500]">
-                  <Target className="h-4 w-4" />
-                  <span>Instructor Group Debrief: Top 3 Cohort Weaknesses & Live Agenda</span>
-                </div>
-                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
-                  Synthesized across all cohort attempts. Use these 3 core gaps as your primary group talking points during live coaching.
-                </p>
-              </div>
-              <span className="self-start sm:self-auto rounded-full bg-[#FF6500]/15 border border-[#FF6500]/40 px-3 py-1 text-[11px] font-bold text-[#FF6500]">
-                Live Group Focus
-              </span>
-            </div>
-
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-              {/* Weakness 1 */}
-              {(() => {
-                const weakSkills = cohortProgress?.skill_score_distribution || (cohortProgress as any)?.skill_distribution || [];
-                return (
-                  <>
-                    <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between text-xs font-bold">
-                          <span className="rounded bg-rose-500/15 text-rose-600 dark:text-rose-400 px-2 py-0.5 font-black uppercase">
-                            #1 Priority Gap
-                          </span>
-                          <span className="font-mono text-slate-500 text-xs font-bold">
-                            {weakSkills[0]
-                              ? `${Math.round(weakSkills[0].average_score)}% Avg`
-                              : '62% Avg'}
-                          </span>
-                        </div>
-                        <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
-                          {weakSkills[0]?.skill_name || 'Handling Defensive Pushback & Objections'}
-                        </h3>
-                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                          Participants frequently defend initial positions rather than validating counterpart concerns.
-                        </p>
-                      </div>
-                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
-                        💡 Group Drill: Practice open calibration questions before proposing solutions.
-                      </div>
-                    </div>
-
-                    {/* Weakness 2 */}
-                    <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between text-xs font-bold">
-                          <span className="rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2 py-0.5 font-black uppercase">
-                            #2 Priority Gap
-                          </span>
-                          <span className="font-mono text-slate-500 text-xs font-bold">
-                            {weakSkills[1]
-                              ? `${Math.round(weakSkills[1].average_score)}% Avg`
-                              : '68% Avg'}
-                          </span>
-                        </div>
-                        <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
-                          {weakSkills[1]?.skill_name || 'Uncovering Hidden Motivations & Blockers'}
-                        </h3>
-                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                          Participants move directly to solutions before discovering underlying emotional drivers.
-                        </p>
-                      </div>
-                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
-                        💡 Group Drill: Identify subtext cues and ask 'help me understand' inquiries.
-                      </div>
-                    </div>
-
-                    {/* Weakness 3 */}
-                    <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between text-xs font-bold">
-                          <span className="rounded bg-teal-500/15 text-teal-600 dark:text-teal-400 px-2 py-0.5 font-black uppercase">
-                            #3 Priority Gap
-                          </span>
-                          <span className="font-mono text-slate-500 text-xs font-bold">
-                            {weakSkills[2]
-                              ? `${Math.round(weakSkills[2].average_score)}% Avg`
-                              : '74% Avg'}
-                          </span>
-                        </div>
-                        <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
-                          {weakSkills[2]?.skill_name || 'Closing with Clear Accountability & Benchmarks'}
-                        </h3>
-                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                          Meetings end on general goodwill without explicit timelines or mutual commitments.
-                        </p>
-                      </div>
-                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
-                        💡 Group Drill: Conclude conversations with the 'Who, Does What, By When' framework.
-                      </div>
-                    </div>
-                  </>
-                );
-              })()}
-            </div>
-          </div>
-
           {/* Quick Enroll Trainee Card */}
           <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
                   <UserPlus className="h-4 w-4 text-[#FF6500]" />
-                  <span>Enroll New Participant in Cohort</span>
+                  <span>Enroll New Participant into {cohort?.name || 'Cohort'}</span>
                 </h2>
                 <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
-                  Add participant name to authorize them to log in with the cohort passcode.
+                  Authorized participants can log in using cohort passcode <strong className="text-[#FF6500] font-mono">{cohort?.initial_passcode || (cohort?.name?.toLowerCase().includes('uzair') ? 'UZAIR-2026' : '—')}</strong>.
                 </p>
               </div>
 
@@ -726,6 +680,7 @@ conclusion_signals:
             {!showBulkAdd && (
               <form onSubmit={handleAddMember} className="mt-4 flex flex-col sm:flex-row items-center gap-3">
                 <input
+                  id="enroll-student-input"
                   type="text"
                   placeholder="Enter participant's full name (e.g., Sarah Jenkins)"
                   value={newMemberName}
@@ -768,6 +723,79 @@ conclusion_signals:
               </form>
             )}
           </div>
+
+          {/* Top 3 Group Weaknesses Card (Requested by Uzair for Live Group Debriefs) */}
+          <div className="rounded-2xl border-2 border-[#FF6500]/60 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#FF6500]/30 pb-3">
+              <div>
+                <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#FF6500]">
+                  <Target className="h-4 w-4" />
+                  <span>Instructor Group Debrief: Cohort Weaknesses & Live Agenda</span>
+                </div>
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                  Synthesized across all cohort attempts. Use these core gaps as your primary group talking points during live coaching.
+                </p>
+              </div>
+              <span className="self-start sm:self-auto rounded-full bg-[#FF6500]/15 border border-[#FF6500]/40 px-3 py-1 text-[11px] font-bold text-[#FF6500]">
+                Live Group Focus
+              </span>
+            </div>
+
+            {(() => {
+              const weakSkills = cohortProgress?.skill_score_distribution || (cohortProgress as any)?.skill_distribution || [];
+              if (weakSkills.length === 0) {
+                return (
+                  <div className="mt-4 rounded-xl border border-dashed border-slate-300 dark:border-[#1E3E62] bg-slate-50/50 dark:bg-[#0B192C]/50 p-6 text-center">
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                      Cohort Analytics Initializing
+                    </p>
+                    <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
+                      Live coaching focus and group debrief priorities will automatically synthesize here once cohort participants complete scenario simulations.
+                    </p>
+                  </div>
+                );
+              }
+              return (
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {weakSkills.slice(0, 3).map((ws: { skill_name?: string; avg_score?: number; score?: number; benchmark?: number; recommendation?: string }, idx: number) => (
+                    <div
+                      key={ws.skill_name || idx}
+                      className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between text-xs font-bold">
+                          <span
+                            className={`rounded px-2 py-0.5 font-black uppercase ${
+                              idx === 0
+                                ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                                : idx === 1
+                                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                                : 'bg-teal-500/15 text-teal-600 dark:text-teal-400'
+                            }`}
+                          >
+                            Priority #{idx + 1}
+                          </span>
+                          <span className="font-mono text-slate-500 text-xs font-bold">
+                            {Math.round(ws.avg_score || ws.score || 0)}% Avg
+                          </span>
+                        </div>
+                        <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
+                          {ws.skill_name}
+                        </h3>
+                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                          Cohort score average: {Math.round(ws.avg_score || ws.score || 0)}% across recorded attempts.
+                        </p>
+                      </div>
+                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
+                        💡 Focus Area: Target for deliberate practice during live facilitation.
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+          </div>
+
 
           {/* Participant Roster Table */}
           <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-6 shadow-sm">
@@ -838,10 +866,10 @@ conclusion_signals:
                         </div>
 
                         {/* View 1-Pager Debrief Button */}
-                        {latestSession && onViewEvaluation ? (
+                        {latestSession ? (
                           <button
                             type="button"
-                            onClick={() => onViewEvaluation(latestSession.id)}
+                            onClick={() => handleOpenOnePagerReport(latestSession.id)}
                             className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition"
                             title="View official 1-Pager Executive Performance Report"
                           >
@@ -938,16 +966,15 @@ conclusion_signals:
                         )}
                       </td>
                       <td className="py-3 px-3 text-right">
-                        {onViewEvaluation && (
-                          <button
-                            type="button"
-                            onClick={() => onViewEvaluation(session.id)}
-                            className="inline-flex items-center space-x-1 rounded-lg bg-[#FF6500] hover:bg-[#E05A00] px-3 py-1 text-xs font-bold text-white transition shadow-sm"
-                          >
-                            <FileText className="h-3 w-3" />
-                            <span>1-Pager Report</span>
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => handleOpenOnePagerReport(session.id)}
+                          className="inline-flex items-center space-x-1 rounded-lg bg-[#FF6500] hover:bg-[#E05A00] px-3 py-1 text-xs font-bold text-white transition shadow-sm"
+                          title="View official 1-Pager Executive Performance Report"
+                        >
+                          <FileText className="h-3 w-3" />
+                          <span>1-Pager Report</span>
+                        </button>
                       </td>
                     </tr>
                   ))}
@@ -1061,7 +1088,7 @@ conclusion_signals:
                     <span>Cohort Entry Passcode</span>
                   </div>
                   <div className="mt-3 font-mono text-3xl font-black text-slate-900 dark:text-white tracking-widest">
-                    {cohort?.initial_passcode || 'UZAIR-2026'}
+                    {cohort?.initial_passcode || (cohort?.name?.toLowerCase().includes('uzair') ? 'UZAIR-2026' : '—')}
                   </div>
                   <p className="mt-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
                     Participants enter this code along with their enrolled name to access workplace practice scenarios.
@@ -1552,6 +1579,353 @@ conclusion_signals:
           </div>
         </div>
       )}
+
+      {/* ======================================================== */}
+      {/* 1-PAGER EXECUTIVE EVALUATION REPORT CARD MODAL           */}
+      {/* (Self-contained in Admin Console for Facilitator Uzair)  */}
+      {/* ======================================================== */}
+      {reportSessionId && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto"
+        >
+          <div
+            className="fixed inset-0"
+            onClick={() => {
+              setReportSessionId(null);
+              setReportData(null);
+              setReportSession(null);
+            }}
+          />
+
+          <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] shadow-2xl z-10 overflow-hidden text-slate-900 dark:text-white">
+            {/* Modal Top Action Bar */}
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#1E3E62] px-6 py-4 bg-slate-50 dark:bg-[#132B45] flex-shrink-0">
+              <div className="flex items-center space-x-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FF6500]/15 text-[#FF6500] border border-[#FF6500]/30 font-bold text-sm">
+                  3H
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase tracking-wider text-[#FF6500] block">
+                    Executive Facilitator Report Card
+                  </span>
+                  <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-heading">
+                    1-Pager Executive Performance Evaluation
+                  </h3>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1E3E62] transition shadow-sm"
+                  title="Print or Save as PDF"
+                >
+                  <Printer className="h-4 w-4 text-[#FF6500]" />
+                  <span>Print Report</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setReportSessionId(null);
+                    setReportData(null);
+                    setReportSession(null);
+                  }}
+                  className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-2 text-slate-400 hover:text-slate-600 dark:hover:text-white transition"
+                  title="Close Report Card"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="overflow-y-auto p-6 space-y-6 text-sm">
+              {isLoadingReport ? (
+                <div className="py-20 flex flex-col items-center justify-center space-y-4">
+                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#FF6500] border-t-transparent" />
+                  <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
+                    Generating Official 1-Pager Executive Performance Report...
+                  </p>
+                </div>
+              ) : reportData ? (
+                <div className="space-y-6 print:p-0">
+                  {/* Trainee & Scenario Identity Dossier */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-xl border border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#132B45] text-xs">
+                    <div>
+                      <span className="font-bold text-slate-400 uppercase text-[10px] tracking-wider block">Participant</span>
+                      <p className="font-black text-slate-900 dark:text-white text-sm mt-0.5">
+                        {reportSession?.trainee_name || 'Cohort Participant'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="font-bold text-slate-400 uppercase text-[10px] tracking-wider block">Practice Scenario</span>
+                      <p className="font-bold text-slate-900 dark:text-white text-xs mt-0.5 line-clamp-1">
+                        {reportSession?.scenario_title || 'Simulation Dialogue'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="font-bold text-slate-400 uppercase text-[10px] tracking-wider block">Simulation Mode</span>
+                      <p className="font-bold text-[#FF6500] text-xs mt-0.5 capitalize">
+                        {reportSession?.mode === 'voice' ? '🎙️ Live Voice Dialogue' : '💬 Interactive Text Dialogue'}
+                      </p>
+                    </div>
+
+                    <div>
+                      <span className="font-bold text-slate-400 uppercase text-[10px] tracking-wider block">Concluded Date</span>
+                      <p className="font-bold text-slate-900 dark:text-white text-xs mt-0.5">
+                        {reportSession?.ended_at ? new Date(reportSession.ended_at).toLocaleDateString() : 'Recent Session'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Executive Score & Level Hero */}
+                  <div className="rounded-2xl border-2 border-[#FF6500]/50 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#FF6500]/25 pb-4">
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-[#FF6500]">
+                          3H Executive Rubric Rating
+                        </span>
+                        <div className="flex items-baseline space-x-3 mt-1">
+                          <span className="text-4xl font-black text-slate-900 dark:text-white font-mono">
+                            {reportData.overall_score}
+                          </span>
+                          <span className="text-sm font-bold text-slate-400">/ 100</span>
+                          <span
+                            className={`rounded-full px-3 py-1 text-xs font-black uppercase tracking-wider ${
+                              reportData.overall_score >= 85
+                                ? 'bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-500/30'
+                                : reportData.overall_score >= 70
+                                ? 'bg-amber-500/20 text-amber-600 dark:text-amber-400 border border-amber-500/30'
+                                : 'bg-rose-500/20 text-rose-600 dark:text-rose-400 border border-rose-500/30'
+                            }`}
+                          >
+                            {reportData.overall_score >= 85
+                              ? 'Executive Mastery'
+                              : reportData.overall_score >= 70
+                              ? 'Proficient'
+                              : reportData.overall_score >= 50
+                              ? 'Developing'
+                              : 'Needs Targeted Coaching'}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="text-xs text-slate-500 dark:text-slate-400 sm:text-right">
+                        <div>Evaluated against 3H Deliberate Practice Standard</div>
+                        <div className="font-bold text-[#FF6500] mt-0.5">Facilitator: Uzair</div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4">
+                      <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                        Executive Summary
+                      </span>
+                      <p className="mt-1 text-sm text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
+                        {reportData.overall_summary}
+                      </p>
+                    </div>
+
+                    {reportData.hidden_reveal && (
+                      <div className="mt-3.5 pt-3.5 border-t border-amber-500/20 text-xs">
+                        <span className="font-black uppercase tracking-wider text-[#FF6500] text-[10px]">
+                          Counterpart Hidden Motivations Revealed:
+                        </span>
+                        <p className="mt-0.5 text-slate-600 dark:text-slate-300 font-medium">
+                          {reportData.hidden_reveal}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Assessed Competency Rubric Grid */}
+                  <div>
+                    <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
+                      Assessed Executive Competencies
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+                      {reportData.skill_scores.map((skill, idx) => (
+                        <div
+                          key={skill.skill || idx}
+                          className="rounded-xl border border-slate-200 dark:border-[#1E3E62] bg-slate-50/70 dark:bg-[#132B45]/70 p-3.5 flex flex-col justify-between"
+                        >
+                          <div>
+                            <div className="flex items-center justify-between text-xs font-bold">
+                              <span className="text-slate-900 dark:text-white capitalize">
+                                {skill.skill.replace(/_/g, ' ')}
+                              </span>
+                              <span className="font-mono text-[#FF6500] text-sm">
+                                {skill.score}%
+                              </span>
+                            </div>
+
+                            {/* Progress Bar */}
+                            <div className="mt-2 h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all duration-500 ${
+                                  skill.score >= 80 ? 'bg-emerald-500' : skill.score >= 60 ? 'bg-[#FF6500]' : 'bg-rose-500'
+                                }`}
+                                style={{ width: `${Math.min(100, Math.max(0, skill.score))}%` }}
+                              />
+                            </div>
+
+                            <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                              {skill.justification}
+                            </p>
+                          </div>
+
+                          <div className="mt-2.5 pt-2 border-t border-slate-200 dark:border-[#1E3E62] text-[10px] font-bold text-slate-400">
+                            Rubric Level: <span className="text-slate-700 dark:text-slate-200 capitalize">{skill.rubric_level_reached}</span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Success Criteria Assessment */}
+                  {reportData.success_criteria_results && reportData.success_criteria_results.length > 0 && (
+                    <div>
+                      <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-2.5">
+                        Simulation Objectives & Outcomes
+                      </h4>
+                      <div className="space-y-2">
+                        {reportData.success_criteria_results.map((sc, i) => (
+                          <div
+                            key={i}
+                            className={`flex items-start space-x-3 p-3 rounded-xl border text-xs ${
+                              sc.met
+                                ? 'border-emerald-500/30 bg-emerald-50/50 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-200'
+                                : 'border-amber-500/30 bg-amber-50/50 dark:bg-amber-950/20 text-amber-900 dark:text-amber-200'
+                            }`}
+                          >
+                            <span className="font-bold flex-shrink-0 text-sm mt-[-1px]">
+                              {sc.met ? '✓' : '✗'}
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <span className="font-bold block">{sc.criterion}</span>
+                              {sc.evidence && (
+                                <p className="mt-1 text-[11px] opacity-80 italic">
+                                  Evidence: "{sc.evidence}"
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* 2-Column: Key Strengths vs Coaching Growth Priorities */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* What Worked */}
+                    <div className="rounded-xl border border-emerald-500/30 bg-emerald-50/30 dark:bg-emerald-950/20 p-4">
+                      <div className="flex items-center space-x-1.5 text-xs font-black uppercase tracking-wider text-emerald-700 dark:text-emerald-400 pb-2 border-b border-emerald-500/20">
+                        <Check className="h-4 w-4" />
+                        <span>Strengths Demonstrated (What Worked)</span>
+                      </div>
+                      <div className="mt-3 space-y-3">
+                        {reportData.what_worked && reportData.what_worked.length > 0 ? (
+                          reportData.what_worked.map((item, idx) => (
+                            <div key={idx} className="text-xs">
+                              {item.quote && (
+                                <p className="italic text-slate-700 dark:text-slate-300 font-semibold">
+                                  "{item.quote}"
+                                </p>
+                              )}
+                              <p className="mt-0.5 text-emerald-800 dark:text-emerald-300 font-medium">
+                                • {item.why_it_worked}
+                              </p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-xs text-slate-400 italic">No specific strengths recorded.</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* What Didn't / Coaching Actions */}
+                    <div className="rounded-xl border border-amber-500/30 bg-amber-50/30 dark:bg-amber-950/20 p-4">
+                      <div className="flex items-center space-x-1.5 text-xs font-black uppercase tracking-wider text-amber-700 dark:text-amber-400 pb-2 border-b border-amber-500/20">
+                        <Target className="h-4 w-4" />
+                        <span>Growth Priorities (Live Coaching Agenda)</span>
+                      </div>
+                      <div className="mt-3 space-y-3">
+                        {reportData.what_didnt && reportData.what_didnt.length > 0 ? (
+                          reportData.what_didnt.map((item, idx) => (
+                            <div key={idx} className="text-xs">
+                              {item.quote && (
+                                <p className="italic text-slate-700 dark:text-slate-300 font-semibold">
+                                  "{item.quote}"
+                                </p>
+                              )}
+                              <p className="mt-0.5 text-amber-800 dark:text-amber-300 font-medium">
+                                • {item.why_it_missed}
+                              </p>
+                            </div>
+                          ))
+                        ) : reportData.improvement_steps && reportData.improvement_steps.length > 0 ? (
+                          reportData.improvement_steps.map((step, idx) => (
+                            <div key={idx} className="text-xs">
+                              <p className="font-bold text-slate-800 dark:text-white">
+                                {step.step}
+                              </p>
+                              <p className="mt-0.5 text-amber-800 dark:text-amber-300 font-medium">
+                                • {step.why}
+                              </p>
+                            </div>
+                          ))
+                        ) : (
+                          <p className="text-xs text-slate-400 italic">No developmental items recorded.</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Facilitator Sign-off & Seal */}
+                  <div className="pt-4 border-t border-slate-200 dark:border-[#1E3E62] flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-2">
+                    <div>
+                      <span>Facilitator Oversight: </span>
+                      <strong className="text-slate-800 dark:text-slate-200">Uzair</strong>
+                      <span> · 3H Solutions Executive Scenario Training Platform</span>
+                    </div>
+                    <div className="text-[11px] font-mono">
+                      Session ID: {reportSession?.id || reportSessionId}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="py-12 text-center text-slate-400 italic">
+                  No evaluation details available for this session.
+                </div>
+              )}
+            </div>
+
+            {/* Modal Bottom Close Bar */}
+            <div className="border-t border-slate-200 dark:border-[#1E3E62] px-6 py-3 bg-slate-50 dark:bg-[#132B45] flex items-center justify-between flex-shrink-0">
+              <span className="text-xs text-slate-500 dark:text-slate-400">
+                Official deliberate practice debrief record for facilitator review
+              </span>
+              <button
+                type="button"
+                onClick={() => {
+                  setReportSessionId(null);
+                  setReportData(null);
+                  setReportSession(null);
+                }}
+                className="rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2 text-xs font-bold text-white shadow-md transition"
+              >
+                Close Report
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
+

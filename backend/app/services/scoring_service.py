@@ -457,7 +457,7 @@ class ScoringService:
                         max_tokens=850,
                         temperature=0.2,
                     ),
-                    timeout=50.0,
+                    timeout=85.0,
                 )
                 evaluation_llm_ms = max(1, int((time.perf_counter() - t_llm0) * 1000))
                 raw_text = response.content.strip()

@@ -9,6 +9,7 @@ export interface VoiceClientCallbacks {
   onSessionEnded?: (status: string) => void;
   onMicStatusChange?: (isCapturing: boolean, isMuted: boolean) => void;
   onFallbackHttpSend?: (spokenText: string) => Promise<void>;
+  onAutoplayBlocked?: () => void;
 }
 
 export interface VoiceServerMessage {
@@ -53,6 +54,7 @@ interface ISpeechRecognition {
   interimResults: boolean;
   lang: string;
   maxAlternatives?: number;
+  onstart?: (() => void) | null;
   onresult: ((event: ISpeechRecognitionEvent) => void) | null;
   onerror: ((event: ISpeechRecognitionErrorEvent) => void) | null;
   onend: (() => void) | null;
@@ -68,6 +70,7 @@ export class VoiceClient {
   private ws: WebSocket | null = null;
   private audioContext: AudioContext | null = null;
   private currentBufferSource: AudioBufferSourceNode | null = null;
+  private currentAudioElement: HTMLAudioElement | null = null;
   private recognition: ISpeechRecognition | null = null;
   private latestUtterance = '';
   private isCommitting = false;
@@ -97,9 +100,24 @@ export class VoiceClient {
   })();
   private callbacks: VoiceClientCallbacks;
   private ttsAudioCache = new Map<string, AudioBuffer>();
+  private networkErrorCount = 0;
+  private consecutiveFastRestarts = 0;
+  private lastStartTimestamp = 0;
+  private pendingSpeech: { text: string; personaName: string } | null = null;
 
   constructor(callbacks: VoiceClientCallbacks = {}) {
     this.callbacks = callbacks;
+  }
+
+  public hasPendingSpeech(): boolean {
+    return this.pendingSpeech !== null;
+  }
+
+  public async playPendingSpeech(): Promise<void> {
+    if (!this.pendingSpeech) return;
+    const item = this.pendingSpeech;
+    this.pendingSpeech = null;
+    await this.speakText(item.text, item.personaName);
   }
 
   /**
@@ -226,7 +244,7 @@ export class VoiceClient {
     const voiceParam = isFemale ? 'female' : isMale ? 'male' : this.sessionVoiceGender;
 
     const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
-    const apiHost = isVercel ? 'https://scenariolab-api.onrender.com' : '';
+    const apiHost = isVercel ? 'https://mrdev444-scenario-training-backend.hf.space' : '';
     const audioUrl = `${apiHost}/api/voice/tts?text=${encodeURIComponent(clean.slice(0, 600))}&voice=${voiceParam}`;
 
     if (this.ttsAudioCache.has(audioUrl)) return;
@@ -254,11 +272,11 @@ export class VoiceClient {
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
     const hostDirect = `${protocol === 'wss:' ? 'wss:' : 'ws:'}//${window.location.hostname || '127.0.0.1'}:8000`;
     const hostProxy = isVercel
-      ? 'wss://scenariolab-api.onrender.com'
+      ? 'wss://mrdev444-scenario-training-backend.hf.space'
       : `${protocol}//${window.location.host}`;
 
     const primaryUrl = isVercel
-      ? `wss://scenariolab-api.onrender.com/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`
+      ? `wss://mrdev444-scenario-training-backend.hf.space/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`
       : isDevPort
       ? `${hostDirect}/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`
       : `${hostProxy}/api/sessions/${sessionId}/voice?token=${encodeURIComponent(token)}`;
@@ -391,12 +409,29 @@ export class VoiceClient {
     if (forceUnlock) {
       this.isSpeaking = false;
       this.isCommitting = false;
+      this.networkErrorCount = 0;
+      this.consecutiveFastRestarts = 0;
     }
 
     // Critical: Do NOT interrupt assistant speech when mic capture arms automatically!
     if (this.isSpeaking || this.isCommitting) {
       return;
     }
+
+    // Guard against instant crash loops (e.g. invalid permission throwing in < 200ms)
+    const now = Date.now();
+    if (now - this.lastStartTimestamp < 200) {
+      this.consecutiveFastRestarts++;
+      if (this.consecutiveFastRestarts > 5) {
+        console.warn('Speech recognition aborted too rapidly, backing off.');
+        this.isRecording = false;
+        this.callbacks.onMicStatusChange?.(false, this.isMuted);
+        return;
+      }
+    } else {
+      this.consecutiveFastRestarts = 0;
+    }
+    this.lastStartTimestamp = now;
 
     // Fully tear down any previous recognition instance before constructing a fresh one
     if (this.recognition) {
@@ -429,16 +464,19 @@ export class VoiceClient {
       this.callbacks.onMicStatusChange?.(true, this.isMuted);
 
       const recog = new SpeechRecognitionClass();
-
-      // ─── SINGLE-UTTERANCE CONVERSATIONAL TURN ───
-      // When the user speaks, we capture the live phrase.
-      // When the user pauses or stops speaking, onend/onspeechend/silenceTimer
-      // triggers commitTurn(), which shuts the mic and triggers the assistant response.
-      // Once assistant finishes speaking, startAudioCapture() arms for the next turn.
-      recog.continuous = false;
+      recog.continuous = true;
       recog.interimResults = true;
       recog.lang = this.recognitionLanguage || 'en-IN';
       recog.maxAlternatives = 1;
+
+      let hadFatalError = false;
+
+      recog.onstart = () => {
+        this.consecutiveFastRestarts = 0;
+        this.networkErrorCount = 0;
+        this.isRecording = true;
+        this.callbacks.onMicStatusChange?.(true, this.isMuted);
+      };
 
       recog.onresult = (event: ISpeechRecognitionEvent) => {
         // If muted, assistant is speaking, or currently committing turn, ignore incoming audio
@@ -453,7 +491,7 @@ export class VoiceClient {
           if (!segment) continue;
 
           if (res.isFinal) {
-            // Android Bug Fix: Do not duplicate if already ending with this piece
+            // Deduplicate segments
             if (!finalTranscript) {
               finalTranscript = segment;
             } else if (!finalTranscript.toLowerCase().endsWith(segment.toLowerCase())) {
@@ -471,18 +509,20 @@ export class VoiceClient {
           this.latestUtterance = cleaned;
           this.callbacks.onTranscriptPartial?.(cleaned);
 
-          // ─── 5-second hard deadline ───
-          // If the user has been speaking continuously for 5 seconds without a pause, auto-commit
+          // 10-second safety deadline for very long uninterrupted speech
           if (!this.hardCommitTimer) {
             this.hardCommitTimer = setTimeout(() => {
               this.hardCommitTimer = null;
               if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
-                this.commitTurn(this.latestUtterance);
+                const words = this.latestUtterance.trim().split(/\s+/).filter(Boolean);
+                if (words.length >= 2 || this.latestUtterance.trim().length >= 8) {
+                  this.commitTurn(this.latestUtterance);
+                }
               }
-            }, 5000);
+            }, 10000);
           }
 
-          // ─── Silence detection timer ───
+          // Natural silence detection timer (1200ms allows natural conversational pacing)
           if (this.silenceTimer) {
             clearTimeout(this.silenceTimer);
             this.silenceTimer = null;
@@ -490,12 +530,14 @@ export class VoiceClient {
 
           const lastResult = event.results[event.results.length - 1];
           const isFinal = lastResult?.isFinal;
-          // Shorter pause (600ms) for finalized speech, 1000ms for interim
-          const delayMs = isFinal ? 600 : 1000;
+          const delayMs = isFinal ? 1200 : 1600;
 
           this.silenceTimer = setTimeout(() => {
             if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
-              this.commitTurn(this.latestUtterance);
+              const words = this.latestUtterance.trim().split(/\s+/).filter(Boolean);
+              if (words.length >= 2 || this.latestUtterance.trim().length >= 8) {
+                this.commitTurn(this.latestUtterance);
+              }
             }
           }, delayMs);
         }
@@ -504,22 +546,42 @@ export class VoiceClient {
       // Built-in speech cessation detection: fires when vocal sound ends
       recog.onspeechend = () => {
         if (this.isMuted || this.isSpeaking || this.isCommitting) return;
-        if (this.latestUtterance && this.latestUtterance.trim().length >= 2) {
+        const words = (this.latestUtterance || '').trim().split(/\s+/).filter(Boolean);
+        if (words.length >= 2 || (this.latestUtterance || '').trim().length >= 8) {
           if (this.silenceTimer) clearTimeout(this.silenceTimer);
-          // Browser detected acoustic voice cessation: commit quickly after 400ms
+          // Wait 1000ms after speech cessation before committing
           this.silenceTimer = setTimeout(() => {
             if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
               this.commitTurn(this.latestUtterance);
             }
-          }, 400);
+          }, 1000);
         }
       };
 
       recog.onerror = (event: ISpeechRecognitionErrorEvent) => {
         if (event.error === 'not-allowed') {
-          this.callbacks.onError?.('Microphone permission denied. Please allow microphone in your browser address bar.');
+          hadFatalError = true;
           this.isRecording = false;
+          this.callbacks.onError?.('Microphone permission denied. Please allow microphone in your browser address bar.');
           this.callbacks.onMicStatusChange?.(false, this.isMuted);
+        } else if (event.error === 'network') {
+          hadFatalError = true;
+          this.networkErrorCount++;
+          console.warn(`Speech recognition notice: network error (occurrence ${this.networkErrorCount})`);
+          // Critical: Never commit partial fragments on network error!
+          this.latestUtterance = '';
+          if (this.silenceTimer) clearTimeout(this.silenceTimer);
+          if (this.hardCommitTimer) clearTimeout(this.hardCommitTimer);
+
+          if (this.networkErrorCount >= 2) {
+            this.isRecording = false;
+            this.callbacks.onMicStatusChange?.(false, this.isMuted);
+            this.callbacks.onError?.(
+              'Browser speech recognition cloud connection interrupted. Tap "Tap to Speak" or type below.'
+            );
+          } else {
+            this.callbacks.onError?.('Speech recognition reconnecting...');
+          }
         } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
           console.warn('Speech recognition notice:', event.error);
         }
@@ -528,32 +590,50 @@ export class VoiceClient {
       recog.onend = () => {
         this.recognition = null;
 
-        if (this.isSpeaking || this.isCommitting) return;
-
-        // CRITICAL FIX: If the user spoke words and recognition ended (turn completed by acoustic model):
-        // COMMIT THE TURN IMMEDIATELY! Do NOT loop-restart listening!
-        if (this.latestUtterance && this.latestUtterance.trim().length >= 2) {
-          if (this.silenceTimer) {
-            clearTimeout(this.silenceTimer);
-            this.silenceTimer = null;
-          }
-          if (this.hardCommitTimer) {
-            clearTimeout(this.hardCommitTimer);
-            this.hardCommitTimer = null;
-          }
-          this.commitTurn(this.latestUtterance);
+        if (this.isSpeaking || this.isCommitting) {
+          this.callbacks.onMicStatusChange?.(false, this.isMuted);
           return;
         }
 
-        // If NO speech occurred (e.g. browser timed out with no-speech while waiting for trainee to speak):
-        // Re-arm listening with a 250ms backoff so microphone stays ready.
-        if (this.isRecording && !this.isMuted) {
+        // If stopped due to fatal error (network or not-allowed), do NOT auto-commit!
+        if (hadFatalError) {
+          if (this.networkErrorCount === 1 && this.isContinuousCall && !this.isMuted) {
+            // One gentle restart attempt with backoff
+            if (this.restartTimeout) clearTimeout(this.restartTimeout);
+            this.restartTimeout = setTimeout(() => {
+              if (this.isRecording && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
+                this.startAudioCapture().catch(() => {});
+              }
+            }, 1500);
+          } else {
+            this.callbacks.onMicStatusChange?.(false, this.isMuted);
+          }
+          return;
+        }
+
+        // Reset network error count on successful session
+        this.networkErrorCount = 0;
+
+        // If user finished an utterance, commit it
+        const trimmed = (this.latestUtterance || '').trim();
+        const words = trimmed.split(/\s+/).filter(Boolean);
+        if (words.length >= 2 && trimmed.length >= 5) {
+          if (this.silenceTimer) clearTimeout(this.silenceTimer);
+          if (this.hardCommitTimer) clearTimeout(this.hardCommitTimer);
+          this.commitTurn(trimmed);
+          return;
+        }
+
+        // Keep microphone listening if call is active and unmuted
+        if (this.isRecording && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
           if (this.restartTimeout) clearTimeout(this.restartTimeout);
           this.restartTimeout = setTimeout(() => {
             if (this.isRecording && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
               this.startAudioCapture().catch(() => {});
             }
-          }, 250);
+          }, 350);
+        } else {
+          this.callbacks.onMicStatusChange?.(false, this.isMuted);
         }
       };
 
@@ -635,19 +715,18 @@ export class VoiceClient {
       }
     }, 12000);
 
-    // Primary: Send over WebSocket if open
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+    // Primary: Send over robust streaming HTTP API with NVIDIA NIM and full conversation context
+    if (this.callbacks.onFallbackHttpSend) {
+      this.callbacks.onFallbackHttpSend(spokenText);
+    } else if (this.ws && this.ws.readyState === WebSocket.OPEN) {
       this.ws.send(
         JSON.stringify({
           type: 'audio.commit',
           text: spokenText,
         })
       );
-    } else if (this.callbacks.onFallbackHttpSend) {
-      // Bulletproof Fallback: Send over streaming HTTP API
-      this.callbacks.onFallbackHttpSend(spokenText);
     } else {
-      console.error('No turn dispatch route available (WS closed and onFallbackHttpSend missing)');
+      console.error('No turn dispatch route available');
       this.releaseTurnLock();
     }
   }
@@ -723,6 +802,13 @@ export class VoiceClient {
       clearTimeout(this.watchdogTimer);
       this.watchdogTimer = null;
     }
+    if (this.currentAudioElement) {
+      try {
+        this.currentAudioElement.pause();
+        this.currentAudioElement.currentTime = 0;
+      } catch {}
+      this.currentAudioElement = null;
+    }
     if (this.currentBufferSource) {
       try {
         this.currentBufferSource.stop();
@@ -741,9 +827,8 @@ export class VoiceClient {
   }
 
   /**
-   * Synthesize & speak counterpart text.
-   * Primary: Microsoft Edge Neural TTS via Web Audio.
-   * Fallback: Instant Browser SpeechSynthesis (zero network, 100% offline, never stalls).
+   * Synthesize & speak counterpart text with authentic Neural Edge-TTS human voice.
+   * Uses HTML5 Audio with instant streaming and proper browser autoplay handling.
    */
   async speakText(text: string, personaName: string = ''): Promise<void> {
     if (this.watchdogTimer) {
@@ -780,34 +865,85 @@ export class VoiceClient {
     const voiceParam = isFemale ? 'female' : isMale ? 'male' : this.sessionVoiceGender;
 
     const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
-    const apiHost = isVercel ? 'https://scenariolab-api.onrender.com' : '';
+    const apiHost = isVercel ? 'https://mrdev444-scenario-training-backend.hf.space' : '';
     const audioUrl = `${apiHost}/api/voice/tts?text=${encodeURIComponent(clean.slice(0, 600))}&voice=${voiceParam}`;
 
     this.isSpeaking = true;
     this.callbacks.onAssistantSpeaking?.(true);
 
-    const onPlaybackComplete = () => {
-      this.currentBufferSource = null;
-      this.isSpeaking = false;
-      this.isCommitting = false;
-      this.latestUtterance = '';
-      this.callbacks.onAssistantSpeaking?.(false);
+    return new Promise<void>((resolve) => {
+      let resolved = false;
+      const onPlaybackComplete = () => {
+        if (!resolved) {
+          resolved = true;
+          this.pendingSpeech = null;
+          if (this.currentAudioElement) {
+            try { this.currentAudioElement.pause(); } catch {}
+            this.currentAudioElement = null;
+          }
+          this.currentBufferSource = null;
+          this.isSpeaking = false;
+          this.isCommitting = false;
+          this.latestUtterance = '';
+          this.callbacks.onAssistantSpeaking?.(false);
 
-      if (this.isContinuousCall && !this.isMuted) {
-        setTimeout(() => {
-          this.startAudioCapture().catch(() => {});
-        }, 120);
+          if (this.isContinuousCall && !this.isMuted) {
+            setTimeout(() => {
+              this.startAudioCapture().catch(() => {});
+            }, 120);
+          }
+          resolve();
+        }
+      };
+
+      // Primary: Native HTML5 Audio stream from Neural Edge-TTS
+      try {
+        if (typeof Audio !== 'undefined') {
+          const audio = new Audio(audioUrl);
+          audio.preload = 'auto';
+          this.currentAudioElement = audio;
+
+          audio.onended = () => onPlaybackComplete();
+          audio.onerror = () => {
+            console.warn('HTML5 Audio playback error, falling back to Web Audio decoding...');
+            this.playViaWebAudio(audioUrl, onPlaybackComplete);
+          };
+
+          const playPromise = audio.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((err: Error) => {
+              console.warn('HTML5 Audio playback notice:', err.name);
+              if (err.name === 'NotAllowedError') {
+                // Autoplay blocked: store pending speech so first user click anywhere immediately plays it!
+                this.pendingSpeech = { text: clean, personaName };
+                this.isSpeaking = false;
+                this.callbacks.onAssistantSpeaking?.(false);
+                this.callbacks.onAutoplayBlocked?.();
+                resolve();
+              } else {
+                this.playViaWebAudio(audioUrl, onPlaybackComplete);
+              }
+            });
+          }
+          return;
+        }
+      } catch (audioInitErr) {
+        console.warn('HTML5 Audio init exception:', audioInitErr);
       }
-    };
 
-    // Attempt 1: High-fidelity Neural Web Audio buffer source with strict 4.0s timeout
+      // Secondary fallback: Web Audio Buffer Source
+      this.playViaWebAudio(audioUrl, onPlaybackComplete);
+    });
+  }
+
+  private async playViaWebAudio(audioUrl: string, onComplete: () => void): Promise<void> {
     try {
       const ctx = await this.ensureAudioContext();
       let audioBuffer = this.ttsAudioCache.get(audioUrl);
 
       if (!audioBuffer) {
         const controller = new AbortController();
-        const fetchTimeout = setTimeout(() => controller.abort(), 4000);
+        const fetchTimeout = setTimeout(() => controller.abort(), 8000);
         const res = await fetch(audioUrl, { signal: controller.signal });
         clearTimeout(fetchTimeout);
 
@@ -833,62 +969,19 @@ export class VoiceClient {
           completed = true;
           clearTimeout(bufferSafetyTimer);
           if (this.currentBufferSource === source) {
-            onPlaybackComplete();
+            onComplete();
           }
         }
       };
 
       const bufferSafetyTimer = setTimeout(finishBufferPlayback, durationMs);
       source.onended = finishBufferPlayback;
-
       source.start(0);
       return;
     } catch (audioErr) {
-      console.warn('Neural Web Audio notice, activating instant browser speech synthesis fallback:', audioErr);
+      console.warn('Neural Web Audio fallback notice:', audioErr);
+      onComplete();
     }
-
-    // Attempt 2: Instant Browser SpeechSynthesis fallback (100% offline, zero network latency)
-    try {
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.cancel();
-        const utterance = new SpeechSynthesisUtterance(clean);
-        utterance.rate = 1.0;
-        utterance.pitch = 1.0;
-        utterance.lang = this.recognitionLanguage || 'en-US';
-
-        const voices = window.speechSynthesis.getVoices();
-        if (voices && voices.length > 0) {
-          const matching = voices.find((v) =>
-            voiceParam === 'female'
-              ? /female|zira|samantha|karen|victoria|natural/i.test(v.name)
-              : /male|david|george|alex|daniel|natural/i.test(v.name)
-          );
-          if (matching) utterance.voice = matching;
-        }
-
-        const estDurationMs = Math.max(2500, clean.length * 90);
-        let synthCompleted = false;
-        const completeSynth = () => {
-          if (!synthCompleted) {
-            synthCompleted = true;
-            clearTimeout(synthSafetyTimer);
-            onPlaybackComplete();
-          }
-        };
-
-        const synthSafetyTimer = setTimeout(completeSynth, estDurationMs + 1000);
-        utterance.onend = completeSynth;
-        utterance.onerror = completeSynth;
-
-        window.speechSynthesis.speak(utterance);
-        return;
-      }
-    } catch (synthErr) {
-      console.error('All speech synthesis channels exhausted:', synthErr);
-    }
-
-    // Attempt 3: If everything fails, safely release turn locks so user is NEVER frozen
-    onPlaybackComplete();
   }
 
   interrupt(): void {

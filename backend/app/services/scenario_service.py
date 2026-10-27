@@ -41,7 +41,7 @@ class ScenarioService:
             return validated
         except Exception as e:
             raise HTTPException(
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                status_code=getattr(status, "HTTP_422_UNPROCESSABLE_CONTENT", 422),
                 detail=f"Scenario schema validation failure: {str(e)}",
             )
 
@@ -347,23 +347,46 @@ class ScenarioService:
 
     @classmethod
     async def list_all_capabilities(cls, db: AsyncSession) -> List[dict]:
-        """Load and return all 60 capabilities from Uzair's curriculum with mapped practice scenarios."""
+        """Load and return all capabilities from Uzair's curriculum with mapped practice scenarios."""
         if cls._capabilities_cache:
             return cls._capabilities_cache
 
+        import json
         import os
         import yaml
 
-        skills_path = os.path.join(
-            os.path.dirname(__file__), "..", "..", "scenarios", "skills.yaml"
-        )
-        if not os.path.exists(skills_path):
+        candidate_paths = [
+            os.path.join(os.path.dirname(__file__), "..", "..", "scenarios", "skills.yaml"),
+            os.path.join(os.getcwd(), "backend", "scenarios", "skills.yaml"),
+            os.path.join(os.getcwd(), "scenarios", "skills.yaml"),
+            "/app/backend/scenarios/skills.yaml",
+            r"c:\Users\naren\Downloads\Scenario-Training\backend\scenarios\skills.yaml",
+        ]
+        skills_path = None
+        for p in candidate_paths:
+            if os.path.exists(p):
+                skills_path = p
+                break
+
+        if not skills_path:
             return []
 
         with open(skills_path, "r", encoding="utf-8") as f:
             data = yaml.safe_load(f)
 
         lead_skills = data.get("leadership", {})
+
+        def safe_list(val):
+            if isinstance(val, list):
+                return val
+            if isinstance(val, str):
+                try:
+                    loaded = json.loads(val)
+                    if isinstance(loaded, list):
+                        return loaded
+                except Exception:
+                    pass
+            return []
 
         # Query all published scenarios to find matching scenarios for each capability
         stmt = select(Scenario, Track).join(Track, Scenario.track_id == Track.id).where(Scenario.status == "published")
@@ -376,26 +399,33 @@ class ScenarioService:
             name = s_info.get("name", key.replace("_", " ").title())
             pillar = s_info.get("pillar", "Executive Leadership")
             desc = s_info.get("description", "")
-            rubric = s_info.get("rubric", {})
+            raw_rubric = s_info.get("rubric", {}) or {}
+            rubric = {str(k): str(v) for k, v in raw_rubric.items()}
 
             # Find matching scenario:
             matched_scen = None
             # 1. Exact topic match
             for sc in all_scenarios:
-                if sc.topic.lower() == key.lower():
+                if sc.topic and sc.topic.lower() == key.lower():
                     matched_scen = sc
                     break
             # 2. Target capabilities match
             if not matched_scen:
                 for sc in all_scenarios:
-                    if any(name.lower() in cap.lower() for cap in (sc.target_capabilities or [])):
+                    caps = safe_list(sc.target_capabilities)
+                    if any(isinstance(cap, str) and name.lower() in cap.lower() for cap in caps):
                         matched_scen = sc
                         break
             # 3. Skills assessed match
             if not matched_scen:
                 for sc in all_scenarios:
-                    if any(s.get("skill") == key for s in (sc.skills_assessed or [])):
-                        matched_scen = sc
+                    skills = safe_list(sc.skills_assessed)
+                    for s in skills:
+                        s_key = s.get("skill") if isinstance(s, dict) else (s if isinstance(s, str) else "")
+                        if s_key and s_key == key:
+                            matched_scen = sc
+                            break
+                    if matched_scen:
                         break
             # 4. Fallback to scenario by index
             if not matched_scen and len(all_scenarios) > 0:

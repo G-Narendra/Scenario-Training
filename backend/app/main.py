@@ -14,6 +14,7 @@ from backend.app.api.admin_analytics import router as admin_analytics_router
 from backend.app.api.admin_cohorts import router as admin_cohorts_router
 from backend.app.api.admin_scenarios import router as admin_scenarios_router
 from backend.app.api.auth import router as auth_router
+from backend.app.api.chat import router as chat_router
 from backend.app.api.progress import router as progress_router
 from backend.app.api.scenarios import router as scenarios_router
 from backend.app.api.sessions import router as sessions_router
@@ -25,6 +26,8 @@ from backend.app.voice.ws_handler import router as voice_router
 
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
+    # Ensure data directory exists for persistent SQLite WAL storage
+    os.makedirs("data", exist_ok=True)
     # Ensure all tables exist on startup
     import backend.app.db.models  # noqa: F401
     from backend.app.db.base import Base
@@ -49,7 +52,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
-    allow_origin_regex=r"https://.*\.vercel\.app",
+    allow_origin_regex=r"https://.*\.vercel\.app|https://.*\.hf\.space|https://huggingface\.co",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -60,6 +63,7 @@ app.include_router(admin_cohorts_router)
 app.include_router(scenarios_router)
 app.include_router(admin_scenarios_router)
 app.include_router(sessions_router)
+app.include_router(chat_router)
 app.include_router(voice_router)
 app.include_router(voice_tts_router)
 app.include_router(progress_router)
@@ -98,17 +102,17 @@ async def request_context_middleware(request: Request, call_next):
 
     # Security headers
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Content-Security-Policy"] = (
-        "default-src 'self'; script-src 'self' 'unsafe-inline'; "
+        "default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https:; "
         "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-        "font-src 'self' https://fonts.gstatic.com; connect-src 'self' ws: wss:; "
-        "img-src 'self' data: https:; frame-ancestors 'none';"
+        "font-src 'self' https://fonts.gstatic.com data:; connect-src 'self' ws: wss: https:; "
+        "img-src 'self' data: https: blob:; frame-ancestors 'self' https://huggingface.co https://*.hf.space https://*.vercel.app;"
     )
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
     response.headers["Permissions-Policy"] = "microphone=(self), camera=(), geolocation=()"
-    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
     return response
 
 
@@ -134,6 +138,7 @@ async def global_exception_handler(request: Request, exc: Exception):
 
 @app.get("/health", tags=["Ops"])
 @app.get("/health/live", tags=["Ops"])
+@app.get("/api/health", tags=["Ops"])
 async def health_check():
     return {
         "status": "healthy",
@@ -170,4 +175,25 @@ frontend_dist = os.path.join(
     os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "frontend", "dist"
 )
 if os.path.exists(frontend_dist):
-    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="frontend")
+    from fastapi.responses import FileResponse
+    assets_dir = os.path.join(frontend_dist, "assets")
+    if os.path.exists(assets_dir):
+        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+    index_file = os.path.join(frontend_dist, "index.html")
+
+    @app.get("/app", include_in_schema=False)
+    @app.get("/app/", include_in_schema=False)
+    @app.get("/app/{full_path:path}", include_in_schema=False)
+    async def serve_app_subpath(full_path: str = ""):
+        return FileResponse(index_file, media_type="text/html")
+
+    app.mount("/app", StaticFiles(directory=frontend_dist, html=True), name="app_spa")
+
+    @app.get("/logo_3h_solutions.webp", include_in_schema=False)
+    async def serve_logo_direct():
+        logo_file = os.path.join(frontend_dist, "logo_3h_solutions.webp")
+        if os.path.exists(logo_file):
+            return FileResponse(logo_file, media_type="image/webp")
+        return JSONResponse(status_code=404, content={"detail": "Logo not found"})
+
+    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="root_spa")

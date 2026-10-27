@@ -11,19 +11,51 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
       {/* Hero Heading */}
       <div className="text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center space-x-2 rounded-full border border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/60 px-3.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-sm">
-          <Sparkles className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
-          <span>3H Solutions Practice Tracks</span>
+          <Sparkles className="h-3.5 w-3.5 text-[#FF6500]" />
+          <span>3H Solutions Executive Scenario Training</span>
         </div>
         <h1 className="mt-4 text-4xl font-black tracking-tight text-slate-900 dark:text-white font-heading sm:text-5xl">
-          Choose Your Training Track
+          Executive Training Curriculum
         </h1>
         <p className="mt-3 text-base text-slate-600 dark:text-slate-300 max-w-2xl mx-auto leading-relaxed">
-          Select a curriculum to practice difficult workplace conversations with realistic roleplay partners.
+          Deliberate workplace simulations designed for executive leadership and enterprise sales mastery.
         </p>
       </div>
 
+      {/* Executive Capability Framework Banner (Primary) */}
+      <div
+        id="track-card-capabilities"
+        onClick={() => onSelectTrack('all')}
+        className="mt-10 group cursor-pointer overflow-hidden rounded-2xl border-2 border-[#FF6500]/60 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-6 sm:p-8 dark:border-[#1E3E62] dark:bg-[#132B45] transition-all hover:border-[#FF6500] hover:shadow-xl"
+      >
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center space-x-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FF6500] text-white shadow-md">
+              <Sparkles className="h-7 w-7" />
+            </div>
+            <div>
+              <div className="flex items-center space-x-2">
+                <h2 className="text-2xl font-black text-slate-900 dark:text-white font-heading">
+                  Executive Capability Framework
+                </h2>
+                <span className="rounded-full bg-[#FF6500]/20 px-2.5 py-0.5 text-xs font-bold text-[#FF6500] border border-[#FF6500]/30">
+                  Master Curriculum • Strategic Competencies
+                </span>
+              </div>
+              <p className="mt-1 text-sm text-slate-700 dark:text-slate-200 font-medium">
+                Comprehensive leadership and sales framework mapped directly to authentic deliberate practice scenarios.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-1.5 text-sm font-bold text-[#FF6500] group-hover:translate-x-1 transition-transform whitespace-nowrap">
+            <span>Explore Curriculum</span>
+            <ArrowRight className="h-4 w-4" />
+          </div>
+        </div>
+      </div>
+
       {/* Track Selection Cards */}
-      <div className="mt-12 grid grid-cols-1 gap-8 md:grid-cols-2">
+      <div className="mt-8 grid grid-cols-1 gap-8 md:grid-cols-2">
         {/* Leadership Track */}
         <div
           id="track-card-leadership"
@@ -36,19 +68,19 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
 
           <div className="mt-6 flex items-center space-x-2">
             <h2 className="text-2xl font-black text-slate-900 dark:text-white font-heading group-hover:text-[#FF6500] transition-colors">
-              Leadership & Executive Track
+              Executive Leadership Scenarios
             </h2>
             <span className="rounded-full bg-[#FF6500]/15 px-2.5 py-0.5 text-xs font-bold text-[#FF6500] border border-[#FF6500]/30">
-              25 Scenarios
+              Leadership Track
             </span>
           </div>
 
           <p className="mt-2 text-base text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
-            Master essential leadership conversations: handling underperformers, psychological safety in reorgs, board crises, toxic stars, and ethical whistleblowers.
+            Master high-stakes leadership conversations: handling underperformers, post-merger integration, managing up disagreeable executives, and AI ethics governance.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            {['Psychological Safety', 'Conflict Resolution', 'Crisis Decision Making', 'Ethical Governance', 'Strategic Realignment'].map(
+            {['Psychological Safety', 'Conflict Resolution', 'Managing Up', 'Ethical Governance', 'Resource Allocation'].map(
               (tag) => (
                 <span
                   key={tag}
@@ -62,10 +94,10 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
 
           <div className="mt-8 flex items-center justify-between border-t border-slate-300 dark:border-[#1E3E62] pt-6">
             <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-              25 Scenarios • Difficulty Levels 1–5
+              Levels 1–3: Normal, Challenging, Crisis
             </span>
             <div className="flex items-center space-x-1.5 text-base font-bold text-[#FF6500] group-hover:translate-x-1 transition-transform">
-              <span>Enter Track</span>
+              <span>Enter Leadership</span>
               <ArrowRight className="h-5 w-5" />
             </div>
           </div>
@@ -83,19 +115,19 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
 
           <div className="mt-6 flex items-center space-x-2">
             <h2 className="text-2xl font-black text-slate-900 dark:text-white font-heading group-hover:text-[#FF6500] transition-colors">
-              Enterprise Sales Track
+              Enterprise Sales Scenarios
             </h2>
             <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-300 border border-amber-500/30">
-              25 Scenarios
+              Sales Track
             </span>
           </div>
 
           <p className="mt-2 text-base text-slate-700 dark:text-slate-200 leading-relaxed font-medium">
-            Conquer enterprise deal cycles: cold Fortune 500 discovery, displacing entrenched incumbents, defending ROI to skeptical CFOs, and handling aggressive procurement.
+            Conquer complex B2B deal cycles: reverse auction procurement defense, reviving ghosted accounts, build-vs-buy displacement, and channel partner mediation.
           </p>
 
           <div className="mt-6 flex flex-wrap gap-2">
-            {['Discovery Excellence', 'Incumbent Displacement', 'CFO ROI Defense', 'Procurement Hardball', 'Multi-Stakeholder Consensus'].map(
+            {['Discovery Excellence', 'Reverse Auction Defense', 'Build-vs-Buy Displacement', 'Channel Mediation', 'Crisis Retention'].map(
               (tag) => (
                 <span
                   key={tag}
@@ -109,44 +141,12 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
 
           <div className="mt-8 flex items-center justify-between border-t border-slate-300 dark:border-[#1E3E62] pt-6">
             <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
-              25 Scenarios • Difficulty Levels 1–5
+              Levels 1–3: Normal, Challenging, Crisis
             </span>
             <div className="flex items-center space-x-1.5 text-base font-bold text-[#FF6500] group-hover:translate-x-1 transition-transform">
-              <span>Enter Track</span>
+              <span>Enter Sales</span>
               <ArrowRight className="h-5 w-5" />
             </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Uzair's 60 Capabilities Matrix Banner */}
-      <div
-        id="track-card-capabilities"
-        onClick={() => onSelectTrack('leadership')}
-        className="mt-8 group cursor-pointer overflow-hidden rounded-2xl border-2 border-[#FF6500]/50 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-6 sm:p-8 dark:border-[#1E3E62] dark:bg-[#132B45] transition-all hover:border-[#FF6500] hover:shadow-xl"
-      >
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div className="flex items-center space-x-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FF6500] text-white shadow-md">
-              <Sparkles className="h-6 w-6" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2">
-                <h3 className="text-xl font-black text-slate-900 dark:text-white font-heading">
-                  Uzair's Shortlisted 60 Executive Capabilities
-                </h3>
-                <span className="rounded-full bg-[#FF6500]/20 px-2.5 py-0.5 text-xs font-bold text-[#FF6500] border border-[#FF6500]/30">
-                  60 Capabilities • 6 Pillars
-                </span>
-              </div>
-              <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 font-medium">
-                Practice each of the 60 capabilities from the master curriculum: Strategic Thinking (#1) through Lead by Example (#60).
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center space-x-1.5 text-sm font-bold text-[#FF6500] group-hover:translate-x-1 transition-transform whitespace-nowrap">
-            <span>Explore 60 Capabilities</span>
-            <ArrowRight className="h-4 w-4" />
           </div>
         </div>
       </div>

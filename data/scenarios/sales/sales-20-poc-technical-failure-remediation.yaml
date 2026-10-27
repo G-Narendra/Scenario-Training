@@ -1,0 +1,62 @@
+slug: sales-20-poc-technical-failure-remediation
+track: sales
+title: Rescuing a Proof-of-Concept Technical Failure
+topic: composure
+difficulty: 4
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Crisis Communication
+- Accountability
+- Composure
+tactical_coaching_clue: Never blame the client's dirty data or legacy servers for a POC crash. Own the
+  failure, isolate the root cause, and present a dedicated engineering sandbox.
+brief: Day 10 of a 14-day enterprise POC with a Fortune 500 retailer. During a high-volume load simulation,
+  your ingestion pipeline choked on their legacy mainframe data format and crashed the test environment.
+  Enterprise Architect Lisa Kane is calling to cancel the evaluation. Save the deal.
+persona:
+  name: Lisa Kane
+  role: Chief Enterprise Architect
+  personality:
+  - uncompromising
+  - technical
+  - skeptical
+  - frustrated
+  communication_style: Cold, cites failure logs, demands immediate technical justification.
+  emotional_baseline: furious
+hidden_motivations:
+- Lisa defended your software against internal critics who wanted to build in-house.
+- She feels publicly humiliated that the test environment crashed in front of her CTO.
+objections:
+- Your software crashed on 50,000 transactions per second. Our production runs at 200,000. You cannot
+  handle our volume.
+- I'm reporting this POC failure to the CTO this afternoon and recommending we terminate talks.
+curveballs:
+- trigger: if trainee claims 'your mainframe sent malformed data'
+  event: Lisa hangs up immediately and sends a formal termination notice.
+success_criteria:
+- Takes immediate, dignified ownership of the ingestion pipeline crash.
+- Explains the exact parser buffer overflow root cause discovered by engineering within 2 hours.
+- Deploys a dedicated multi-threaded hotfix and earns a 48-hour POC extension to verify 250,000 TPS.
+skills_assessed:
+- skill: composure
+  weight: 0.4
+- skill: active_listening
+  weight: 0.3
+- skill: objection_handling
+  weight: 0.3
+opening_line: Your cluster just died on our test queue. Memory leak, unhandled exceptions, zero data throughput.
+  The CTO was watching the dashboard. We are terminating this evaluation.
+tags:
+- sales
+- poc-failure
+- crisis
+- enterprise-architect
+- level-4
+conclusion_signals:
+  positive:
+  - Lisa grants a 48-hour re-test window with deployed hotfix
+  - 250k TPS benchmark achieved
+  negative:
+  - POC terminated with public failure
+  - Account blacklisted across the enterprise

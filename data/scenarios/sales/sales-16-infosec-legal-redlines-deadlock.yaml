@@ -1,0 +1,63 @@
+slug: sales-16-infosec-legal-redlines-deadlock
+track: sales
+title: Navigating Infosec & Legal Redlines Deadlock
+topic: negotiation
+difficulty: 4
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Contract Negotiation
+- Risk Mitigation
+- Clarity
+tactical_coaching_clue: 'Lawyers are trained to imagine worst-case catastrophes. Deconstruct the unlimited
+  liability clause: separate direct operational damages from indirect consequential damages.'
+brief: Enterprise General Counsel Victoria Sterling has redlined your Master Services Agreement, demanding
+  unlimited liability for any data interruption and mutual indemnity for third-party cloud outages. Your
+  executive leadership will not accept unlimited liability. Negotiate a mutually acceptable risk cap.
+persona:
+  name: Victoria Sterling
+  role: General Counsel & VP of Legal Compliance
+  personality:
+  - meticulous
+  - unyielding
+  - intellectually formidable
+  - risk-averse
+  communication_style: Precise legal terminology, cites statutory exposure, unemotional, highly structured
+    arguments.
+  emotional_baseline: steely
+hidden_motivations:
+- Victoria was scorched by a ransomware lawsuit at her previous company.
+- She knows unlimited liability is commercially unreasonable, but wants a 3x contract value cap.
+objections:
+- Our corporate charter prohibits entering SaaS agreements without full data indemnity.
+- If your software causes an outage, our damages could easily exceed $10 million.
+curveballs:
+- trigger: if trainee agrees to unlimited liability on the call
+  event: Deal is rendered uninsurable and rejected by internal CFO.
+success_criteria:
+- Articulates standard commercial risk boundaries without being dismissive of legal duty.
+- 'Proposes a tiered liability cap: 1x contract value for standard SLA, 3x for verified data breach.'
+- Secures Victoria's agreement to the compromise draft for final execution.
+skills_assessed:
+- skill: negotiation
+  weight: 0.4
+- skill: clarity
+  weight: 0.3
+- skill: composure
+  weight: 0.3
+opening_line: I've reviewed your standard contract. Your $50,000 limitation of liability is completely
+  unacceptable for an enterprise handling our customer telemetry. We require uncapped liability or we
+  walk.
+tags:
+- sales
+- legal
+- redlines
+- contracting
+- level-4
+conclusion_signals:
+  positive:
+  - Victoria accepts 3x contract value super-cap for breach
+  - Contract approved for signing
+  negative:
+  - Deal dies in legal gridlock
+  - Uninsurable terms accepted

@@ -15,7 +15,12 @@ from backend.app.db.models import (
 )
 from backend.app.db.session import get_db
 from backend.app.schemas.auth import LoginResponse, PasscodeLoginRequest, UserResponse
-from backend.app.security.deps import get_current_user, invalidate_all_user_tokens, security
+from backend.app.security.deps import (
+    get_current_user,
+    invalidate_all_user_tokens,
+    invalidate_token_cache,
+    security,
+)
 from backend.app.security.passcodes import hash_token
 from backend.app.services.access_service import AccessService
 
@@ -62,6 +67,7 @@ async def logout(
         )
         await db.execute(stmt)
         await db.commit()
+        invalidate_token_cache(t_hash)
     return {"message": "Logged out successfully"}
 
 

@@ -38,6 +38,7 @@ yarn-debug.log*
 yarn-error.log*
 frontend/dist/
 frontend/build/
+hf_repo/
 frontend/.vite/
 
 # Environment and secrets
@@ -80,6 +81,6 @@ PROMPT-FOR-SCENARIO-TRAINING.md
 SKILLBRIDGE-MASTER-PROMPT.md
 scripts/*.ps1
 docker-compose.test.yml
-tests/
+/tests
 reviews/
 feedback/

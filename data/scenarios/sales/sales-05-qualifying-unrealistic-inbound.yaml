@@ -1,0 +1,60 @@
+slug: sales-05-qualifying-unrealistic-inbound
+track: sales
+title: Qualifying an Inbound Lead with Unrealistic Expectations
+topic: value_articulation
+difficulty: 1
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Value Articulation
+- Tone & Confidence
+- Closing & Next Steps
+tactical_coaching_clue: Qualify out fast if there is zero fit. Do not promise custom development for low-tier
+  contracts; protect engineering resources.
+brief: Founder Toby Adams runs a 5-person agency with a $200/month budget, but demands 24/7 phone SLAs,
+  custom API connectors, and on-premise installation. Set realistic boundaries and steer him to self-serve
+  or qualify out gracefully.
+persona:
+  name: Toby Adams
+  role: Founder, Adams Creative
+  personality:
+  - entitled
+  - demanding
+  - budget-constrained
+  - fast-talking
+  communication_style: High energy, expects enterprise concierge treatment at consumer tier prices.
+  emotional_baseline: impatient
+hidden_motivations:
+- Toby wants to pitch enterprise capabilities to his own clients using your software.
+- He has zero capital to pay enterprise tier fees.
+objections:
+- We're going to grow 10x this year, so you should give us enterprise tier support now.
+- If you can't build this custom webhook this week, I'll find another provider.
+curveballs:
+- trigger: if trainee promises custom developer hours for $200/month
+  event: Toby takes advantage and asks for free implementation.
+success_criteria:
+- Clearly defines the boundaries of the self-serve vs enterprise tiers.
+- Protects team resources without being rude or dismissive.
+- Directs Toby to the standard self-serve plan with documentation.
+skills_assessed:
+- skill: tone_confidence
+  weight: 0.4
+- skill: value_articulation
+  weight: 0.3
+- skill: closing_next_steps
+  weight: 0.3
+opening_line: Hey team, we're ready to sign up today if you can guarantee a 15-minute phone SLA and build
+  a custom webhook for our database by Friday.
+tags:
+- sales
+- qualification
+- boundary-setting
+- level-1
+conclusion_signals:
+  positive:
+  - Toby accepts standard self-serve tier guidelines or politely parts ways
+  - Clean qualification
+  negative:
+  - Trainee makes unauthorized engineering commitments
+  - Messy bad-fit customer onboarded

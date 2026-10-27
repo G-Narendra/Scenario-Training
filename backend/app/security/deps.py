@@ -28,6 +28,11 @@ def invalidate_all_user_tokens(user_id: str):
         _token_cache.pop(k, None)
 
 
+def clear_token_cache():
+    """Evicts all tokens from the fast-path in-memory cache."""
+    _token_cache.clear()
+
+
 async def get_current_user(
     credentials: HTTPAuthorizationCredentials = Depends(security),
     db: AsyncSession = Depends(get_db),

@@ -24,11 +24,13 @@ import {
 interface ProgressPageProps {
   onSelectScenario: (scenarioId: string) => void;
   onViewSessionEvaluation: (sessionId: string) => void;
+  onResumeSession?: (sessionId: string) => void;
 }
 
 export const ProgressPage: React.FC<ProgressPageProps> = ({
   onSelectScenario,
   onViewSessionEvaluation,
+  onResumeSession,
 }) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<'me' | 'cohort'>('me');
@@ -584,7 +586,13 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                               </button>
                             ) : (
                               <button
-                                onClick={() => onSelectScenario(sess.scenario_id)}
+                                onClick={() => {
+                                  if (onResumeSession) {
+                                    onResumeSession(sess.session_id);
+                                  } else {
+                                    onSelectScenario(sess.scenario_id);
+                                  }
+                                }}
                                 className="inline-flex items-center space-x-1 rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3.5 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1E3E62] transition shadow-sm"
                               >
                                 <span>Resume</span>
@@ -682,79 +690,54 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               {(() => {
                 const weakSkills = cohortData.skill_score_distribution || (cohortData as any)?.skill_distribution || [];
+                if (weakSkills.length === 0) {
+                  return (
+                    <div className="rounded-xl border border-dashed border-slate-300 dark:border-[#1E3E62] bg-slate-50/50 dark:bg-[#0B192C]/50 p-6 text-center col-span-3">
+                      <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
+                        Cohort Analytics Initializing
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
+                        Live coaching focus and group debrief priorities will automatically synthesize here once cohort participants complete scenario simulations.
+                      </p>
+                    </div>
+                  );
+                }
                 return (
                   <>
-                    <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between text-xs font-bold">
-                          <span className="rounded bg-rose-500/15 text-rose-600 dark:text-rose-400 px-2 py-0.5 font-black uppercase">
-                            #1 Priority Gap
-                          </span>
-                          <span className="font-mono text-slate-500 text-xs font-bold">
-                            {weakSkills[0]
-                              ? `${Math.round(weakSkills[0].average_score)}% Avg`
-                              : '62% Avg'}
-                          </span>
+                    {weakSkills.slice(0, 3).map((ws: { skill_name?: string; avg_score?: number; score?: number; benchmark?: number; recommendation?: string }, idx: number) => (
+                      <div
+                        key={ws.skill_name || idx}
+                        className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between"
+                      >
+                        <div>
+                          <div className="flex items-center justify-between text-xs font-bold">
+                            <span
+                              className={`rounded px-2 py-0.5 font-black uppercase ${
+                                idx === 0
+                                  ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
+                                  : idx === 1
+                                  ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
+                                  : 'bg-teal-500/15 text-teal-600 dark:text-teal-400'
+                              }`}
+                            >
+                              Priority #{idx + 1}
+                            </span>
+                            <span className="font-mono text-slate-500 text-xs font-bold">
+                              {Math.round(ws.avg_score || ws.score || 0)}% Avg
+                            </span>
+                          </div>
+                          <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
+                            {ws.skill_name}
+                          </h3>
+                          <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                            Cohort aggregate score: {Math.round(ws.avg_score || ws.score || 0)}% across recorded simulations.
+                          </p>
                         </div>
-                        <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
-                          {weakSkills[0]?.skill_name || 'Handling Defensive Pushback & Objections'}
-                        </h3>
-                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                          Participants frequently defend initial positions rather than validating counterpart concerns.
-                        </p>
-                      </div>
-                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
-                        💡 Group Drill: Practice open calibration questions before proposing solutions.
-                      </div>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between text-xs font-bold">
-                          <span className="rounded bg-amber-500/15 text-amber-600 dark:text-amber-400 px-2 py-0.5 font-black uppercase">
-                            #2 Priority Gap
-                          </span>
-                          <span className="font-mono text-slate-500 text-xs font-bold">
-                            {weakSkills[1]
-                              ? `${Math.round(weakSkills[1].average_score)}% Avg`
-                              : '68% Avg'}
-                          </span>
+                        <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
+                          Target for deliberate practice during upcoming coaching sessions.
                         </div>
-                        <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
-                          {weakSkills[1]?.skill_name || 'Uncovering Hidden Motivations & Blockers'}
-                        </h3>
-                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                          Participants often move directly to solutions before discovering underlying emotional drivers.
-                        </p>
                       </div>
-                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
-                        💡 Group Drill: Identify subtext cues and ask 'help me understand' inquiries.
-                      </div>
-                    </div>
-
-                    <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between">
-                      <div>
-                        <div className="flex items-center justify-between text-xs font-bold">
-                          <span className="rounded bg-teal-500/15 text-teal-600 dark:text-teal-400 px-2 py-0.5 font-black uppercase">
-                            #3 Priority Gap
-                          </span>
-                          <span className="font-mono text-slate-500 text-xs font-bold">
-                            {weakSkills[2]
-                              ? `${Math.round(weakSkills[2].average_score)}% Avg`
-                              : '74% Avg'}
-                          </span>
-                        </div>
-                        <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
-                          {weakSkills[2]?.skill_name || 'Closing with Clear Accountability & Benchmarks'}
-                        </h3>
-                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                          Meetings end on general goodwill without explicit timelines or mutual commitments.
-                        </p>
-                      </div>
-                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
-                        💡 Group Drill: Conclude conversations with the 'Who, Does What, By When' framework.
-                      </div>
-                    </div>
+                    ))}
                   </>
                 );
               })()}

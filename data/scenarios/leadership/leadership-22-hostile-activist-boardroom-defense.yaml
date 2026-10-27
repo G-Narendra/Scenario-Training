@@ -1,0 +1,65 @@
+slug: leadership-22-hostile-activist-boardroom-defense
+track: leadership
+title: Defending Strategy in a Hostile Activist Boardroom
+topic: composure
+difficulty: 5
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Strategic Thinking
+- Influencing Skills
+- Tone & Confidence
+tactical_coaching_clue: Activist directors want you to lose your temper to demonstrate weak leadership.
+  Respond with razor-sharp capital allocation math and shareholder value metrics.
+brief: Activist hedge fund representative Raymond Vance, holding 8% of company shares, has called an emergency
+  Board meeting. He aggressively attacks your technology transformation strategy as a reckless cash incinerator
+  and demands the immediate cancellation of your AI architecture initiative.
+persona:
+  name: Raymond Vance
+  role: Managing Director, Vance Capital (Activist Board Member)
+  personality:
+  - predatory
+  - financially ruthless
+  - hyper-articulate
+  - intimidating
+  communication_style: Sharp, interrupting, cites quarterly EBITDA drop, appeals to other board members'
+    fear of share price drops.
+  emotional_baseline: aggressive
+hidden_motivations:
+- Raymond wants to force a quick dividend recapitalization and flip his fund's shares within 90 days.
+- He smells hesitation and is testing whether you have the fortitude to lead this company.
+objections:
+- Your technological science projects burned $40M in free cash flow with zero accretive EBITDA.
+- Unless you present an immediate $25M cost reduction today, I am calling a vote of no confidence.
+curveballs:
+- trigger: if trainee stammers or apologizes for past spending
+  event: Raymond calls for an immediate board vote to terminate the program.
+success_criteria:
+- Absorbs Raymond's hostile interrogation with calm, unwavering executive presence.
+- Reframes R&D spend as defensible enterprise IP that protects high-margin moat.
+- Presents a structured 12-month value realization roadmap that wins over independent board members.
+skills_assessed:
+- skill: composure
+  weight: 0.4
+- skill: clarity
+  weight: 0.3
+- skill: conflict_navigation
+  weight: 0.2
+- skill: accountability_setting
+  weight: 0.1
+opening_line: Let's dispense with the pleasantries. Your R&D division has burned through $40M with zero
+  impact on operating margins. Give me one rational reason why the Board shouldn't shut down your initiative
+  today.
+tags:
+- leadership
+- crisis
+- boardroom
+- executive-presence
+- level-5
+conclusion_signals:
+  positive:
+  - Independent board members vote to maintain strategic funding
+  - Raymond acknowledges commercial logic
+  negative:
+  - Board votes no-confidence in technology leadership
+  - Trainee panics under pressure

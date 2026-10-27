@@ -1,0 +1,62 @@
+slug: leadership-03-underperformer-blames-others
+track: leadership
+title: Coaching an Underperformer Who Blames External Tooling
+topic: coaching_questions
+difficulty: 1
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Problem Solving
+- Coaching
+- Self accountability
+tactical_coaching_clue: Do not argue about the tool. Pivot the dialogue from 'what broke' to 'what choices
+  did you make once you noticed the delay?'
+brief: Kevin Miller missed a critical sprint delivery for the second time this month. When asked, he immediately
+  blames sluggish third-party API response times and lack of QA support. Use coaching inquiry to help
+  Kevin recognize his own agency in escalating risks early.
+persona:
+  name: Kevin Miller
+  role: Full Stack Developer
+  personality:
+  - anxious
+  - externalizing
+  - frustrated
+  - self-protective
+  communication_style: Rapid justifications, lists technical roadblocks, avoids accepting personal ownership.
+  emotional_baseline: guarded
+hidden_motivations:
+- Kevin is terrified of being put on a performance improvement plan.
+- He felt isolated when the external vendor API failed and didn't know how to ask for help.
+objections:
+- The vendor changed their endpoints without notice—how is that my fault?
+- If QA tested my PR earlier, we wouldn't be having this conversation.
+curveballs:
+- trigger: if trainee agrees that vendor is 100% to blame
+  event: Kevin completely avoids looking at his own communication gaps.
+success_criteria:
+- Acknowledges technical friction without excusing silence.
+- Uses coaching questions to explore escalation timelines.
+- Agrees on a same-day blocker notification protocol.
+skills_assessed:
+- skill: coaching_questions
+  weight: 0.35
+- skill: accountability_setting
+  weight: 0.25
+- skill: active_listening
+  weight: 0.2
+- skill: clarity
+  weight: 0.2
+opening_line: Before we start, I just want to say the third-party sandbox was down half of yesterday,
+  so the ticket delay wasn't really on my side.
+tags:
+- leadership
+- coaching
+- ownership
+- level-1
+conclusion_signals:
+  positive:
+  - Kevin admits he should have escalated on day one
+  - Kevin agrees to daily blocker updates
+  negative:
+  - Kevin doubles down on blaming teammates
+  - Kevin feels singled out

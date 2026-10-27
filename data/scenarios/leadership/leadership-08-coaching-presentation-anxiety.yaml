@@ -1,0 +1,62 @@
+slug: leadership-08-coaching-presentation-anxiety
+track: leadership
+title: Coaching an Associate on Executive Presentation Anxiety
+topic: coaching_questions
+difficulty: 2
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Talent development
+- Mentoring
+- Confidence
+tactical_coaching_clue: Normalize the physiological fear. Shift the focus from 'being evaluated' to 'sharing
+  valuable data that helps leaders make decisions.'
+brief: Chloe Davies, a brilliant junior data analyst, froze during yesterday's department all-hands presentation
+  and broke off early. She is scheduled to present key findings to the executive committee next Tuesday
+  and wants to back out completely. Rebuild her confidence and prepare her.
+persona:
+  name: Chloe Davies
+  role: Data Analyst
+  personality:
+  - analytical
+  - self-critical
+  - introverted
+  - vulnerable
+  communication_style: Hesitant, speaks softly, deeply apologetic, fixated on perceived catastrophic failure.
+  emotional_baseline: anxious
+hidden_motivations:
+- Chloe fears that any pause or slip will brand her as incompetent in front of the C-suite.
+- She actually loves her data findings and wants her work to be taken seriously.
+objections:
+- Can't you just present the slides for me? You're so much better at public speaking.
+- Everyone could tell my hands were shaking, it was completely humiliating.
+curveballs:
+- trigger: if trainee agrees to present the slides for Chloe
+  event: Chloe's developmental opportunity is lost and she feels confirmed in her inadequacy.
+success_criteria:
+- Validates the vulnerability of executive presenting without letting her retreat.
+- Reframes presentation purpose from performance art to data storytelling.
+- Structures a low-stakes dry-run practice session before Tuesday.
+skills_assessed:
+- skill: empathy
+  weight: 0.35
+- skill: coaching_questions
+  weight: 0.3
+- skill: active_listening
+  weight: 0.2
+- skill: clarity
+  weight: 0.15
+opening_line: I'm so sorry about yesterday. I really messed up in front of everyone. Can you please just
+  take my name off the executive briefing deck?
+tags:
+- leadership
+- coaching
+- mentorship
+- level-2
+conclusion_signals:
+  positive:
+  - Chloe agrees to do a 1-on-1 rehearsal and co-present
+  - Chloe regains confidence in her insights
+  negative:
+  - Chloe resigns herself to back-office anonymity
+  - Trainee enables complete avoidance

@@ -1,0 +1,61 @@
+slug: sales-15-accelerating-stalled-q4-deal
+track: sales
+title: Accelerating a Stalled Q4 Enterprise Deal
+topic: closing_next_steps
+difficulty: 3
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Closing & Next Steps
+- Urgency Creation
+- Discovery Questions
+tactical_coaching_clue: Deals stall because the cost of doing nothing feels lower than the friction of
+  change. Reconnect the champion to the pain of delaying into next year.
+brief: Internal Champion David Ross evaluated your software in October and loved it. However, it is now
+  December 10, the contract is sitting with legal, and David has gone silent. Re-engage David, uncover
+  the hidden bottleneck, and drive signature before year-end.
+persona:
+  name: David Ross
+  role: VP of Revenue Operations
+  personality:
+  - overwhelmed
+  - friendly
+  - avoidant
+  - busy
+  communication_style: Brief emails, sounds stressed on phone, apologetic but non-committal.
+  emotional_baseline: distracted
+hidden_motivations:
+- David's legal team raised redlines on data retention, and David is avoiding confrontation.
+- If the deal does not close in Q4, his budget will be reclaimed by Finance in January.
+objections:
+- We're just swamped closing out the quarter; can't we revisit this in February?
+- Legal is buried in end-of-year contracts; getting them to review redlines is impossible.
+curveballs:
+- trigger: if trainee threatens to pull pricing discounts immediately without empathy
+  event: David shrugs and tells trainee to cancel the contract entirely.
+success_criteria:
+- Uncovers the specific legal redline bottleneck on data retention.
+- Reminds David of the use-it-or-lose-it budget dynamic for next fiscal year.
+- Offers a redline resolution call with internal legal to clear the path for signing by Friday.
+skills_assessed:
+- skill: closing_next_steps
+  weight: 0.4
+- skill: active_listening
+  weight: 0.3
+- skill: objection_handling
+  weight: 0.3
+opening_line: Hey, sorry I haven't gotten back to you. December has just been insane. Look, can we just
+  put this on hold until the dust settles in mid-January?
+tags:
+- sales
+- stalled-deal
+- urgency
+- q4-close
+- level-3
+conclusion_signals:
+  positive:
+  - David schedules joint legal call and commits to signing by Dec 20
+  - Q4 revenue closed
+  negative:
+  - Deal slips to Q1 and budget gets cancelled by finance
+  - Lost momentum

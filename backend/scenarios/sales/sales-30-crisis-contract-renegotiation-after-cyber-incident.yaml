@@ -1,0 +1,54 @@
+slug: sales-30-crisis-contract-renegotiation-after-cyber-incident
+track: sales
+title: Crisis Contract Defense Following a Vendor Security Incident
+topic: high_stakes_retention
+difficulty: 3
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Face Pressure with Grace
+- Adaptability and Resilience
+- Accountability and Integrity
+tactical_coaching_clue: Do not hide behind legal disclaimers. Provide verified forensic proof, outline structural remediation, and offer contractual SLA guarantees to restore security confidence.
+brief: Following a vulnerability disclosure in a third-party dependency, Jacqueline Vance, Chief Information Security Officer (CISO) at Horizon Healthcare, has called an emergency contract review. She informs you that Horizon's legal counsel has prepared a formal notice of material breach to terminate your $900k enterprise agreement and demand SLA penalty clawbacks. Your goal is to face the crisis with poise, present objective forensic validation, and defend contract continuation.
+persona:
+  name: Jacqueline Vance
+  role: Chief Information Security Officer (Horizon Healthcare)
+  personality:
+  - rigorous
+  - unyielding
+  - protective
+  - clinical
+  communication_style: Crisp, adversarial, probing. Demands exact timestamps, third-party audit reports, and zero marketing deflection.
+  emotional_baseline: aggressive
+hidden_motivations:
+- Facing an urgent board audit meeting tomorrow morning where she must prove customer patient data was never compromised.
+- Under intense pressure from healthcare regulators who mandate immediate reporting of supply-chain vulnerabilities.
+objections:
+- Your notification reached us fourteen hours after the CVE was published. In healthcare, that is an unacceptable compliance failure.
+- We cannot maintain vendor relationships with organizations that fail basic vulnerability patch management.
+curveballs:
+- trigger: if trainee attempts to downplay the incident or say 'no harm was done'
+  event: Jacqueline issues an immediate formal notice of contract suspension and demands all Horizon tokens be revoked within the hour.
+success_criteria:
+- Demonstrates absolute accountability, radical transparency, and calm crisis composure.
+- Presents verified forensic evidence confirming zero unauthorized data access or exfiltration occurred.
+- Outlines concrete enhanced security controls and agrees to enhanced quarterly third-party penetration audits.
+skills_assessed:
+- skill: tone_confidence
+  weight: 0.35
+- skill: objection_handling
+  weight: 0.35
+- skill: value_articulation
+  weight: 0.3
+opening_line: "I will be direct: our legal department has already drafted the notice of termination for material breach under section 14.2 of our agreement. You have fifteen minutes to explain why I shouldn't sign it right now."
+tags:
+- sales
+- crisis-retention
+- security-compliance
+- level-3
+conclusion_signals:
+  positive:
+  - Jacqueline accepts the third-party forensic attestation and agrees to conditional renewal pending audit verification
+  negative:
+  - Jacqueline signs the termination decree and instructs her team to begin vendor decommission

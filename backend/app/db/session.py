@@ -47,12 +47,19 @@ else:
 
 engine = create_async_engine(db_url, **engine_kwargs)
 
+if "sqlite" in db_url:
+    import os
+    db_file = db_url.split("///")[-1].split("?")[0]
+    db_dir = os.path.dirname(db_file)
+    if db_dir:
+        os.makedirs(db_dir, exist_ok=True)
+
 if "sqlite" in settings.DATABASE_URL:
     @event.listens_for(engine.sync_engine, "connect")
     def set_sqlite_pragma(dbapi_connection, connection_record):
         cursor = dbapi_connection.cursor()
         cursor.execute("PRAGMA journal_mode=WAL")
-        cursor.execute("PRAGMA busy_timeout=60000")
+        cursor.execute("PRAGMA busy_timeout=5000")
         cursor.close()
 
 async_session_factory = async_sessionmaker(

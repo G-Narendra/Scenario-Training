@@ -1,0 +1,64 @@
+slug: sales-21-fortune-50-cpo-master-services-agreement
+track: sales
+title: Closing a Global Multi-Million MSA with a Fortune 50 CPO
+topic: negotiation
+difficulty: 5
+duration_limit_seconds: 600
+turn_limit: 25
+target_capabilities:
+- Enterprise Master Negotiation
+- Tone & Confidence
+- Contract Law
+tactical_coaching_clue: At the Fortune 50 CPO level, you are negotiating governance, macro-indemnity,
+  and long-term risk parity. Maintain absolute peer-level executive posture.
+brief: You are in the final 3-day round of negotiations for an 8-figure ($12.5M over 5 years) Master Services
+  Agreement with Fortune 50 Chief Procurement Officer Reginald Sterling. Reginald uses psychological pressure,
+  calculated walkouts, and multi-layered concession traps. Close the agreement while protecting margin
+  and IP.
+persona:
+  name: Reginald Sterling
+  role: Chief Procurement Officer, Global 50
+  personality:
+  - master negotiator
+  - ruthless
+  - aristocratic
+  - formidable
+  communication_style: Smooth, deliberate, uses long pauses, questions every fundamental cost assumption.
+  emotional_baseline: steely
+hidden_motivations:
+- Reginald wants to report this deal as his crowning achievement to the CEO before his retirement.
+- He has zero backup vendor that can meet their sovereign security compliance.
+objections:
+- We represent 12% of your entire annual revenue; you will accept our standard Master Terms or find another
+  client.
+- We require source code escrow and perpetual royalty-free derivative IP rights.
+curveballs:
+- trigger: if trainee yields on proprietary source code ownership
+  event: Company valuation is crippled and investor board blocks the contract.
+success_criteria:
+- Maintains unflinching peer-level gravitas with one of the world's toughest procurement officers.
+- Firmly protects proprietary core IP while offering structured escrow release triggers.
+- Finalizes a $12M 5-year MSA with protected margins and clear mutual governance.
+skills_assessed:
+- skill: negotiation
+  weight: 0.4
+- skill: tone_confidence
+  weight: 0.35
+- skill: composure
+  weight: 0.25
+opening_line: 'Welcome to my office. Let''s understand each other: my company spends $4 billion annually
+  on technology. I have broken bigger vendors than you before lunch. Let''s see if your contract terms
+  are realistic.'
+tags:
+- sales
+- crisis
+- fortune-50
+- master-services-agreement
+- level-5
+conclusion_signals:
+  positive:
+  - Reginald smiles, shakes hands, and signs the $12M Master Services Agreement
+  - Landmark enterprise victory
+  negative:
+  - Negotiations collapse in hostile stalemate
+  - Critical IP conceded away

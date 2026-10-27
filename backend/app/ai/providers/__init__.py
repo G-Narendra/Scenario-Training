@@ -40,6 +40,9 @@ def get_llm_provider(
             raise LLMProviderError("OPENAI_API_KEY is not configured", retryable=False)
         return OpenAIProvider(api_key=settings.OPENAI_API_KEY)
 
+    if name == "mock":
+        return MockLLMProvider()
+
     # Auto-detect: if NVIDIA key is available, use it instead of mock
     if settings.NVIDIA_API_KEY or getattr(settings, "NVIDIA_API_KEYS", None):
         return NVIDIAProvider(

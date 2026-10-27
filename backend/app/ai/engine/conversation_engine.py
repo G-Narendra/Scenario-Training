@@ -13,7 +13,9 @@ from backend.app.ai.engine.curveballs import CurveballManager
 from backend.app.ai.prompts.persona import PersonaPromptBuilder
 from backend.app.ai.providers import get_llm_provider
 from backend.app.ai.providers.base import LLMMessage, LLMProvider
+from backend.app.ai.providers.mock_provider import MockLLMProvider
 from backend.app.db.models import Message, Scenario, SimulationSession, UsageEvent, User
+from backend.app.security.sanitizer import sanitize_user_input
 
 logger = logging.getLogger(__name__)
 
@@ -93,6 +95,10 @@ class ConversationEngine:
         Process a trainee utterance, evaluate guardrails, stream counterpart reply,
         and handle turn limits or natural conclusion detection.
         """
+        trainee_message = sanitize_user_input(trainee_message)
+        if not trainee_message:
+            yield "I didn't quite catch that. Could you clarify what you mean?"
+            return
         stmt = (
             select(SimulationSession)
             .where(SimulationSession.id == session_id)
@@ -259,23 +265,18 @@ class ConversationEngine:
             logger.warning(f"LLM streaming provider note ({e}). Emitting in-character conversational fallback.")
 
         if not full_reply_parts:
-            persona_name = scenario_persona.get("name", "Marcus")
-            t_lower = trainee_message.lower().strip()
-            
-            # Dynamic contextual fallback reflecting what the trainee actually communicated
-            if any(w in t_lower for w in ["bye", "byr", "later", "cya", "see you", "continue with it", "touch base"]):
-                fallback_reply = "Sounds good. Keep me updated after your discussion with the client, and we'll take it from there."
-            elif any(w in t_lower for w in ["plan", "what is your", "what's your", "how do you"]):
-                fallback_reply = "My priority is delivering top-quality creative work without burnout. If we can adjust the standup cadence or allow asynchronous updates, that would solve the friction."
-            elif any(w in t_lower for w in ["meeting", "inperson", "in person", "schedule", "discuss"]):
-                fallback_reply = "I'm willing to talk through it, provided we keep it focused on finding a practical workflow rather than rigid clock-watching."
-            elif any(w in t_lower for w in ["agree", "take care", "don't worry", "dont worry", "i will talk"]):
-                fallback_reply = "Understood. As long as our client deliverables remain top-tier, I'm confident we can work through any scheduling logistics."
-            elif "marcus" in persona_name.lower():
-                fallback_reply = "I hear your point. Let's figure out a middle ground that protects both sprint visibility and our creative execution."
-            else:
-                fallback_reply = "I hear what you're saying. From my perspective, we need to balance team process with our delivery milestones. How do you propose we handle this?"
-                
+            # High-fidelity contextual fallback reflecting the exact scenario persona, track, and objections
+            try:
+                mock_engine = MockLLMProvider()
+                fallback_reply = mock_engine._generate_contextual_reply(
+                    last_user_message=trainee_message,
+                    system_prompt=system_prompt,
+                    messages=llm_messages,
+                )
+            except Exception as fe:
+                logger.warning(f"Contextual engine fallback note: {fe}")
+                fallback_reply = "I hear what you're saying. From my perspective, we need to balance our team priorities with delivery milestones. How do you propose we address this?"
+
             full_reply_parts.append(fallback_reply)
             yield fallback_reply
 

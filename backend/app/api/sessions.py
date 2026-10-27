@@ -82,21 +82,25 @@ async def create_session(
             )
 
             if not is_developer_or_admin:
+                # Enforce Max 2 Practice Runs per student and device fingerprint lock
                 ledger_stmt = (
                     select(AttemptLedger)
                     .where(
                         AttemptLedger.cohort_id == cohort.id,
                         AttemptLedger.scenario_id == payload.scenario_id,
-                        AttemptLedger.user_id == current_user.id,
+                        or_(
+                            AttemptLedger.user_id == current_user.id,
+                            AttemptLedger.device_fingerprint == device_fp,
+                        ),
                     )
                     .order_by(AttemptLedger.last_attempt_at.desc())
                 )
                 existing_attempt = (await db.execute(ledger_stmt)).scalars().first()
 
-                if existing_attempt and existing_attempt.attempt_count >= 10:
+                if existing_attempt and existing_attempt.attempt_count >= 2:
                     raise HTTPException(
                         status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-                        detail="ATTEMPT_LIMIT_REACHED: You have completed your 10 assigned practice attempts for this scenario. Please contact your instructor for additional attempts.",
+                        detail="ATTEMPT_LIMIT_REACHED: You have completed your 2 assigned practice attempts for this scenario. Please contact your instructor for additional attempts.",
                     )
 
                 # Check Cohort Budget Cap ($10 USD safety ceiling) with fast-path memory cache
@@ -384,10 +388,11 @@ async def get_session_messages(
 @router.get("", response_model=List[SessionListItemResponse])
 async def list_sessions(
     mine: Optional[bool] = Query(None),
+    cohort_id: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """List simulation sessions for current user or cohort."""
+    """List simulation sessions for current user or specific cohort."""
     query = (
         select(SimulationSession)
         .options(
@@ -402,8 +407,10 @@ async def list_sessions(
 
     if is_mine:
         query = query.where(SimulationSession.user_id == current_user.id)
+    elif cohort_id:
+        query = query.join(SimulationSession.user).where(User.cohort_id == cohort_id)
     elif current_user.role != "super_admin" and current_user.cohort_id:
-        # Group admin viewing cohort
+        # Group admin viewing their own assigned cohort
         query = query.join(SimulationSession.user).where(User.cohort_id == current_user.cohort_id)
 
     res = await db.execute(query)
