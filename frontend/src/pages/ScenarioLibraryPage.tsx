@@ -3,7 +3,7 @@ import { api } from '../api/client';
 import { CapabilityItem, ScenarioDetail, ScenarioListItem } from '../types';
 import { ScenarioBriefingModal } from '../components/ScenarioBriefingModal';
 import { DifficultyBadge } from '../components/DifficultyBadge';
-import { ArrowRight, BookOpen, Clock, Lightbulb, Search, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, Clock, Lightbulb, Search, Sparkles, Target } from 'lucide-react';
 
 interface ScenarioLibraryPageProps {
   selectedTrack: string;
@@ -170,7 +170,11 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                 : 'Executive Practice Scenarios'}
             </h1>
           </div>
-          {viewMode === 'scenarios' && (
+          {viewMode === 'capabilities' ? (
+            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 font-medium">
+              Core leadership and enterprise sales competencies taught by Uzair. Review competencies and launch deliberate practice simulations.
+            </p>
+          ) : (
             <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 font-medium">
               Select an authentic workplace scenario, review the briefing dossier, and begin deliberate practice.
             </p>
@@ -220,8 +224,8 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
           </button>
         </div>
 
-        {viewMode === 'scenarios' ? (
-          /* Track & Difficulty Filters for Scenarios (Dropdowns) */
+        {viewMode === 'scenarios' && (
+          /* Track & Difficulty Filters for Scenarios */
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center space-x-2 bg-white dark:bg-[#132B45] border-2 border-slate-300 dark:border-[#1E3E62] rounded-xl px-3 py-1.5 shadow-sm">
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Track:</span>
@@ -252,25 +256,41 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
               </select>
             </div>
           </div>
-        ) : (
-          /* Pillar Dropdown Filter for Capabilities */
-          <div className="flex items-center space-x-2 bg-white dark:bg-[#132B45] border-2 border-slate-300 dark:border-[#1E3E62] rounded-xl px-3 py-1.5 shadow-sm">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Pillar:</span>
-            <select
-              id="capability-pillar-filter"
-              value={selectedPillar}
-              onChange={(e) => setSelectedPillar(e.target.value)}
-              className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-2"
-            >
-              {pillars.map((p) => (
-                <option key={p.key} value={p.key} className="dark:bg-[#0B192C]">
-                  {p.label}
-                </option>
-              ))}
-            </select>
-          </div>
         )}
       </div>
+
+      {/* Pillar Filter Pills for Capabilities */}
+      {viewMode === 'capabilities' && (
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {pillars.map((p) => (
+            <button
+              key={p.key}
+              id={`pillar-filter-${p.key.replace(/\s+/g, '-').toLowerCase()}`}
+              onClick={() => setSelectedPillar(p.key)}
+              className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
+                selectedPillar === p.key
+                  ? 'bg-[#FF6500] text-white shadow-sm'
+                  : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 dark:bg-[#132B45] dark:text-slate-300 dark:border-[#1E3E62] dark:hover:bg-[#1E3E62]'
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Competency Framework Callout Banner */}
+      {viewMode === 'capabilities' && (
+        <div className="mt-6 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-5 dark:border-[#1E3E62] dark:bg-[#0B192C]">
+          <div className="flex items-center space-x-2 text-xs font-bold text-[#FF6500] uppercase tracking-wider">
+            <Target className="h-4 w-4" />
+            <span>EXECUTIVE TRAINING CURRICULUM · COMPETENCY FRAMEWORK</span>
+          </div>
+          <p className="mt-1 text-sm text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
+            Every capability below represents an executive competency taught in the 3H Solutions curriculum and is mapped to a dedicated practice scenario. Click <strong>Practice Scenario</strong> on any item to review its executive briefing and begin deliberate practice.
+          </p>
+        </div>
+      )}
 
       {/* Main Grid View */}
       {loading ? (
