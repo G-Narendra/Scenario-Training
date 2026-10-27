@@ -111,32 +111,32 @@ async def seed_official_cohort(db):
         )
     )
 
-    # 5. Seed Primary Administrator Accounts: Narendra & Uzair
-    # Both have super_admin role with dual participant + admin access:
-    # - Participant: Full curriculum scenario practice & dialogue testing
-    # - Administrator: Facilitator console, cohort management, roster additions, and progress tracking
-    admin_profiles = [
+    # 5. Seed Primary Administrator Accounts & Enrolled Trainees (Narendra, Uzair, Dev)
+    # Narendra & Uzair have super_admin role with dual participant + admin access.
+    # Dev is seeded as an active enrolled trainee for mobile and participant testing.
+    roster_profiles = [
         {"name": "Narendra", "role": "super_admin"},
         {"name": "Uzair", "role": "super_admin"},
+        {"name": "Dev", "role": "trainee"},
     ]
-    for profile in admin_profiles:
+    for profile in roster_profiles:
         u_stmt = select(User).where(func.lower(User.display_name) == profile["name"].lower())
-        admin_user = (await db.execute(u_stmt)).scalars().first()
-        if not admin_user:
-            admin_user = User(
+        user_record = (await db.execute(u_stmt)).scalars().first()
+        if not user_record:
+            user_record = User(
                 cohort_id=cohort.id,
                 display_name=profile["name"],
                 role=profile["role"],
                 is_active=True,
             )
-            db.add(admin_user)
+            db.add(user_record)
         else:
-            admin_user.cohort_id = cohort.id
-            admin_user.role = profile["role"]
-            admin_user.is_active = True
+            user_record.cohort_id = cohort.id
+            user_record.role = profile["role"]
+            user_record.is_active = True
 
     await db.commit()
-    print("Uzair Executive Training Cohort, passcodes (UZAIR-2026, NARENDRA-2026), and admin accounts (Narendra, Uzair) seeded successfully. Dummy student roster deleted.")
+    print("Uzair Executive Training Cohort, passcodes (UZAIR-2026, NARENDRA-2026), and roster accounts (Narendra, Uzair, Dev) seeded successfully.")
 
 
 
