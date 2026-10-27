@@ -58,9 +58,26 @@ demo = gr.Interface(
     description="Enterprise scenario training engine with NVIDIA NIM sub-second inference."
 )
 
-dist_dir = os.path.join(ROOT_DIR, "frontend", "dist")
-assets_dir = os.path.join(dist_dir, "assets")
-index_file = os.path.join(dist_dir, "index.html")
+# Multi-path search for compiled frontend SPA
+candidate_dirs = [
+    os.path.join(ROOT_DIR, "frontend", "dist"),
+    os.path.join(os.getcwd(), "frontend", "dist"),
+    os.path.join(ROOT_DIR, "dist"),
+    os.path.join(os.getcwd(), "dist"),
+    "/home/user/app/frontend/dist",
+    "/app/frontend/dist",
+]
+resolved_dist_dir = None
+for d in candidate_dirs:
+    if os.path.exists(os.path.join(d, "index.html")):
+        resolved_dist_dir = d
+        break
+
+if not resolved_dist_dir:
+    resolved_dist_dir = os.path.join(ROOT_DIR, "frontend", "dist")
+
+assets_dir = os.path.join(resolved_dist_dir, "assets")
+index_file = os.path.join(resolved_dist_dir, "index.html")
 
 # Launch demo using demo.launch() so ZeroGPU supervisor binds to it on port 7860
 demo_app, _, _ = demo.launch(
@@ -98,6 +115,19 @@ async def health_check():
         "environment": settings.ENVIRONMENT,
     }
 
+@demo_app.get("/api/debug-spa", tags=["Ops"])
+async def debug_spa_info():
+    return {
+        "root_dir": ROOT_DIR,
+        "cwd": os.getcwd(),
+        "resolved_dist_dir": resolved_dist_dir,
+        "dist_exists": os.path.exists(resolved_dist_dir),
+        "index_file": index_file,
+        "index_exists": os.path.exists(index_file),
+        "candidate_checks": {c: os.path.exists(c) for c in candidate_dirs},
+        "root_files": os.listdir(ROOT_DIR) if os.path.exists(ROOT_DIR) else [],
+    }
+
 @demo_app.get("/ready", tags=["Ops"])
 @demo_app.get("/health/ready", tags=["Ops"])
 async def readiness_check():
@@ -114,21 +144,21 @@ async def readiness_check():
     return {"status": "ready", "database": db_status, "version": settings.APP_VERSION}
 
 # 3. Mount static assets and SPA routes
-if os.path.exists(dist_dir):
-    if os.path.exists(assets_dir):
-        demo_app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+if os.path.exists(assets_dir):
+    demo_app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
 
-    logo_file = os.path.join(dist_dir, "logo_3h_solutions.webp")
-    if os.path.exists(logo_file):
-        @demo_app.get("/logo_3h_solutions.webp", include_in_schema=False)
-        async def serve_logo():
-            return FileResponse(logo_file, media_type="image/webp")
+logo_file = os.path.join(resolved_dist_dir, "logo_3h_solutions.webp")
+if os.path.exists(logo_file):
+    @demo_app.get("/logo_3h_solutions.webp", include_in_schema=False)
+    async def serve_logo():
+        return FileResponse(logo_file, media_type="image/webp")
 
-    @demo_app.get("/", include_in_schema=False)
-    @demo_app.get("/app", include_in_schema=False)
-    @demo_app.get("/app/", include_in_schema=False)
-    @demo_app.get("/app/{full_path:path}", include_in_schema=False)
-    async def serve_app_spa(full_path: str = ""):
+@demo_app.get("/", include_in_schema=False)
+@demo_app.get("/app", include_in_schema=False)
+@demo_app.get("/app/", include_in_schema=False)
+@demo_app.get("/app/{full_path:path}", include_in_schema=False)
+async def serve_app_spa(full_path: str = ""):
+    if os.path.exists(index_file):
         resp = FileResponse(index_file, media_type="text/html")
         resp.headers["X-Content-Type-Options"] = "nosniff"
         resp.headers["X-Frame-Options"] = "SAMEORIGIN"
@@ -136,10 +166,14 @@ if os.path.exists(dist_dir):
         resp.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         resp.headers["Permissions-Policy"] = "microphone=(self), camera=(), geolocation=()"
         return resp
+    # Emergency fallback if index.html is still packaging
+    from fastapi.responses import HTMLResponse
+    return HTMLResponse("<!DOCTYPE html><html><head><title>ScenarioLab</title><meta name='viewport' content='width=device-width, initial-scale=1.0'></head><body style='font-family:system-ui;background:#0f172a;color:#f8fafc;padding:2rem;'><h1>ScenarioLab</h1><p>Initializing enterprise modules...</p></body></html>")
 
 # Place all application endpoints and SPA ahead of Gradio's catch-all handlers
 new_routes = demo_app.router.routes[before_len:]
 demo_app.router.routes = new_routes + demo_app.router.routes[:before_len]
+demo_app.middleware_stack = None
 
 logging.info("3H Solutions Scenario Training Engine initialized successfully on port 7860.")
 
