@@ -38,6 +38,8 @@ yarn-debug.log*
 yarn-error.log*
 !frontend/dist/
 !frontend/dist/**
+!dist/
+!dist/**
 frontend/build/
 hf_repo/
 frontend/.vite/
