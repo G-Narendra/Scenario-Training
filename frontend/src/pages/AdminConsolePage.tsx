@@ -804,9 +804,6 @@ conclusion_signals:
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">
                   Enrolled Participants ({cohortMembers.filter((m) => m.role === 'trainee').length})
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Click on any participant to review their completed attempts and generate the official 1-Pager Evaluation Debrief.
-                </p>
               </div>
 
               <button
@@ -923,9 +920,6 @@ conclusion_signals:
             <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">
               Completed Practice Sessions ({completedSessions.length})
             </h2>
-            <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-              Live log of scenario runs completed by participants. Click any debrief button to inspect or print the 1-Pager Report.
-            </p>
 
             <div className="mt-4 overflow-x-auto">
               <table className="w-full text-left text-xs">
@@ -1004,9 +998,6 @@ conclusion_signals:
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">
                   Active Cohort Parameters
                 </h2>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                  Manage your cohort's passcode, expiration date, and curriculum track authorization.
-                </p>
               </div>
 
               <div className="flex items-center space-x-2">
@@ -1090,9 +1081,6 @@ conclusion_signals:
                   <div className="mt-3 font-mono text-3xl font-black text-slate-900 dark:text-white tracking-widest">
                     {cohort?.initial_passcode || (cohort?.name?.toLowerCase().includes('uzair') ? 'UZAIR-2026' : '—')}
                   </div>
-                  <p className="mt-3 text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-medium">
-                    Participants enter this code along with their enrolled name to access workplace practice scenarios.
-                  </p>
                 </div>
 
                 <div className="mt-6 flex flex-wrap gap-2.5">

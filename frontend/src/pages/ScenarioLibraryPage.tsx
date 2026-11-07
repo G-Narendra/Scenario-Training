@@ -186,107 +186,70 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
       {/* Top Header */}
-      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+      <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 pb-4 border-b border-slate-200 dark:border-[#1E3E62]">
         <div>
-          <div className="flex items-center space-x-2 text-xs font-bold text-[#FF6500] mb-2">
-            <span className="rounded-full bg-[#FF6500]/10 px-3 py-0.5 text-xs font-bold text-[#FF6500] border border-[#FF6500]/30">
+          <div className="flex items-center space-x-2 text-xs font-bold text-[#FF6500] mb-1">
+            <span className="rounded-full bg-[#FF6500]/10 px-2.5 py-0.5 text-xs font-bold text-[#FF6500] border border-[#FF6500]/30">
               3H Solutions Executive Training
             </span>
           </div>
-          <div className="flex items-center space-x-3 mt-1">
-            <h1 className="text-3xl font-black tracking-tight text-slate-900 dark:text-white font-heading">
-              {viewMode === 'capabilities'
-                ? 'Executive Curriculum & Core Capabilities'
-                : trackFilter === 'sales'
-                ? 'Enterprise Sales Scenarios'
-                : trackFilter === 'leadership'
-                ? 'Executive Leadership Scenarios'
-                : 'Executive Practice Scenarios'}
-            </h1>
-          </div>
-          {viewMode === 'scenarios' && (
-            <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 font-medium">
-              Select an authentic workplace scenario, review the briefing dossier, and begin deliberate practice.
-            </p>
-          )}
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white font-heading">
+            {viewMode === 'capabilities'
+              ? 'Executive Curriculum & Core Capabilities'
+              : trackFilter === 'sales'
+              ? 'Enterprise Sales Scenarios'
+              : trackFilter === 'leadership'
+              ? 'Executive Leadership Scenarios'
+              : 'Executive Practice Scenarios'}
+          </h1>
+          <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
+            {viewMode === 'capabilities'
+              ? 'Select an executive competency to review its briefing and launch deliberate practice.'
+              : 'Authentic workplace dialogue simulations with simulated counterparts.'}
+          </p>
         </div>
 
         {/* Search Input */}
-        <div className="relative w-full sm:w-80">
+        <div className="relative w-full sm:w-72">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
             placeholder={viewMode === 'capabilities' ? 'Search capabilities...' : 'Search scenarios, skills...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white py-2.5 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 focus:border-[#FF6500] focus:outline-none focus:ring-2 focus:ring-[#FF6500]/25 shadow-sm dark:border-[#2D5B8D] dark:bg-[#132B45] dark:text-white dark:placeholder-slate-500"
+            className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-10 pr-4 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:border-[#FF6500] focus:outline-none focus:ring-2 focus:ring-[#FF6500]/25 shadow-sm dark:border-[#2D5B8D] dark:bg-[#132B45] dark:text-white dark:placeholder-slate-500"
           />
         </div>
       </div>
 
-      {/* Welcome Hero — only show in capabilities mode for clean entry */}
-      {viewMode === 'capabilities' && (
-        <div className="mt-6 rounded-2xl border border-slate-200 dark:border-[#1E3E62] bg-gradient-to-br from-[#0B192C] via-[#1E3E62] to-[#0B192C] p-6 sm:p-8 text-white shadow-lg">
-          <p className="text-xs font-bold uppercase tracking-wider text-[#FF6500]">Executive Training Curriculum · Competency Framework</p>
-          <p className="mt-2 text-sm text-slate-300 leading-relaxed max-w-3xl">
-            Every capability below represents an executive competency taught in the 3H Solutions curriculum and is mapped to a dedicated practice scenario. Click <strong className="text-white">Practice Scenario</strong> on any item to review its executive briefing and begin deliberate practice.
-          </p>
-          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-bold">
-            <span className="flex items-center space-x-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5">
-              <span className="text-[#FF6500]">📋</span>
-              <span>25 Practice Scenarios</span>
-            </span>
-            <span className="flex items-center space-x-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5">
-              <span className="text-[#FF6500]">🏛️</span>
-              <span>60 Core Capabilities</span>
-            </span>
-            <span className="flex items-center space-x-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5">
-              <span className="text-[#FF6500]">🎯</span>
-              <span>3 Difficulty Levels</span>
-            </span>
-            <span className="flex items-center space-x-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5">
-              <span className="text-[#FF6500]">🔒</span>
-              <span>Max 2 Practice Runs</span>
-            </span>
-          </div>
-        </div>
-      )}
-
       {/* View Mode Switcher: Capabilities vs Practice Scenarios */}
-      <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-[#1E3E62] pb-4">
-        <div>
-          <div className="flex items-center space-x-2">
-            <button
-              id="view-mode-capabilities-btn"
-              onClick={() => setViewMode('capabilities')}
-              className={`flex items-center space-x-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
-                viewMode === 'capabilities'
-                  ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/20'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#0B192C] dark:text-slate-300 dark:hover:bg-[#1E3E62]'
-              }`}
-            >
-              <Sparkles className="h-4 w-4" />
-              <span>Capability Curriculum</span>
-            </button>
+      <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-[#1E3E62] pb-4">
+        <div className="flex items-center space-x-2">
+          <button
+            id="view-mode-capabilities-btn"
+            onClick={() => setViewMode('capabilities')}
+            className={`flex items-center space-x-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
+              viewMode === 'capabilities'
+                ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/20'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#0B192C] dark:text-slate-300 dark:hover:bg-[#1E3E62]'
+            }`}
+          >
+            <Sparkles className="h-4 w-4" />
+            <span>Capability Curriculum (60)</span>
+          </button>
 
-            <button
-              id="view-mode-scenarios-btn"
-              onClick={() => setViewMode('scenarios')}
-              className={`flex items-center space-x-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
-                viewMode === 'scenarios'
-                  ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/20'
-                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#0B192C] dark:text-slate-300 dark:hover:bg-[#1E3E62]'
-              }`}
-            >
-              <BookOpen className="h-4 w-4" />
-              <span>Practice Scenarios</span>
-            </button>
-          </div>
-          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
-            {viewMode === 'capabilities'
-              ? 'Core leadership & sales capabilities mapped to deliberate practice simulations.'
-              : 'Authentic workplace dialogue exercises with simulated counterparts.'}
-          </p>
+          <button
+            id="view-mode-scenarios-btn"
+            onClick={() => setViewMode('scenarios')}
+            className={`flex items-center space-x-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
+              viewMode === 'scenarios'
+                ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/20'
+                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#0B192C] dark:text-slate-300 dark:hover:bg-[#1E3E62]'
+            }`}
+          >
+            <BookOpen className="h-4 w-4" />
+            <span>Practice Scenarios (25)</span>
+          </button>
         </div>
 
         {/* Dynamic Filters Bar */}
@@ -358,50 +321,45 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
               <div
                 key={cap.key}
                 id={`capability-card-${cap.key}`}
-                className="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-md ring-1 ring-slate-100 dark:border-[#2D5B8D] dark:bg-[#132B45] dark:ring-0 transition-all duration-200 hover:-translate-y-1 hover:border-[#FF6500] hover:shadow-2xl hover:ring-[#FF6500]/20"
+                className="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100 dark:border-[#2D5B8D] dark:bg-[#132B45] dark:ring-0 transition-all duration-200 hover:-translate-y-1 hover:border-[#FF6500] hover:shadow-xl"
               >
                 <div>
-                  {/* Top Bar: Pillar Tag without truncation so full title is visible */}
+                  {/* Top Bar: Pillar Tag & Difficulty Badge */}
                   <div className="flex items-center justify-between gap-2">
                     <span className="rounded-md bg-amber-500/10 dark:bg-[#0B192C] border border-[#FF6500]/30 px-2.5 py-0.5 text-[11px] font-bold text-[#FF6500] uppercase tracking-wider">
                       {cap.pillar}
                     </span>
+                    <DifficultyBadge
+                      difficulty={cap.matching_scenario_difficulty || 2}
+                      difficultyLevel={cap.matching_scenario_difficulty_level || 'Normal'}
+                      size="sm"
+                    />
                   </div>
 
                   {/* Capability Name */}
-                  <h3 className="mt-4 text-xl font-black text-slate-900 dark:text-white font-heading group-hover:text-[#FF6500] transition-colors leading-snug">
+                  <h3 className="mt-3 text-lg font-black text-slate-900 dark:text-white font-heading group-hover:text-[#FF6500] transition-colors leading-snug">
                     {cap.name}
                   </h3>
 
                   {/* Executive Description */}
-                  <p className="mt-2 text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
+                  <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed line-clamp-2">
                     {cap.description}
                   </p>
 
                   {/* Mapped Practice Scenario Preview */}
-                  <div className="mt-4 rounded-xl border border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-xs">
-                    <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider flex items-center justify-between">
-                      <span>Practice Scenario</span>
-                      <span className="text-[#FF6500] font-semibold">Simulated Dialogue</span>
+                  <div className="mt-3.5 rounded-xl border border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-xs">
+                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                      Practice Scenario
                     </div>
-                    <div className="font-bold text-slate-900 dark:text-white mt-1 text-sm line-clamp-2">
-                      {cap.matching_scenario_title || 'Authentic Workplace Dialogue Simulation'}
-                    </div>
-                    <div className="mt-2 flex items-center space-x-2">
-                      <DifficultyBadge
-                        difficulty={cap.matching_scenario_difficulty || 2}
-                        difficultyLevel={cap.matching_scenario_difficulty_level || 'Challenging'}
-                        size="sm"
-                      />
+                    <div className="font-bold text-slate-900 dark:text-white mt-1 text-sm line-clamp-1">
+                      {cap.matching_scenario_title || 'Authentic Workplace Dialogue'}
                     </div>
                   </div>
                 </div>
 
-                {/* Direct Practice Button */}
-                <div className="mt-6 border-t border-slate-200 dark:border-[#1E3E62] pt-4 flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                    Executive Practice
-                  </span>
+                {/* Direct Action Button */}
+                <div className="mt-4 border-t border-slate-100 dark:border-[#1E3E62] pt-3 flex items-center justify-between">
+                  <span className="text-[11px] text-slate-400 font-medium">Deliberate Practice</span>
                   <button
                     id={`practice-btn-${cap.key || cap.number}`}
                     onClick={() => {
@@ -411,7 +369,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                         handleOpenBriefing(scenarios[0].id);
                       }
                     }}
-                    className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 py-2 text-xs font-bold text-white shadow-sm transition"
+                    className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition"
                   >
                     <span>Practice Scenario</span>
                     <ArrowRight className="h-3.5 w-3.5" />

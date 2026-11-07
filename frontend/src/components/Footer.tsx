@@ -85,14 +85,6 @@ export const Footer: React.FC = () => {
                 <span>Participant FAQ</span>
               </button>
             </div>
-
-            {/* Assessment Clarification Notice */}
-            <div className="flex items-center space-x-2 text-[11px] text-slate-500 dark:text-slate-400 text-center lg:text-right max-w-md font-medium">
-              <Shield className="h-3.5 w-3.5 text-[#FF6500] flex-shrink-0 hidden sm:inline" />
-              <span>
-                Instant summary debrief upon completion. Full evaluation dossier & transcripts reserved for your Facilitator (Uzair).
-              </span>
-            </div>
           </div>
         </div>
       </footer>

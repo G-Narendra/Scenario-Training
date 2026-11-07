@@ -217,15 +217,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
         </div>
       </div>
 
-      {/* 3H Solutions Assessment Protocol Notice */}
-      <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 dark:bg-[#0B192C] p-4 text-xs flex items-center justify-between gap-3 flex-wrap print:hidden">
-        <div className="flex items-center space-x-2.5 text-slate-700 dark:text-slate-300">
-          <Sparkles className="h-4 w-4 text-[#FF6500] flex-shrink-0 animate-pulse" />
-          <span>
-            <strong className="text-slate-900 dark:text-white">Assessment Protocol:</strong> You are viewing your immediate <strong>{reportTier === 'summary' ? 'Performance Summary Debrief' : 'Detailed Evaluation Dossier'}</strong>. Comprehensive scoring rubrics and verbatim dialogue transcripts are archived for your 3H Solutions Executive Facilitator (Uzair) for 1-on-1 coaching.
-          </span>
-        </div>
-      </div>
+
 
       {/* Printable Header */}
       <div className="hidden print:block mb-6 border-b-2 border-[#FF6500] pb-4">
@@ -309,55 +301,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           </div>
         </div>
 
-        {/* Stage Timing Telemetry Breakdown (Parallel & Layer Metrics - Facilitator Detailed View Only) */}
-        {reportTier === 'detailed' && report.stage_timing_ms && (
-          <div className="mt-6 rounded-2xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C]/90 p-4 shadow-sm print:hidden">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-[#1E3E62] pb-2.5">
-              <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
-                <Clock className="h-4 w-4" />
-                <span>Stage Profiling & Pipeline Telemetry</span>
-              </div>
-              <span className="flex items-center space-x-1.5 text-xs font-mono font-bold text-emerald-600 dark:text-emerald-400">
-                <Zap className="h-3.5 w-3.5" />
-                <span>Total Latency: {report.stage_timing_ms.total_evaluation_ms || 411}ms</span>
-              </span>
-            </div>
 
-            <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
-              <div className="rounded-xl bg-white dark:bg-[#132B45] p-2.5 border border-slate-200 dark:border-[#1E3E62]">
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">1. Database Fetch</div>
-                <div className="text-sm font-black font-mono text-slate-900 dark:text-white mt-0.5">
-                  {report.stage_timing_ms.db_fetch_ms || 12}ms
-                </div>
-                <div className="text-[10px] text-slate-400 mt-0.5">Indexed query</div>
-              </div>
-
-              <div className="rounded-xl bg-white dark:bg-[#132B45] p-2.5 border border-slate-200 dark:border-[#1E3E62]">
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">2. AI Scoring Engine</div>
-                <div className="text-sm font-black font-mono text-slate-900 dark:text-white mt-0.5">
-                  {report.stage_timing_ms.evaluation_llm_ms || 380}ms
-                </div>
-                <div className="text-[10px] text-slate-400 mt-0.5">Fast-path eval</div>
-              </div>
-
-              <div className="rounded-xl bg-white dark:bg-[#132B45] p-2.5 border border-slate-200 dark:border-[#1E3E62]">
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">3. Quote & Weighting</div>
-                <div className="text-sm font-black font-mono text-slate-900 dark:text-white mt-0.5">
-                  {report.stage_timing_ms.post_processing_ms || 4}ms
-                </div>
-                <div className="text-[10px] text-slate-400 mt-0.5">In-memory pass</div>
-              </div>
-
-              <div className="rounded-xl bg-white dark:bg-[#132B45] p-2.5 border border-slate-200 dark:border-[#1E3E62]">
-                <div className="text-[10px] text-slate-500 dark:text-slate-400 font-bold uppercase">4. ACID Persistence</div>
-                <div className="text-sm font-black font-mono text-slate-900 dark:text-white mt-0.5">
-                  {report.stage_timing_ms.db_persist_ms || 15}ms
-                </div>
-                <div className="text-[10px] text-slate-400 mt-0.5">Commit & refresh</div>
-              </div>
-            </div>
-          </div>
-        )}
 
         {/* Micro-Debrief (Top Strength + Key Adjustment - Always Visible) */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
