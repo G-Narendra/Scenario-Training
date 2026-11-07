@@ -9,7 +9,6 @@ import {
   BookOpen,
   CheckCircle2,
   ChevronRight,
-  Clock,
   Eye,
   FileText,
   Lightbulb,
@@ -21,7 +20,6 @@ import {
   Target,
   TrendingUp,
   XCircle,
-  Zap,
 } from 'lucide-react';
 
 interface FeedbackReportPageProps {

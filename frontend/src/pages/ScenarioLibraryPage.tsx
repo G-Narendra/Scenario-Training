@@ -111,7 +111,8 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
       if (capTrack && capTrack !== trackFilter.toLowerCase()) return false;
     }
     if (difficultyFilter !== 'all') {
-      const capDifficulty = cap.matching_scenario_difficulty_level || (cap.matching_scenario_difficulty <= 1 ? 'Normal' : cap.matching_scenario_difficulty <= 3 ? 'Challenging' : 'Crisis');
+      const diffVal = cap.matching_scenario_difficulty ?? 1;
+      const capDifficulty = cap.matching_scenario_difficulty_level || (diffVal <= 1 ? 'Normal' : diffVal <= 3 ? 'Challenging' : 'Crisis');
       if (capDifficulty !== difficultyFilter) return false;
     }
     if (selectedPillar !== 'all') {
@@ -148,8 +149,10 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
   });
 
   const sortedCapabilities = [...filteredCapabilities].sort((a, b) => {
-    const aTier = a.matching_scenario_difficulty_level || (a.matching_scenario_difficulty <= 1 ? 'Normal' : a.matching_scenario_difficulty <= 3 ? 'Challenging' : 'Crisis');
-    const bTier = b.matching_scenario_difficulty_level || (b.matching_scenario_difficulty <= 1 ? 'Normal' : b.matching_scenario_difficulty <= 3 ? 'Challenging' : 'Crisis');
+    const aDiff = a.matching_scenario_difficulty ?? 1;
+    const aTier = a.matching_scenario_difficulty_level || (aDiff <= 1 ? 'Normal' : aDiff <= 3 ? 'Challenging' : 'Crisis');
+    const bDiff = b.matching_scenario_difficulty ?? 1;
+    const bTier = b.matching_scenario_difficulty_level || (bDiff <= 1 ? 'Normal' : bDiff <= 3 ? 'Challenging' : 'Crisis');
     const diff = (difficultyOrder[aTier] || 2) - (difficultyOrder[bTier] || 2);
     if (diff !== 0) return diff;
     return (a.number || 0) - (b.number || 0);

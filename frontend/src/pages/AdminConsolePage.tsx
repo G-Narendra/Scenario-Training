@@ -1888,7 +1888,7 @@ conclusion_signals:
                       <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
                         {reportSession.messages.map((m, idx) => (
                           <div
-                            key={m.id || idx}
+                            key={m.seq || idx}
                             className={`p-3 rounded-xl border text-xs leading-relaxed ${
                               m.role === 'trainee'
                                 ? 'border-[#FF6500]/30 bg-[#FF6500]/5 dark:bg-[#FF6500]/10 text-slate-800 dark:text-slate-200 ml-4'

@@ -502,16 +502,17 @@ class AccessService:
                 detail="Access Denied: Invalid administrator username for super admin passcode.",
             )
 
-        # ─── PERSONA 3: Student Narendra (Participant View) ───
-        elif is_cohort_passcode and lower_name in ("narendra", "student narendra", "narendra (student)", "narendra student"):
+        # ─── PERSONA 3: Student Dev & Narendra (Participant View) ───
+        elif is_cohort_passcode and lower_name in ("dev", "student dev", "dev student", "dev (participant)", "dev (student)", "narendra", "student narendra", "narendra (student)", "narendra student"):
+            target_name = "Dev" if "dev" in lower_name else "Narendra"
             user_stmt = select(User).where(
-                and_(User.cohort_id == matched_cohort_id, func.lower(User.display_name) == "narendra", User.role == "trainee")
+                and_(User.cohort_id == matched_cohort_id, func.lower(User.display_name) == target_name.lower(), User.role == "trainee")
             )
             user = (await db.execute(user_stmt)).scalars().first()
             if not user:
-                # Also check if any Narendra exists in cohort
+                # Also check if any user with this name exists in cohort
                 existing_stmt = select(User).where(
-                    and_(User.cohort_id == matched_cohort_id, func.lower(User.display_name) == "narendra")
+                    and_(User.cohort_id == matched_cohort_id, func.lower(User.display_name) == target_name.lower())
                 )
                 existing_user = (await db.execute(existing_stmt)).scalars().first()
                 if existing_user and existing_user.role != "super_admin":
@@ -521,7 +522,7 @@ class AccessService:
                 else:
                     user = User(
                         cohort_id=matched_cohort_id,
-                        display_name="Narendra",
+                        display_name=target_name,
                         role="trainee",
                         is_active=True,
                         last_login_at=now,

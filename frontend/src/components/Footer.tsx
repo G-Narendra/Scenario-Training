@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Globe, HelpCircle, Mail, MessageCircle, Shield, X } from 'lucide-react';
+import { Globe, HelpCircle, Mail, MessageCircle, X } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   const [showFaqModal, setShowFaqModal] = useState(false);
