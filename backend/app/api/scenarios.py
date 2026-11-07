@@ -82,6 +82,7 @@ async def list_capabilities(
                 "matching_scenario_id": sc.id,
                 "matching_scenario_slug": sc.slug,
                 "matching_scenario_title": sc.title,
+                "matching_scenario_track": track_val,
                 "matching_scenario_difficulty": getattr(sc, "difficulty", 2),
                 "matching_scenario_difficulty_level": diff_level,
             })

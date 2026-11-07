@@ -392,6 +392,7 @@ class ScenarioService:
         stmt = select(Scenario, Track).join(Track, Scenario.track_id == Track.id).where(Scenario.status == "published")
         all_scen_results = (await db.execute(stmt)).all()
         all_scenarios = [row[0] for row in all_scen_results]
+        scen_track_map = {row[0].id: row[1].key for row in all_scen_results}
 
         capabilities = []
         for key, s_info in lead_skills.items():
@@ -443,6 +444,7 @@ class ScenarioService:
                 "matching_scenario_id": matched_scen.id if matched_scen else None,
                 "matching_scenario_slug": matched_scen.slug if matched_scen else None,
                 "matching_scenario_title": matched_scen.title if matched_scen else None,
+                "matching_scenario_track": scen_track_map.get(matched_scen.id, "leadership") if matched_scen else "leadership",
                 "matching_scenario_difficulty": matched_scen.difficulty if matched_scen else 2,
                 "matching_scenario_difficulty_level": diff_level,
             })

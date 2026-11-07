@@ -17,7 +17,7 @@ export type ViewMode = 'tracks' | 'scenarios' | 'chat' | 'evaluation' | 'progres
 const AppContent: React.FC = () => {
   const { user, isAuthenticated, loading } = useAuth();
   const [currentView, setCurrentView] = useState<ViewMode>('scenarios');
-  const [selectedTrack, setSelectedTrack] = useState<string>('leadership');
+  const [selectedTrack, setSelectedTrack] = useState<string>('all');
   const [activeSession, setActiveSession] = useState<SimulationSession | null>(null);
   const [evalSessionId, setEvalSessionId] = useState<string | null>(null);
   const [isStartingSimulation, setIsStartingSimulation] = useState(false);
@@ -28,6 +28,9 @@ const AppContent: React.FC = () => {
   const navigateTo = (view: ViewMode, track?: string, replace = false) => {
     if (track) setSelectedTrack(track);
     setCurrentView(view);
+    try {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+    } catch {}
     const hash = '#' + view;
     const stateObj = { view, selectedTrack: track || selectedTrack };
     if (replace) {
@@ -115,6 +118,9 @@ const AppContent: React.FC = () => {
     const handlePopState = (e: PopStateEvent) => {
       if (e.state && e.state.view) {
         setCurrentView(e.state.view);
+        try {
+          window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+        } catch {}
         if (e.state.selectedTrack) {
           setSelectedTrack(e.state.selectedTrack);
         }
@@ -343,7 +349,7 @@ const AppContent: React.FC = () => {
           </div>
         )}
       </main>
-      <Footer />
+      {currentView !== 'chat' && <Footer />}
     </div>
   );
 };

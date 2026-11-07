@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Clock, MessageSquare, Mic, Sparkles, X, Target, UserCheck, Shield } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import { ScenarioDetail } from '../types';
 import { DifficultyBadge } from './DifficultyBadge';
 import { TacticalClueCard } from './TacticalClueCard';
@@ -19,8 +20,16 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
   isStarting,
   completedAttemptsCount = 0,
 }) => {
+  const { user } = useAuth();
   const [selectedMode, setSelectedMode] = useState<'text' | 'voice'>('text');
-  const remainingAttempts = Math.max(0, 10 - completedAttemptsCount);
+  
+  const isPrivileged =
+    user?.role === 'super_admin' ||
+    user?.role === 'group_admin' ||
+    (user?.display_name && (user.display_name.toLowerCase().includes('uzair') || user.display_name.toLowerCase().includes('narendra')));
+  const maxAttempts = isPrivileged ? 999 : 2;
+  const remainingAttempts = Math.max(0, maxAttempts - completedAttemptsCount);
+  const isLimitReached = !isPrivileged && remainingAttempts <= 0;
 
   React.useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -258,17 +267,28 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
         {/* Footer CTA */}
         <div className="border-t border-slate-300 dark:border-[#1E3E62] p-4 sm:p-6 bg-slate-50 dark:bg-[#0B192C] flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-xs text-slate-600 dark:text-slate-400 font-medium text-center sm:text-left">
-            <span className="font-bold text-slate-900 dark:text-white">{completedAttemptsCount} of 10</span> attempts completed
-            {remainingAttempts > 0 ? (
-              <span className="ml-1 text-[#FF6500] font-bold">({remainingAttempts} remaining)</span>
+            {isPrivileged ? (
+              <span className="inline-flex items-center space-x-1.5 font-bold text-[#FF6500]">
+                <span>⚡ Facilitator Testing</span>
+                <span className="text-slate-400">•</span>
+                <span className="text-slate-600 dark:text-slate-300">Unlimited Practice Runs</span>
+              </span>
             ) : (
-              <span className="ml-1 text-rose-500 font-bold">(Attempt limit reached)</span>
+              <>
+                <span className="font-bold text-slate-900 dark:text-white">{completedAttemptsCount} of 2</span> practice runs completed
+                {remainingAttempts > 0 ? (
+                  <span className="ml-1 text-[#FF6500] font-bold">({remainingAttempts} remaining)</span>
+                ) : (
+                  <span className="ml-1 text-rose-500 font-bold">(Max 2 runs completed)</span>
+                )}
+              </>
             )}
           </div>
 
           <button
             id="start-simulation-btn"
             onClick={async () => {
+              if (isLimitReached) return;
               try {
                 const windowWithAudio = window as unknown as {
                   __sharedAudioContext?: AudioContext;
@@ -299,10 +319,16 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
 
               onStartSimulation(scenario.id, selectedMode);
             }}
-            disabled={isStarting}
+            disabled={isStarting || isLimitReached}
             className="w-full sm:w-auto flex items-center justify-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-7 py-3 text-base font-bold text-white shadow-lg shadow-[#FF6500]/30 transition disabled:opacity-50"
           >
-            <span>{isStarting ? 'Starting Practice...' : 'Start Practice'}</span>
+            <span>
+              {isStarting
+                ? 'Starting Practice...'
+                : isLimitReached
+                ? 'Practice Limit Reached (2/2)'
+                : 'Start Practice'}
+            </span>
           </button>
         </div>
       </div>

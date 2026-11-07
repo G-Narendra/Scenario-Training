@@ -75,11 +75,8 @@ export const LoginPage: React.FC = () => {
           <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900 dark:text-white font-heading sm:text-3xl">
             Executive Scenario Training
           </h1>
-          <p className="mt-2 text-sm text-slate-600 dark:text-slate-200 font-medium max-w-sm">
-            High-Impact Corporate Training & Scenario Practice
-          </p>
-          <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
-            Executive Scenario Practice Platform
+          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300 font-medium max-w-sm leading-relaxed">
+            Enter your cohort passcode and enrolled name to access authentic leadership & sales deliberate practice simulations.
           </p>
         </div>
 

@@ -106,6 +106,10 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
   };
 
   const filteredCapabilities = capabilities.filter((cap) => {
+    if (trackFilter !== 'all') {
+      const capTrack = (cap.matching_scenario_track || '').toLowerCase();
+      if (capTrack && capTrack !== trackFilter.toLowerCase()) return false;
+    }
     if (difficultyFilter !== 'all') {
       const capDifficulty = cap.matching_scenario_difficulty_level || (cap.matching_scenario_difficulty <= 1 ? 'Normal' : cap.matching_scenario_difficulty <= 3 ? 'Challenging' : 'Crisis');
       if (capDifficulty !== difficultyFilter) return false;
@@ -230,11 +234,11 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
           <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-bold">
             <span className="flex items-center space-x-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5">
               <span className="text-[#FF6500]">📋</span>
-              <span>{capabilities.length || 25} Scenarios</span>
+              <span>25 Practice Scenarios</span>
             </span>
             <span className="flex items-center space-x-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5">
               <span className="text-[#FF6500]">🏛️</span>
-              <span>6 Competency Pillars</span>
+              <span>60 Core Capabilities</span>
             </span>
             <span className="flex items-center space-x-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5">
               <span className="text-[#FF6500]">🎯</span>
@@ -242,7 +246,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
             </span>
             <span className="flex items-center space-x-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5">
               <span className="text-[#FF6500]">🔒</span>
-              <span>10 Practice Attempts</span>
+              <span>Max 2 Practice Runs</span>
             </span>
           </div>
         </div>

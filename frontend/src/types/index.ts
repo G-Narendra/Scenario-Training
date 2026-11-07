@@ -23,6 +23,7 @@ export interface CapabilityItem {
   matching_scenario_id?: string;
   matching_scenario_slug?: string;
   matching_scenario_title?: string;
+  matching_scenario_track?: string;
   matching_scenario_difficulty?: number;
   matching_scenario_difficulty_level?: string;
 }
