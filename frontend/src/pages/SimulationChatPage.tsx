@@ -868,15 +868,15 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
       {/* Completion Banner if closed */}
       {isSessionClosed && (
-        <div className="flex items-center justify-between border-b border-[#FF6500]/40 bg-[#0B192C] px-4 py-3 sm:px-6 sm:py-3.5 z-10 text-white flex-wrap gap-2">
-          <div className="flex items-center space-x-2 text-xs sm:text-sm font-semibold">
-            <Sparkles className="h-4 w-4 text-[#FF6500] flex-shrink-0" />
-            <span>Practice session complete. Review your performance evaluation report below.</span>
+        <div className="flex items-center justify-between border-b border-[#FF6500]/40 bg-[#0B192C] px-4 py-3 sm:px-6 sm:py-3.5 z-10 text-white flex-wrap gap-3 shadow-md">
+          <div className="flex items-center space-x-2.5 text-xs sm:text-sm font-semibold">
+            <Sparkles className="h-4 w-4 text-[#FF6500] flex-shrink-0 animate-pulse" />
+            <span>Practice dialogue completed. Click <strong className="text-[#FF6500]">View Evaluation</strong> to review your score and debrief.</span>
           </div>
           <button
             id="view-evaluation-btn"
             onClick={() => onViewEvaluation(session.id)}
-            className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 py-2 text-xs font-bold text-white shadow-md shadow-[#FF6500]/30 transition"
+            className="flex items-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 py-2 text-xs font-bold text-white shadow-md shadow-[#FF6500]/30 transition transform hover:scale-105"
           >
             <span>View Evaluation</span>
             <ArrowRight className="h-4 w-4" />
@@ -1157,6 +1157,32 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                 )}
                 <span className="inline-block h-4 w-1.5 bg-[#FF6500] ml-1 animate-pulse" />
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Interactive In-Stream Completion Card */}
+        {isSessionClosed && (
+          <div className="my-6 rounded-2xl border-2 border-[#FF6500]/40 bg-gradient-to-r from-amber-500/10 via-[#FF6500]/10 to-amber-500/10 p-6 text-center shadow-lg dark:border-[#FF6500]/50 dark:bg-[#0B192C]">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FF6500]/20 text-[#FF6500] mb-3 border border-[#FF6500]/30 shadow-inner">
+              <Sparkles className="h-6 w-6" />
+            </div>
+            <h3 className="text-lg font-black text-slate-900 dark:text-white font-heading">
+              Practice Dialogue Concluded
+            </h3>
+            <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 max-w-md mx-auto font-medium">
+              Your simulation exchanges have been evaluated. Click below to view your performance score, top strengths, and tactical improvements.
+            </p>
+            <div className="mt-4 flex items-center justify-center">
+              <button
+                type="button"
+                id="inline-view-evaluation-btn"
+                onClick={() => onViewEvaluation(session.id)}
+                className="flex items-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-[#FF6500]/30 transition transform hover:scale-105"
+              >
+                <span>View Performance Evaluation</span>
+                <ArrowRight className="h-4 w-4" />
+              </button>
             </div>
           </div>
         )}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/Navbar';
+import { Footer } from './components/Footer';
 import { LoginPage } from './pages/LoginPage';
 import { ScenarioLibraryPage } from './pages/ScenarioLibraryPage';
 import { SimulationChatPage } from './pages/SimulationChatPage';
@@ -217,7 +218,7 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-[#090D16] dark:text-slate-100 flex flex-col font-sans selection:bg-indigo-600 selection:text-white transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900 dark:bg-[#090D16] dark:from-[#090D16] dark:via-[#090D16] dark:to-[#090D16] dark:text-slate-100 flex flex-col font-sans selection:bg-[#FF6500] selection:text-white transition-colors duration-200">
       <Navbar currentView={currentView} onNavigate={(v) => navigateTo(v as ViewMode)} />
 
       <main className="flex-1">
@@ -342,6 +343,7 @@ const AppContent: React.FC = () => {
           </div>
         )}
       </main>
+      <Footer />
     </div>
   );
 };

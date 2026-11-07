@@ -4,12 +4,16 @@ interface ThreeHSolutionsLogoProps {
   className?: string;
   variant?: 'full' | 'compact' | 'monogram';
   size?: 'sm' | 'md' | 'lg';
+  websiteUrl?: string;
+  enableWebsiteLink?: boolean;
 }
 
 export const ThreeHSolutionsLogo: React.FC<ThreeHSolutionsLogoProps> = ({
   className = '',
   variant = 'full',
   size = 'md',
+  websiteUrl = 'https://www.3hsolutionsgroup.com/',
+  enableWebsiteLink = true,
 }) => {
   const [imageError, setImageError] = useState(false);
 
@@ -31,63 +35,78 @@ export const ThreeHSolutionsLogo: React.FC<ThreeHSolutionsLogoProps> = ({
     lg: 'text-xs',
   };
 
+  const logoMark = !imageError ? (
+    <div className={`${iconSizes[size]} flex items-center justify-center rounded-xl overflow-hidden shadow-sm flex-shrink-0 bg-white/90 dark:bg-[#071322] p-1 border border-slate-200 dark:border-[#1E3E62] transition hover:scale-105 hover:border-[#FF6500]`}>
+      <img
+        src="/logo_3h_solutions.webp"
+        alt="3H Solutions"
+        className="w-full h-full object-contain rounded-lg overflow-hidden"
+        onError={() => setImageError(true)}
+      />
+    </div>
+  ) : (
+    <div
+      className={`flex items-center justify-center bg-[#0B192C] ${iconSizes[size]} rounded-xl overflow-hidden shadow-sm transition hover:scale-105`}
+    >
+      <svg
+        viewBox="0 0 100 100"
+        className="w-full h-full"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        {/* Hexagonal Shield Background */}
+        <polygon
+          points="50,6 90,28 90,72 50,94 10,72 10,28"
+          fill="#0B192C"
+          stroke="#FF6500"
+          strokeWidth="5"
+        />
+        {/* 3 Pillars (Head, Heart, Hands) */}
+        <path
+          d="M32 28 V72"
+          stroke="#FFFFFF"
+          strokeWidth="7"
+          strokeLinecap="round"
+        />
+        <path
+          d="M50 24 V76"
+          stroke="#FF6500"
+          strokeWidth="8"
+          strokeLinecap="round"
+        />
+        <path
+          d="M68 28 V72"
+          stroke="#FFFFFF"
+          strokeWidth="7"
+          strokeLinecap="round"
+        />
+        {/* Crossbeam linking pillars */}
+        <path
+          d="M32 50 H68"
+          stroke="#FF6500"
+          strokeWidth="6"
+          strokeLinecap="round"
+        />
+      </svg>
+    </div>
+  );
+
   return (
     <div className={`flex items-center space-x-3 select-none ${className}`}>
-      {/* 3H Official Logo with cleanly curved corners */}
-      {!imageError ? (
-        <div className={`${iconSizes[size]} flex items-center justify-center rounded-xl overflow-hidden shadow-sm flex-shrink-0 bg-white/90 dark:bg-[#071322] p-1 border border-slate-200 dark:border-[#1E3E62]`}>
-          <img
-            src="/logo_3h_solutions.webp"
-            alt="3H Solutions"
-            className="w-full h-full object-contain rounded-lg overflow-hidden"
-            onError={() => setImageError(true)}
-          />
-        </div>
-      ) : (
-        <div
-          className={`flex items-center justify-center bg-[#0B192C] ${iconSizes[size]} rounded-xl overflow-hidden shadow-sm`}
+      {/* 3H Official Logo with cleanly curved corners - clicking logo navigates to 3H official site */}
+      {enableWebsiteLink ? (
+        <a
+          href={websiteUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Visit 3H Solutions official website (www.3hsolutionsgroup.com)"
+          onClick={(e) => e.stopPropagation()}
+          className="flex-shrink-0 cursor-pointer block"
         >
-          <svg
-            viewBox="0 0 100 100"
-            className="w-full h-full"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            {/* Hexagonal Shield Background */}
-            <polygon
-              points="50,6 90,28 90,72 50,94 10,72 10,28"
-              fill="#0B192C"
-              stroke="#FF6500"
-              strokeWidth="5"
-            />
-            {/* 3 Pillars (Head, Heart, Hands) */}
-            <path
-              d="M32 28 V72"
-              stroke="#FFFFFF"
-              strokeWidth="7"
-              strokeLinecap="round"
-            />
-            <path
-              d="M50 24 V76"
-              stroke="#FF6500"
-              strokeWidth="8"
-              strokeLinecap="round"
-            />
-            <path
-              d="M68 28 V72"
-              stroke="#FFFFFF"
-              strokeWidth="7"
-              strokeLinecap="round"
-            />
-            {/* Crossbeam linking pillars */}
-            <path
-              d="M32 50 H68"
-              stroke="#FF6500"
-              strokeWidth="6"
-              strokeLinecap="round"
-            />
-          </svg>
-        </div>
+          {logoMark}
+        </a>
+      ) : (
+        logoMark
       )}
 
       {/* Typography */}

@@ -1886,6 +1886,44 @@ conclusion_signals:
                     </div>
                   </div>
 
+                  {/* Full Verbatim Dialogue Transcript */}
+                  {reportSession?.messages && reportSession.messages.length > 0 && (
+                    <div className="pt-4 border-t border-slate-200 dark:border-[#1E3E62]">
+                      <div className="flex items-center justify-between mb-3">
+                        <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                          Complete Verbatim Dialogue Transcript ({reportSession.messages.length} exchanges)
+                        </h4>
+                        <span className="text-[11px] text-[#FF6500] font-semibold">
+                          Chronological Context
+                        </span>
+                      </div>
+                      <div className="space-y-2.5 max-h-96 overflow-y-auto pr-1">
+                        {reportSession.messages.map((m, idx) => (
+                          <div
+                            key={m.id || idx}
+                            className={`p-3 rounded-xl border text-xs leading-relaxed ${
+                              m.role === 'trainee'
+                                ? 'border-[#FF6500]/30 bg-[#FF6500]/5 dark:bg-[#FF6500]/10 text-slate-800 dark:text-slate-200 ml-4'
+                                : 'border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#132B45] text-slate-700 dark:text-slate-300 mr-4'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-1 text-[10px] font-bold uppercase tracking-wider">
+                              <span className={m.role === 'trainee' ? 'text-[#FF6500]' : 'text-slate-500 dark:text-slate-400'}>
+                                {m.role === 'trainee' ? `${reportSession.trainee_name || 'Participant'}` : 'Counterpart'}
+                              </span>
+                              <span className="text-slate-400 font-mono">
+                                #{idx + 1}
+                              </span>
+                            </div>
+                            <p className="font-medium whitespace-pre-line text-slate-900 dark:text-white">
+                              {m.content}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
                   {/* Facilitator Sign-off & Seal */}
                   <div className="pt-4 border-t border-slate-200 dark:border-[#1E3E62] flex flex-col sm:flex-row sm:items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-2">
                     <div>

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
 import { FeedbackReport, SimulationSession } from '../types';
 import { ThreeHSolutionsLogo } from '../components/ThreeHSolutionsLogo';
+import { useAuth } from '../context/AuthContext';
 import {
   AlertTriangle,
   Award,
@@ -10,10 +11,12 @@ import {
   ChevronRight,
   Clock,
   Eye,
+  FileText,
   Lightbulb,
   MessageSquare,
   Printer,
   RotateCcw,
+  Shield,
   Sparkles,
   Target,
   TrendingUp,
@@ -34,6 +37,9 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
   onRetryScenario,
   onNavigateProgress,
 }) => {
+  const { user } = useAuth();
+  const isFacilitator = user?.role === 'group_admin' || user?.role === 'super_admin';
+  const [reportTier, setReportTier] = useState<'summary' | 'detailed'>(isFacilitator ? 'detailed' : 'summary');
   const [report, setReport] = useState<FeedbackReport | null>(null);
   const [session, setSession] = useState<SimulationSession | null>(null);
   const [loading, setLoading] = useState(true);
@@ -133,10 +139,42 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
             <span>Scenario Library</span>
           </button>
           <ChevronRight className="h-3 w-3 text-slate-400" />
-          <span className="text-[#FF6500]">Performance Report</span>
+          <span className="text-[#FF6500]">
+            {reportTier === 'summary' ? 'Performance Summary Debrief' : 'Executive Diagnostic Dossier'}
+          </span>
         </nav>
 
         <div className="flex flex-wrap items-center gap-2.5">
+          {/* Dual-Tier Report Switcher (Participant Summary vs Facilitator Diagnostic) */}
+          <div className="flex items-center space-x-1 rounded-xl border border-slate-300 bg-slate-100 p-1 dark:border-[#1E3E62] dark:bg-[#132B45] text-xs">
+            <button
+              id="report-tier-summary-btn"
+              type="button"
+              onClick={() => setReportTier('summary')}
+              className={`flex items-center space-x-1.5 rounded-lg px-3 py-1 font-bold transition ${
+                reportTier === 'summary'
+                  ? 'bg-[#FF6500] text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <FileText className="h-3.5 w-3.5" />
+              <span>Summary</span>
+            </button>
+            <button
+              id="report-tier-detailed-btn"
+              type="button"
+              onClick={() => setReportTier('detailed')}
+              className={`flex items-center space-x-1.5 rounded-lg px-3 py-1 font-bold transition ${
+                reportTier === 'detailed'
+                  ? 'bg-[#FF6500] text-white shadow-sm'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Shield className="h-3.5 w-3.5" />
+              <span>Detailed Dossier</span>
+            </button>
+          </div>
+
           <button
             id="nav-library-btn"
             onClick={onBackToScenarios}
@@ -174,8 +212,18 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
             className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 py-1.5 text-xs font-bold text-white shadow-md shadow-[#FF6500]/20 transition"
           >
             <Printer className="h-3.5 w-3.5" />
-            <span>Print Report</span>
+            <span>{reportTier === 'summary' ? 'Print Summary' : 'Print Full Dossier'}</span>
           </button>
+        </div>
+      </div>
+
+      {/* 3H Solutions Assessment Protocol Notice */}
+      <div className="mt-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 dark:bg-[#0B192C] p-4 text-xs flex items-center justify-between gap-3 flex-wrap print:hidden">
+        <div className="flex items-center space-x-2.5 text-slate-700 dark:text-slate-300">
+          <Sparkles className="h-4 w-4 text-[#FF6500] flex-shrink-0 animate-pulse" />
+          <span>
+            <strong className="text-slate-900 dark:text-white">Assessment Protocol:</strong> You are viewing your immediate <strong>{reportTier === 'summary' ? 'Performance Summary Debrief' : 'Detailed Evaluation Dossier'}</strong>. Comprehensive scoring rubrics and verbatim dialogue transcripts are archived for your 3H Solutions Executive Facilitator (Uzair) for 1-on-1 coaching.
+          </span>
         </div>
       </div>
 
@@ -187,10 +235,14 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
             <h1 className="mt-2 text-2xl font-black text-slate-900 font-heading">
               {session?.scenario_title || 'Executive Performance Report'}
             </h1>
+            <p className="text-xs font-bold text-[#FF6500] uppercase tracking-wider mt-0.5">
+              {reportTier === 'summary' ? '1-Page Executive Summary Debrief' : 'Comprehensive Executive Diagnostic Dossier'}
+            </p>
             <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-slate-700">
               <div><span className="font-bold text-slate-900">Participant:</span> {session?.trainee_name || 'You'}</div>
               <div><span className="font-bold text-slate-900">Cohort:</span> {session?.cohort_name || 'Executive Training'}</div>
               <div><span className="font-bold text-slate-900">Mode:</span> {session?.mode === 'voice' ? 'Voice Call' : 'Written Dialogue'}</div>
+              <div><span className="font-bold text-slate-900">Report Tier:</span> {reportTier === 'summary' ? 'Summary Debrief' : 'Comprehensive Dossier'}</div>
               <div><span className="font-bold text-slate-900">Date:</span> {session?.started_at ? new Date(session.started_at).toLocaleDateString() : 'Today'}</div>
             </div>
           </div>
@@ -207,12 +259,12 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
       </div>
 
       {/* Hero Scorecard */}
-      <div className="print-section mt-6 rounded-3xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-6 sm:p-8 shadow-xl print:p-4 print:mt-2 print:border-slate-300">
+      <div className="print-section mt-6 rounded-3xl border border-slate-200 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-6 sm:p-8 shadow-xl ring-1 ring-slate-100 dark:ring-0 print:p-4 print:mt-2 print:border-slate-300 print:ring-0">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 print:block">
           <div>
             <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
               <Award className="h-4 w-4" />
-              <span>Performance Summary</span>
+              <span>{reportTier === 'summary' ? 'Executive Performance Debrief' : 'Comprehensive Performance Assessment'}</span>
             </div>
             <h1 className="mt-2 text-2xl font-black tracking-tight text-slate-900 dark:text-white font-heading sm:text-3xl print:hidden">
               {session?.scenario_title || 'Scenario Performance Report'}
@@ -230,8 +282,8 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
               </span>
               <span className="text-slate-400">•</span>
               <span className="flex items-center space-x-1.5">
-                <span className="text-slate-400">Date:</span>
-                <span>{session?.started_at ? new Date(session.started_at).toLocaleDateString() : 'Today'}</span>
+                <span className="text-slate-400">Report Tier:</span>
+                <span className="text-[#FF6500] font-bold capitalize">{reportTier === 'summary' ? 'Concise Debrief' : 'Full Diagnostic'}</span>
               </span>
             </div>
 
@@ -257,8 +309,8 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           </div>
         </div>
 
-        {/* Stage Timing Telemetry Breakdown (Parallel & Layer Metrics) */}
-        {report.stage_timing_ms && (
+        {/* Stage Timing Telemetry Breakdown (Parallel & Layer Metrics - Facilitator Detailed View Only) */}
+        {reportTier === 'detailed' && report.stage_timing_ms && (
           <div className="mt-6 rounded-2xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C]/90 p-4 shadow-sm print:hidden">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 dark:border-[#1E3E62] pb-2.5">
               <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
@@ -307,7 +359,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           </div>
         )}
 
-        {/* Micro-Debrief (Top Strength + Key Adjustment) */}
+        {/* Micro-Debrief (Top Strength + Key Adjustment - Always Visible) */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="rounded-2xl border-2 border-emerald-500/50 bg-emerald-50/90 dark:bg-emerald-950/40 p-5 shadow-sm">
             <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
@@ -330,61 +382,69 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           </div>
         </div>
 
-        {/* Recommended Phrasing Options */}
-        <div className="print-card print-avoid-break mt-8 rounded-2xl border-2 border-[#FF6500]/60 bg-gradient-to-br from-[#FF6500]/10 via-amber-500/5 to-transparent p-6 shadow-sm">
-          <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#FF6500]">
-            <Award className="h-4 w-4" />
-            <span>Recommended Response Strategies</span>
-          </div>
-          <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
-            Proven executive response strategies demonstrating structured de-escalation and alignment.
-          </p>
-
-          <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
-                <span className="text-[#FF6500] font-black">Discovery-Led</span>
-                <span className="rounded bg-[#FF6500]/15 px-2 py-0.5 text-[10px] text-[#FF6500] font-black">Empathy</span>
+        {/* Detailed Insights: Phrasing & Hidden Agenda (Detailed Dossier Only) */}
+        {reportTier === 'detailed' && (
+          <>
+            {/* Recommended Phrasing Options */}
+            <div className="print-card print-avoid-break mt-8 rounded-2xl border-2 border-[#FF6500]/60 bg-gradient-to-br from-[#FF6500]/10 via-amber-500/5 to-transparent p-6 shadow-sm">
+              <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#FF6500]">
+                <Award className="h-4 w-4" />
+                <span>Recommended Response Strategies</span>
               </div>
-              <blockquote className="mt-2 text-sm font-semibold text-slate-900 dark:text-white leading-relaxed italic border-l-2 border-[#FF6500] pl-3 py-0.5">
-                "{report.key_moments?.[0]?.alternative_phrasing || 'I hear your concern. Before we finalize next steps, can you walk me through the primary operational hurdles you see?'}"
-              </blockquote>
-              <p className="mt-2.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                <strong className="text-slate-800 dark:text-slate-200">Why it works: </strong>
-                {report.key_moments?.[0]?.reasoning || 'Validates the counterpart perspective before pushing for commitments.'}
+              <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
+                Proven executive response strategies demonstrating structured de-escalation and alignment.
               </p>
+
+              <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <span className="text-[#FF6500] font-black">Discovery-Led</span>
+                    <span className="rounded bg-[#FF6500]/15 px-2 py-0.5 text-[10px] text-[#FF6500] font-black">Empathy</span>
+                  </div>
+                  <blockquote className="mt-2 text-sm font-semibold text-slate-900 dark:text-white leading-relaxed italic border-l-2 border-[#FF6500] pl-3 py-0.5">
+                    "{report.key_moments?.[0]?.alternative_phrasing || 'I hear your concern. Before we finalize next steps, can you walk me through the primary operational hurdles you see?'}"
+                  </blockquote>
+                  <p className="mt-2.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                    <strong className="text-slate-800 dark:text-slate-200">Why it works: </strong>
+                    {report.key_moments?.[0]?.reasoning || 'Validates the counterpart perspective before pushing for commitments.'}
+                  </p>
+                </div>
+
+                <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm">
+                  <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
+                    <span className="text-teal-600 dark:text-teal-400 font-black">Alignment-Led</span>
+                    <span className="rounded bg-teal-500/15 px-2 py-0.5 text-[10px] text-teal-600 dark:text-teal-400 font-black">Structured</span>
+                  </div>
+                  <blockquote className="mt-2 text-sm font-semibold text-slate-900 dark:text-white leading-relaxed italic border-l-2 border-teal-500 pl-3 py-0.5">
+                    "{report.key_moments?.[1]?.alternative_phrasing || 'Let us anchor on our shared priority. If we resolve the bandwidth constraint first, what specific benchmark needs to be met to proceed?'}"
+                  </blockquote>
+                  <p className="mt-2.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                    <strong className="text-slate-800 dark:text-slate-200">Why it works: </strong>
+                    {report.key_moments?.[1]?.reasoning || 'Anchors the conversation around objective business criteria.'}
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
-                <span className="text-teal-600 dark:text-teal-400 font-black">Alignment-Led</span>
-                <span className="rounded bg-teal-500/15 px-2 py-0.5 text-[10px] text-teal-600 dark:text-teal-400 font-black">Structured</span>
+            {/* Counterpart Perspective */}
+            <div className="print-card print-avoid-break mt-8 rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-slate-50 dark:bg-[#0B192C] p-5">
+              <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
+                <Eye className="h-4 w-4" />
+                <span>Counterpart Priorities & Mindset</span>
               </div>
-              <blockquote className="mt-2 text-sm font-semibold text-slate-900 dark:text-white leading-relaxed italic border-l-2 border-teal-500 pl-3 py-0.5">
-                "{report.key_moments?.[1]?.alternative_phrasing || 'Let us anchor on our shared priority. If we resolve the bandwidth constraint first, what specific benchmark needs to be met to proceed?'}"
-              </blockquote>
-              <p className="mt-2.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                <strong className="text-slate-800 dark:text-slate-200">Why it works: </strong>
-                {report.key_moments?.[1]?.reasoning || 'Anchors the conversation around objective business criteria.'}
+              <p className="mt-2 text-base text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
+                {report.hidden_reveal}
               </p>
             </div>
-          </div>
-        </div>
-
-        {/* Counterpart Perspective */}
-        <div className="print-card print-avoid-break mt-8 rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-slate-50 dark:bg-[#0B192C] p-5">
-          <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
-            <Eye className="h-4 w-4" />
-            <span>Counterpart Priorities & Mindset</span>
-          </div>
-          <p className="mt-2 text-base text-slate-800 dark:text-slate-200 leading-relaxed font-medium">
-            {report.hidden_reveal}
-          </p>
-        </div>
+          </>
+        )}
       </div>
 
-      {/* Competency Scores */}
-      <div className="print-section mt-8">
+      {/* Detailed Diagnostic Sections (Competencies, Quoted Moments, Key Exchanges) */}
+      {reportTier === 'detailed' && (
+        <>
+          {/* Competency Scores */}
+          <div className="print-section mt-8">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center space-x-2 font-heading">
           <Target className="h-5 w-5 text-[#FF6500]" />
           <span>Competency Assessment</span>
@@ -534,9 +594,11 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           ))}
         </div>
       </div>
+    </>
+  )}
 
       {/* Action Plan */}
-      <div className="print-section mt-8 rounded-3xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-8 shadow-xl print:p-4">
+      <div className="print-section mt-8 rounded-3xl border border-slate-200 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-8 shadow-xl ring-1 ring-slate-100 dark:ring-0 print:p-4 print:ring-0">
         <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
           <TrendingUp className="h-4 w-4" />
           <span>Action Plan</span>
@@ -585,9 +647,35 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
         </div>
       </div>
 
-      {/* Complete Transcript */}
-      {session && session.messages && session.messages.length > 0 && (
-        <div className="print-section mt-8 rounded-3xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-8 shadow-xl print:p-4">
+      {/* Facilitator Archive Notice Card (Student Summary View) */}
+      {reportTier === 'summary' && (
+        <div className="print:hidden mt-8 rounded-3xl border-2 border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-6 sm:p-8 text-center shadow-sm">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FF6500]/15 text-[#FF6500] mb-3 border border-[#FF6500]/30 shadow-inner">
+            <Shield className="h-6 w-6" />
+          </div>
+          <h3 className="text-lg font-black text-slate-900 dark:text-white font-heading">
+            Full Diagnostic Dossier & Transcripts Delivered to Facilitator
+          </h3>
+          <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl mx-auto leading-relaxed font-medium">
+            Your comprehensive assessment—including all 4 competency scores, quoted dialogue exchanges, counterpart hidden agenda reveal, and verbatim transcripts—is securely archived for your 3H Solutions Executive Facilitator (Uzair).
+          </p>
+          <div className="mt-5 flex items-center justify-center">
+            <button
+              type="button"
+              id="preview-full-dossier-btn"
+              onClick={() => setReportTier('detailed')}
+              className="flex items-center space-x-2 rounded-xl bg-white dark:bg-[#132B45] border-2 border-[#FF6500] hover:bg-[#FF6500] text-slate-800 dark:text-white hover:text-white px-5 py-2.5 text-xs font-bold transition shadow-sm"
+            >
+              <Eye className="h-4 w-4 text-[#FF6500] group-hover:text-white" />
+              <span>Preview Full Diagnostic Dossier</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Complete Transcript (Detailed Dossier) */}
+      {(reportTier === 'detailed') && session && session.messages && session.messages.length > 0 && (
+        <div className="print-section mt-8 rounded-3xl border border-slate-200 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-8 shadow-xl print:p-4 print:border-slate-300">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#1E3E62] pb-4">
             <div>
               <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">

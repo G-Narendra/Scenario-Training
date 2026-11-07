@@ -99,7 +99,17 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
     { key: 'Influence & Executive Presence', label: 'Influence & Executive Presence' },
   ];
 
+  const difficultyOrder: Record<string, number> = {
+    Normal: 1,
+    Challenging: 2,
+    Crisis: 3,
+  };
+
   const filteredCapabilities = capabilities.filter((cap) => {
+    if (difficultyFilter !== 'all') {
+      const capDifficulty = cap.matching_scenario_difficulty_level || (cap.matching_scenario_difficulty <= 1 ? 'Normal' : cap.matching_scenario_difficulty <= 3 ? 'Challenging' : 'Crisis');
+      if (capDifficulty !== difficultyFilter) return false;
+    }
     if (selectedPillar !== 'all') {
       const capPillar = (cap.pillar || '').toLowerCase().trim();
       const sel = selectedPillar.toLowerCase().trim();
@@ -133,6 +143,14 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
     return true;
   });
 
+  const sortedCapabilities = [...filteredCapabilities].sort((a, b) => {
+    const aTier = a.matching_scenario_difficulty_level || (a.matching_scenario_difficulty <= 1 ? 'Normal' : a.matching_scenario_difficulty <= 3 ? 'Challenging' : 'Crisis');
+    const bTier = b.matching_scenario_difficulty_level || (b.matching_scenario_difficulty <= 1 ? 'Normal' : b.matching_scenario_difficulty <= 3 ? 'Challenging' : 'Crisis');
+    const diff = (difficultyOrder[aTier] || 2) - (difficultyOrder[bTier] || 2);
+    if (diff !== 0) return diff;
+    return (a.number || 0) - (b.number || 0);
+  });
+
   const filteredScenarios = scenarios.filter((s) => {
     if (difficultyFilter !== 'all') {
       const tier = s.difficulty_level || (s.difficulty <= 1 ? 'Normal' : s.difficulty <= 3 ? 'Challenging' : 'Crisis');
@@ -148,6 +166,18 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
     }
     return true;
   });
+
+  const sortedScenarios = [...filteredScenarios].sort((a, b) => {
+    const aTier = sTier(a);
+    const bTier = sTier(b);
+    const diff = (difficultyOrder[aTier] || 2) - (difficultyOrder[bTier] || 2);
+    if (diff !== 0) return diff;
+    return a.difficulty - b.difficulty;
+  });
+
+  function sTier(s: ScenarioListItem) {
+    return s.difficulty_level || (s.difficulty <= 1 ? 'Normal' : s.difficulty <= 3 ? 'Challenging' : 'Crisis');
+  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -190,106 +220,146 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
         </div>
       </div>
 
+      {/* Welcome Hero — only show in capabilities mode for clean entry */}
+      {viewMode === 'capabilities' && (
+        <div className="mt-6 rounded-2xl border border-slate-200 dark:border-[#1E3E62] bg-gradient-to-br from-[#0B192C] via-[#1E3E62] to-[#0B192C] p-6 sm:p-8 text-white shadow-lg">
+          <p className="text-xs font-bold uppercase tracking-wider text-[#FF6500]">Executive Training Curriculum · Competency Framework</p>
+          <p className="mt-2 text-sm text-slate-300 leading-relaxed max-w-3xl">
+            Every capability below represents an executive competency taught in the 3H Solutions curriculum and is mapped to a dedicated practice scenario. Click <strong className="text-white">Practice Scenario</strong> on any item to review its executive briefing and begin deliberate practice.
+          </p>
+          <div className="mt-4 flex flex-wrap items-center gap-3 text-xs font-bold">
+            <span className="flex items-center space-x-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5">
+              <span className="text-[#FF6500]">📋</span>
+              <span>{capabilities.length || 25} Scenarios</span>
+            </span>
+            <span className="flex items-center space-x-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5">
+              <span className="text-[#FF6500]">🏛️</span>
+              <span>6 Competency Pillars</span>
+            </span>
+            <span className="flex items-center space-x-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5">
+              <span className="text-[#FF6500]">🎯</span>
+              <span>3 Difficulty Levels</span>
+            </span>
+            <span className="flex items-center space-x-1.5 rounded-lg bg-white/10 backdrop-blur-sm border border-white/20 px-3 py-1.5">
+              <span className="text-[#FF6500]">🔒</span>
+              <span>10 Practice Attempts</span>
+            </span>
+          </div>
+        </div>
+      )}
+
       {/* View Mode Switcher: Capabilities vs Practice Scenarios */}
       <div className="mt-6 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-[#1E3E62] pb-4">
-        <div className="flex items-center space-x-2">
-          <button
-            id="view-mode-capabilities-btn"
-            onClick={() => setViewMode('capabilities')}
-            className={`flex items-center space-x-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
-              viewMode === 'capabilities'
-                ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/20'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#0B192C] dark:text-slate-300 dark:hover:bg-[#1E3E62]'
-            }`}
-          >
-            <Sparkles className="h-4 w-4" />
-            <span>Capability Curriculum</span>
-          </button>
+        <div>
+          <div className="flex items-center space-x-2">
+            <button
+              id="view-mode-capabilities-btn"
+              onClick={() => setViewMode('capabilities')}
+              className={`flex items-center space-x-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+                viewMode === 'capabilities'
+                  ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/20'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#0B192C] dark:text-slate-300 dark:hover:bg-[#1E3E62]'
+              }`}
+            >
+              <Sparkles className="h-4 w-4" />
+              <span>Capability Curriculum</span>
+            </button>
 
-          <button
-            id="view-mode-scenarios-btn"
-            onClick={() => setViewMode('scenarios')}
-            className={`flex items-center space-x-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
-              viewMode === 'scenarios'
-                ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/20'
-                : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#0B192C] dark:text-slate-300 dark:hover:bg-[#1E3E62]'
-            }`}
-          >
-            <BookOpen className="h-4 w-4" />
-            <span>Practice Scenarios</span>
-          </button>
+            <button
+              id="view-mode-scenarios-btn"
+              onClick={() => setViewMode('scenarios')}
+              className={`flex items-center space-x-2 rounded-xl px-4 py-2 text-xs font-bold transition ${
+                viewMode === 'scenarios'
+                  ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/20'
+                  : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#0B192C] dark:text-slate-300 dark:hover:bg-[#1E3E62]'
+              }`}
+            >
+              <BookOpen className="h-4 w-4" />
+              <span>Practice Scenarios</span>
+            </button>
+          </div>
+          <p className="mt-2 text-xs text-slate-500 dark:text-slate-400 font-medium">
+            {viewMode === 'capabilities'
+              ? 'Core leadership & sales capabilities mapped to deliberate practice simulations.'
+              : 'Authentic workplace dialogue exercises with simulated counterparts.'}
+          </p>
         </div>
 
-        {viewMode === 'scenarios' ? (
-          /* Track & Difficulty Filters for Scenarios (Dropdowns) */
-          <div className="flex flex-wrap items-center gap-3">
-            <div className="flex items-center space-x-2 bg-white dark:bg-[#132B45] border-2 border-slate-300 dark:border-[#1E3E62] rounded-xl px-3 py-1.5 shadow-sm">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Track:</span>
-              <select
-                id="scenario-track-filter"
-                value={trackFilter}
-                onChange={(e) => setTrackFilter(e.target.value)}
-                className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-2"
-              >
-                <option value="all" className="dark:bg-[#0B192C]">All Scenarios</option>
-                <option value="leadership" className="dark:bg-[#0B192C]">Leadership</option>
-                <option value="sales" className="dark:bg-[#0B192C]">Sales</option>
-              </select>
-            </div>
-
-            <div className="flex items-center space-x-2 bg-white dark:bg-[#132B45] border-2 border-slate-300 dark:border-[#1E3E62] rounded-xl px-3 py-1.5 shadow-sm">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Difficulty:</span>
-              <select
-                id="scenario-difficulty-filter"
-                value={difficultyFilter}
-                onChange={(e) => setDifficultyFilter(e.target.value)}
-                className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-2"
-              >
-                <option value="all" className="dark:bg-[#0B192C]">All Levels</option>
-                <option value="Normal" className="dark:bg-[#0B192C]">Level 1: Normal</option>
-                <option value="Challenging" className="dark:bg-[#0B192C]">Level 2: Challenging</option>
-                <option value="Crisis" className="dark:bg-[#0B192C]">Level 3: Crisis</option>
-              </select>
-            </div>
-          </div>
-        ) : (
-          /* Pillar Dropdown Filter for Capabilities */
+        {/* Dynamic Filters Bar */}
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Track / Focus Area Dropdown (Available in both views) */}
           <div className="flex items-center space-x-2 bg-white dark:bg-[#132B45] border-2 border-slate-300 dark:border-[#1E3E62] rounded-xl px-3 py-1.5 shadow-sm">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Pillar:</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Focus:</span>
             <select
-              id="capability-pillar-filter"
-              value={selectedPillar}
-              onChange={(e) => setSelectedPillar(e.target.value)}
+              id="scenario-track-filter"
+              value={trackFilter}
+              onChange={(e) => setTrackFilter(e.target.value)}
               className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-2"
             >
-              {pillars.map((p) => (
-                <option key={p.key} value={p.key} className="dark:bg-[#0B192C]">
-                  {p.label}
-                </option>
-              ))}
+              <option value="all" className="dark:bg-[#0B192C]">All Focus Areas</option>
+              <option value="leadership" className="dark:bg-[#0B192C]">Executive Leadership</option>
+              <option value="sales" className="dark:bg-[#0B192C]">Enterprise Sales</option>
             </select>
           </div>
-        )}
+
+          {/* In Capabilities Mode: Pillar Filter */}
+          {viewMode === 'capabilities' && (
+            <div className="flex items-center space-x-2 bg-white dark:bg-[#132B45] border-2 border-slate-300 dark:border-[#1E3E62] rounded-xl px-3 py-1.5 shadow-sm">
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Pillar:</span>
+              <select
+                id="capability-pillar-filter"
+                value={selectedPillar}
+                onChange={(e) => setSelectedPillar(e.target.value)}
+                className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-2 max-w-[180px] sm:max-w-none truncate"
+              >
+                {pillars.map((p) => (
+                  <option key={p.key} value={p.key} className="dark:bg-[#0B192C]">
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
+
+          {/* Difficulty Level Dropdown (Available in both views per Uzair's request) */}
+          <div className="flex items-center space-x-2 bg-white dark:bg-[#132B45] border-2 border-slate-300 dark:border-[#1E3E62] rounded-xl px-3 py-1.5 shadow-sm">
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Difficulty:</span>
+            <select
+              id="catalog-difficulty-filter"
+              value={difficultyFilter}
+              onChange={(e) => setDifficultyFilter(e.target.value)}
+              className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-2"
+            >
+              <option value="all" className="dark:bg-[#0B192C]">All Levels</option>
+              <option value="Normal" className="dark:bg-[#0B192C]">Level 1: Normal</option>
+              <option value="Challenging" className="dark:bg-[#0B192C]">Level 2: Challenging</option>
+              <option value="Crisis" className="dark:bg-[#0B192C]">Level 3: Crisis</option>
+            </select>
+          </div>
+        </div>
       </div>
 
       {/* Main Grid View */}
       {loading ? (
-        <div className="flex h-64 items-center justify-center">
-          <div className="h-8 w-8 animate-spin rounded-full border-4 border-[#FF6500] border-t-transparent" />
+        <div className="flex h-96 flex-col items-center justify-center space-y-3">
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#FF6500] border-t-transparent" />
+          <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 animate-pulse">
+            Loading executive curriculum & scenarios...
+          </p>
         </div>
       ) : viewMode === 'capabilities' ? (
         <div className="mt-8 space-y-6">
           <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
-            {filteredCapabilities.map((cap) => (
+            {sortedCapabilities.map((cap) => (
               <div
                 key={cap.key}
                 id={`capability-card-${cap.key}`}
-                className="group flex flex-col justify-between rounded-2xl border-2 border-slate-300 bg-white p-6 shadow-sm dark:border-[#2D5B8D] dark:bg-[#132B45] transition-all duration-200 hover:-translate-y-1 hover:border-[#FF6500] hover:shadow-xl"
+                className="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-6 shadow-md ring-1 ring-slate-100 dark:border-[#2D5B8D] dark:bg-[#132B45] dark:ring-0 transition-all duration-200 hover:-translate-y-1 hover:border-[#FF6500] hover:shadow-2xl hover:ring-[#FF6500]/20"
               >
                 <div>
-                  {/* Top Bar: Pillar Tag */}
+                  {/* Top Bar: Pillar Tag without truncation so full title is visible */}
                   <div className="flex items-center justify-between gap-2">
-                    <span className="rounded-md bg-amber-500/10 dark:bg-[#0B192C] border border-[#FF6500]/30 px-2.5 py-0.5 text-[11px] font-bold text-[#FF6500] uppercase tracking-wider truncate max-w-[200px]">
+                    <span className="rounded-md bg-amber-500/10 dark:bg-[#0B192C] border border-[#FF6500]/30 px-2.5 py-0.5 text-[11px] font-bold text-[#FF6500] uppercase tracking-wider">
                       {cap.pillar}
                     </span>
                   </div>
@@ -373,12 +443,12 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
         /* SCENARIO CATALOG GRID                                                     */
         /* ========================================================================= */
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {filteredScenarios.map((scen) => (
+          {sortedScenarios.map((scen) => (
             <div
               key={scen.id}
               id={`scenario-card-${scen.slug}`}
               onClick={() => handleOpenBriefing(scen.id)}
-              className="group flex flex-col justify-between cursor-pointer rounded-2xl border-2 border-slate-300 bg-white p-6 shadow-sm dark:border-[#2D5B8D] dark:bg-[#132B45] transition-all duration-200 hover:-translate-y-1 hover:border-[#FF6500] hover:shadow-xl"
+              className="group flex flex-col justify-between cursor-pointer rounded-2xl border border-slate-200 bg-white p-6 shadow-md ring-1 ring-slate-100 dark:border-[#2D5B8D] dark:bg-[#132B45] dark:ring-0 transition-all duration-200 hover:-translate-y-1 hover:border-[#FF6500] hover:shadow-2xl hover:ring-[#FF6500]/20"
             >
               <div>
                 {/* Card Top: Topic & Difficulty Badge */}
