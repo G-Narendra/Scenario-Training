@@ -11,7 +11,7 @@ export const Footer: React.FC = () => {
     },
     {
       q: 'How many practice attempts do I have?',
-      a: 'Each participant is allocated up to 10 deliberate practice sessions per cohort. Attempts are recorded and monitored to ensure focused, intentional engagement.',
+      a: 'Each enrolled participant is allocated up to 2 deliberate practice runs per scenario to ensure high-stakes, focused preparation. Attempts are recorded and monitored via cohort access controls.',
     },
     {
       q: 'What reports do I receive after a scenario?',

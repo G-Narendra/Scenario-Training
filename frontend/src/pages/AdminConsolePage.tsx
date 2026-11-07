@@ -257,10 +257,10 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
 
   const handleResetAttempts = async (userId: string, name: string) => {
     if (!cohort) return;
-    if (!confirm(`Reset scenario practice attempts for "${name}"? This will grant a fresh 10 attempts.`)) return;
+    if (!confirm(`Reset scenario practice attempts for "${name}"? This will restore 2 fresh practice attempts per scenario.`)) return;
     try {
       await api.resetCohortMemberAttempts(cohort.id, userId);
-      showFeedback(`Practice attempts for "${name}" reset to 10 chances.`);
+      showFeedback(`Practice attempts for "${name}" reset to 0 (2 fresh runs available).`);
       await loadAdminData(cohort.id);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : 'Failed to reset attempts';
@@ -1054,7 +1054,7 @@ conclusion_signals:
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="rounded-xl bg-slate-50 dark:bg-[#0B192C] p-3 border border-slate-200 dark:border-[#1E3E62]">
                     <span className="text-xs text-slate-500 font-bold uppercase">Attempts / Participant</span>
-                    <div className="text-lg font-bold text-[#FF6500] mt-1">10 Attempts</div>
+                    <div className="text-lg font-bold text-[#FF6500] mt-1">Max 2 Runs / Scenario</div>
                   </div>
 
                   <div className="rounded-xl bg-slate-50 dark:bg-[#0B192C] p-3 border border-slate-200 dark:border-[#1E3E62]">
@@ -1541,7 +1541,7 @@ conclusion_signals:
                     Chances / Scenario
                   </label>
                   <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-100 dark:bg-[#0B192C] px-3 py-2 text-xs font-bold text-[#FF6500]">
-                    10 Attempts
+                    2 Practice Runs
                   </div>
                 </div>
               </div>
