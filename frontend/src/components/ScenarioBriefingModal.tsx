@@ -275,12 +275,17 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
               </span>
             ) : (
               <>
-                <span className="font-bold text-slate-900 dark:text-white">{completedAttemptsCount} of 2</span> practice runs completed
-                {remainingAttempts > 0 ? (
-                  <span className="ml-1 text-[#FF6500] font-bold">({remainingAttempts} remaining)</span>
-                ) : (
-                  <span className="ml-1 text-rose-500 font-bold">(Max 2 runs completed)</span>
-                )}
+                <div className="flex items-center space-x-1.5 font-bold text-slate-900 dark:text-white">
+                  <span>{completedAttemptsCount} of 2 Practice Runs Completed</span>
+                  {remainingAttempts > 0 ? (
+                    <span className="text-[#FF6500]">({remainingAttempts} remaining)</span>
+                  ) : (
+                    <span className="text-rose-500">(Max 2 runs completed)</span>
+                  )}
+                </div>
+                <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-0.5">
+                  Run 1: Diagnostic Baseline • Run 2: Mastery Application
+                </div>
               </>
             )}
           </div>

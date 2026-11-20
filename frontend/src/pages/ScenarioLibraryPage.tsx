@@ -225,6 +225,33 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
         </div>
       </div>
 
+      {/* Executive Participant Orientation Banner */}
+      <div className="mt-5 rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-gradient-to-r from-slate-50 via-white to-blue-50/40 dark:from-[#0B192C] dark:via-[#0F243A] dark:to-[#132B45] p-5 shadow-sm">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div className="space-y-1">
+            <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#0B192C] dark:text-[#FF6500]">
+              <Sparkles className="h-4 w-4 text-[#FF6500]" />
+              <span>Participant Orientation & Practice Guide</span>
+            </div>
+            <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-heading">
+              Executive Deliberate Practice Method
+            </h2>
+            <p className="text-xs text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed font-medium">
+              Explore the <strong>60 core executive competencies</strong> across 6 leadership pillars. In each simulation, you conduct interactive written or speech dialogue with an authentic counterpart. 
+              <strong> 2 Practice Runs</strong> per scenario: Run 1 benchmarks your baseline instincts; Run 2 applies targeted adjustments for executive distinction.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
+            <span className="rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm">
+              Max 2 Runs / Scenario
+            </span>
+            <span className="rounded-xl bg-[#0B192C] text-white dark:bg-[#FF6500] px-3 py-1.5 text-xs font-bold shadow-sm">
+              6 Pillars • 60 Scenarios
+            </span>
+          </div>
+        </div>
+      </div>
+
       {/* View Mode Switcher: Capabilities vs Practice Scenarios */}
       <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-[#1E3E62] pb-4">
         <div className="flex items-center space-x-2">
@@ -251,7 +278,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
             }`}
           >
             <BookOpen className="h-4 w-4" />
-            <span>Practice Scenarios (25)</span>
+            <span>Practice Scenarios ({scenarios.length || 60})</span>
           </button>
         </div>
 

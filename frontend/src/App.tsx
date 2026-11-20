@@ -11,6 +11,7 @@ import { api } from './api/client';
 import { SimulationSession } from './types';
 import { ProgressPage } from './pages/ProgressPage';
 import { AdminConsolePage } from './pages/AdminConsolePage';
+import { WhatsAppWidget } from './components/WhatsAppWidget';
 
 export type ViewMode = 'tracks' | 'scenarios' | 'chat' | 'evaluation' | 'progress' | 'admin';
 
@@ -339,7 +340,7 @@ const AppContent: React.FC = () => {
                     setAttemptLimitMessage(null);
                     navigateTo('scenarios');
                   }}
-                  className="w-full rounded-xl bg-[#FF6500] hover:bg-[#E05A00] py-2.5 text-sm font-bold text-white shadow-md transition"
+                  className="w-full rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] py-2.5 text-sm font-bold shadow-md transition"
                 >
                   Return to Scenarios
                 </button>
@@ -357,6 +358,7 @@ const AppContent: React.FC = () => {
           </div>
         )}
       </main>
+      {currentView !== 'chat' && <WhatsAppWidget />}
       {currentView !== 'chat' && <Footer />}
     </div>
   );

@@ -138,7 +138,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           <button
             id="retry-evaluation-btn"
             onClick={loadEvaluation}
-            className="rounded-xl bg-[#FF6500] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#E05A00] transition shadow-lg shadow-[#FF6500]/30"
+            className="rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-6 py-2.5 text-sm font-semibold transition shadow-md"
           >
             Retry Report
           </button>
@@ -745,7 +745,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           {session && onRetryScenario && (
             <button
               onClick={() => onRetryScenario(session.scenario_id)}
-              className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-[#FF6500]/25 transition"
+              className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-5 py-2.5 text-xs font-bold transition shadow-md"
             >
               <RotateCcw className="h-4 w-4" />
               <span>Retry Scenario</span>

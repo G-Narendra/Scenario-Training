@@ -46,8 +46,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                     onClick={() => onNavigate('admin')}
                     className={`flex items-center space-x-1.5 rounded-lg px-2.5 sm:px-3.5 py-1.5 text-xs font-bold transition ${
                       currentView === 'admin'
-                        ? 'bg-[#FF6500] text-white shadow-sm shadow-[#FF6500]/30'
-                        : 'text-slate-700 hover:bg-slate-200 hover:text-[#FF6500] dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-[#FF6500]'
+                        ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-sm'
+                        : 'text-slate-700 hover:bg-slate-200 hover:text-[#0B192C] dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-[#FF6500]'
                     }`}
                   >
                     <ShieldCheck className="h-3.5 w-3.5" />
@@ -59,7 +59,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                     onClick={() => onNavigate('scenarios')}
                     className={`rounded-lg px-2.5 sm:px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
                       currentView === 'scenarios' || currentView === 'tracks'
-                        ? 'bg-[#FF6500] text-white shadow-sm shadow-[#FF6500]/30'
+                        ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-sm'
                         : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-white'
                     }`}
                   >
@@ -73,7 +73,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                     onClick={() => onNavigate('scenarios')}
                     className={`rounded-lg px-2.5 sm:px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
                       currentView === 'scenarios' || currentView === 'tracks'
-                        ? 'bg-[#FF6500] text-white shadow-sm shadow-[#FF6500]/30'
+                        ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-sm'
                         : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-white'
                     }`}
                   >
@@ -85,7 +85,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                     onClick={() => onNavigate('progress')}
                     className={`rounded-lg px-2.5 sm:px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
                       currentView === 'progress'
-                        ? 'bg-[#FF6500] text-white shadow-sm shadow-[#FF6500]/30'
+                        ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-sm'
                         : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-white'
                     }`}
                   >

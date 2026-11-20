@@ -30,7 +30,7 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FF6500] text-white shadow-md">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-md">
               <Sparkles className="h-7 w-7" />
             </div>
             <div>
@@ -38,7 +38,7 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
                 <h2 className="text-2xl font-black text-slate-900 dark:text-white font-heading">
                   Executive Capability Framework
                 </h2>
-                <span className="rounded-full bg-[#FF6500]/20 px-2.5 py-0.5 text-xs font-bold text-[#FF6500] border border-[#FF6500]/30">
+                <span className="rounded-full bg-[#0B192C]/10 dark:bg-[#FF6500]/20 px-2.5 py-0.5 text-xs font-bold text-[#0B192C] dark:text-[#FF6500] border border-slate-300 dark:border-[#FF6500]/30">
                   Master Curriculum • Strategic Competencies
                 </span>
               </div>
@@ -47,7 +47,7 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-1.5 text-sm font-bold text-[#FF6500] group-hover:translate-x-1 transition-transform whitespace-nowrap">
+          <div className="flex items-center space-x-1.5 text-sm font-bold text-[#0B192C] dark:text-[#FF6500] group-hover:translate-x-1 transition-transform whitespace-nowrap">
             <span>Explore Curriculum</span>
             <ArrowRight className="h-4 w-4" />
           </div>
