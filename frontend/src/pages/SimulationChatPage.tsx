@@ -721,7 +721,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
           className="cursor-pointer bg-gradient-to-r from-[#FF6500] via-orange-600 to-amber-600 text-white px-4 py-3.5 flex items-center justify-between shadow-lg z-30 transition hover:brightness-110 animate-pulse"
         >
           <div className="flex items-center space-x-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm flex-shrink-0 animate-bounce">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm flex-shrink-0">
               <Volume2 className="h-5 w-5 text-white" />
             </div>
             <div>
@@ -1076,8 +1076,8 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                 <div
                   className={`flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl text-xs font-bold shadow-sm avatar-counterpart ${
                     isUser
-                      ? 'bg-[#FF6500] text-white'
-                      : 'bg-[#0B192C] text-white border border-[#1E3E62]'
+                      ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:text-white border border-[#1E3E62]'
+                      : 'bg-[#1E3E62] text-white border border-[#2D5B8D] dark:bg-[#0B192C] dark:border-[#1E3E62]'
                   }`}
                   style={{ color: '#ffffff' }}
                 >
@@ -1086,11 +1086,11 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                   </span>
                 </div>
 
-                {/* Message Bubble */}
+                {/* Message Bubble - Executive Navy Blue in Light Mode, Steel Blue in Dark Mode */}
                 <div
                   className={`max-w-[85%] sm:max-w-[78%] rounded-2xl p-4 shadow-sm min-w-0 break-words overflow-hidden ${
                     isUser
-                      ? 'bg-[#FF6500] text-white rounded-tr-sm font-medium'
+                      ? 'bg-[#0B192C] text-white rounded-tr-sm font-medium dark:bg-[#1E3E62] dark:text-white border border-[#0B192C] dark:border-[#2D5B8D]'
                       : 'border border-slate-300 bg-white text-slate-900 rounded-tl-sm dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-white font-medium'
                   }`}
                 >
@@ -1102,8 +1102,8 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                           {personaName} · {personaRole}
                         </span>
                         {currentlySpeakingSeq === m.seq && (
-                          <span className="flex items-center space-x-1 text-[#FF6500] font-bold normal-case text-[10px] bg-[#FF6500]/10 px-2 py-0.5 rounded-full border border-[#FF6500]/25 animate-pulse">
-                            <Volume2 className="h-3 w-3 animate-bounce" />
+                          <span className="flex items-center space-x-1 text-[#FF6500] font-bold normal-case text-[10px] bg-[#FF6500]/10 px-2 py-0.5 rounded-full border border-[#FF6500]/25">
+                            <Volume2 className="h-3 w-3 animate-pulse" />
                             <span>Talking...</span>
                           </span>
                         )}
@@ -1156,9 +1156,9 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
               <div className="whitespace-pre-line text-sm sm:text-base leading-relaxed text-slate-900 dark:text-white break-words [overflow-wrap:anywhere]">
                 {streamingReply || (
                   <span className="flex items-center space-x-1.5 py-1">
-                    <span className="h-2 w-2 rounded-full bg-[#FF6500] animate-bounce" />
-                    <span className="h-2 w-2 rounded-full bg-[#FF6500] animate-bounce [animation-delay:0.2s]" />
-                    <span className="h-2 w-2 rounded-full bg-[#FF6500] animate-bounce [animation-delay:0.4s]" />
+                    <span className="h-2 w-2 rounded-full bg-[#0B192C] dark:bg-[#FF6500] animate-pulse" />
+                    <span className="h-2 w-2 rounded-full bg-[#0B192C] dark:bg-[#FF6500] animate-pulse [animation-delay:0.2s]" />
+                    <span className="h-2 w-2 rounded-full bg-[#0B192C] dark:bg-[#FF6500] animate-pulse [animation-delay:0.4s]" />
                   </span>
                 )}
                 <span className="inline-block h-4 w-1.5 bg-[#FF6500] ml-1 animate-pulse" />
@@ -1272,7 +1272,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                         : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#0B192C] dark:hover:bg-[#1E3E62] dark:text-slate-300 border-slate-300 dark:border-[#1E3E62]'
                     }`}
                   >
-                    <Mic className={`h-3.5 w-3.5 ${isDictating ? 'text-white animate-bounce' : 'text-[#FF6500]'}`} />
+                    <Mic className={`h-3.5 w-3.5 ${isDictating ? 'text-white animate-pulse' : 'text-[#0B192C] dark:text-[#FF6500]'}`} />
                     <span>{isDictating ? 'Listening...' : 'Speak'}</span>
                   </button>
 

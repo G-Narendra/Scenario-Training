@@ -490,15 +490,15 @@ conclusion_signals:
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 border-b border-slate-300 dark:border-[#1E3E62] pb-6">
         <div>
           <div className="flex items-center space-x-2">
-            <span className="rounded-md bg-[#FF6500]/10 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-[#FF6500] border border-[#FF6500]/30">
+            <span className="rounded-md bg-blue-500/10 px-2.5 py-0.5 text-xs font-black uppercase tracking-wider text-[#0B192C] dark:text-[#60A5FA] border border-blue-500/30">
               Executive Facilitator Console
             </span>
           </div>
           <h1 className="mt-2 text-2xl sm:text-3xl font-black text-slate-900 dark:text-white font-heading tracking-tight">
-            Trainer & Cohort Oversight
+            Executive Facilitator & Cohort Oversight
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 font-medium">
-            Facilitator: <span className="text-[#FF6500] font-bold">Uzair</span> · 3H Solutions Executive Scenario Training Platform
+            Lead Facilitator: <span className="text-[#0B192C] dark:text-[#FF6500] font-bold">Uzair</span> · 3H Solutions Executive Scenario Training Platform
           </p>
         </div>
 
@@ -601,13 +601,13 @@ conclusion_signals:
       {/* KPI Stat Cards Strip */}
       <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Passcode Card with Quick Copy */}
-        <div className="rounded-2xl border-2 border-[#FF6500]/40 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-[#132B45] dark:to-[#0B192C] p-5 shadow-sm flex flex-col justify-between">
+        <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-5 shadow-sm flex flex-col justify-between">
           <div>
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-[#B45309] dark:text-[#FF6500]">
+              <span className="text-xs font-bold uppercase tracking-wider text-[#0B192C] dark:text-[#60A5FA]">
                 Active Cohort Passcode
               </span>
-              <Key className="h-4 w-4 text-[#FF6500]" />
+              <Key className="h-4 w-4 text-[#1E3E62] dark:text-[#60A5FA]" />
             </div>
             <div className="mt-3 flex items-center justify-between">
               <span className="font-mono text-xl font-black text-slate-900 dark:text-white tracking-wider">
@@ -701,18 +701,18 @@ conclusion_signals:
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
-                  <UserPlus className="h-4 w-4 text-[#FF6500]" />
+                  <UserPlus className="h-4 w-4 text-[#0B192C] dark:text-[#FF6500]" />
                   <span>Enroll New Participant into {cohort?.name || 'Cohort'}</span>
                 </h2>
                 <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
-                  Authorized participants can log in using cohort passcode <strong className="text-[#FF6500] font-mono">{cohort?.initial_passcode || (cohort?.name?.toLowerCase().includes('uzair') ? 'UZAIR-2026' : '—')}</strong>.
+                  Authorized participants can log in using cohort passcode <strong className="text-[#0B192C] dark:text-[#FF6500] font-mono">{cohort?.initial_passcode || (cohort?.name?.toLowerCase().includes('uzair') ? 'UZAIR-2026' : '—')}</strong>.
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => setShowBulkAdd(!showBulkAdd)}
-                className="text-xs font-bold text-[#FF6500] hover:underline"
+                className="text-xs font-bold text-[#0B192C] dark:text-[#FF6500] hover:underline"
               >
                 {showBulkAdd ? 'Hide Bulk Paste' : '+ Bulk Paste 15-20 Participant Names'}
               </button>
@@ -767,18 +767,18 @@ conclusion_signals:
           </div>
 
           {/* Top 3 Group Weaknesses Card (Requested by Uzair for Live Group Debriefs) */}
-          <div className="rounded-2xl border-2 border-[#FF6500]/60 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-6 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#FF6500]/30 pb-3">
+          <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 dark:border-[#1E3E62] pb-3">
               <div>
-                <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#FF6500]">
-                  <Target className="h-4 w-4" />
-                  <span>Instructor Group Debrief: Cohort Weaknesses & Live Agenda</span>
+                <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#0B192C] dark:text-[#60A5FA]">
+                  <Target className="h-4 w-4 text-[#1E3E62] dark:text-[#60A5FA]" />
+                  <span>Facilitator Group Debrief: Cohort Trends & Live Coaching Agenda</span>
                 </div>
                 <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
                   Synthesized across all cohort attempts. Use these core gaps as your primary group talking points during live coaching.
                 </p>
               </div>
-              <span className="self-start sm:self-auto rounded-full bg-[#FF6500]/15 border border-[#FF6500]/40 px-3 py-1 text-[11px] font-bold text-[#FF6500]">
+              <span className="self-start sm:self-auto rounded-full bg-blue-500/10 border border-blue-500/30 px-3 py-1 text-[11px] font-bold text-[#0B192C] dark:text-[#60A5FA]">
                 Live Group Focus
               </span>
             </div>

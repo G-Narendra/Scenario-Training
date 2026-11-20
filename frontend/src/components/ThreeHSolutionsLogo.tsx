@@ -91,23 +91,9 @@ export const ThreeHSolutionsLogo: React.FC<ThreeHSolutionsLogoProps> = ({
     </div>
   );
 
-  return (
+  const logoContent = (
     <div className={`flex items-center space-x-3 select-none ${className}`}>
-      {/* 3H Official Logo with cleanly curved corners - clicking logo navigates to 3H official site */}
-      {enableWebsiteLink ? (
-        <a
-          href={websiteUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Visit 3H Solutions official website (www.3hsolutionsgroup.com)"
-          onClick={(e) => e.stopPropagation()}
-          className="flex-shrink-0 cursor-pointer block"
-        >
-          {logoMark}
-        </a>
-      ) : (
-        logoMark
-      )}
+      {logoMark}
 
       {/* Typography */}
       {variant !== 'monogram' && (
@@ -130,5 +116,21 @@ export const ThreeHSolutionsLogo: React.FC<ThreeHSolutionsLogoProps> = ({
       )}
     </div>
   );
+
+  if (enableWebsiteLink) {
+    return (
+      <a
+        href={websiteUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        title="Visit 3H Solutions official corporate website (www.3hsolutionsgroup.com)"
+        className="inline-block transition hover:opacity-90 cursor-pointer"
+      >
+        {logoContent}
+      </a>
+    );
+  }
+
+  return logoContent;
 };
 

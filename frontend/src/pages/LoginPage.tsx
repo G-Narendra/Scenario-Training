@@ -51,6 +51,20 @@ export const LoginPage: React.FC = () => {
 
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden bg-slate-50 dark:bg-[#0B192C] px-4 py-12 sm:px-6 lg:px-8 transition-colors duration-200">
+      {/* Top left official corporate website link */}
+      <div className="absolute top-4 left-4 z-20">
+        <a
+          href="https://www.3hsolutionsgroup.com/"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Visit 3H Solutions official website (www.3hsolutionsgroup.com)"
+          className="flex items-center space-x-2 rounded-xl border border-slate-300 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur-sm transition hover:bg-slate-100 dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-200 dark:hover:bg-[#1E3E62]"
+        >
+          <img src="/logo_3h_solutions.webp" alt="3H Solutions" className="h-4 w-4 object-contain rounded" />
+          <span className="font-bold">3hsolutionsgroup.com</span>
+        </a>
+      </div>
+
       {/* Top right theme toggle */}
       <div className="absolute top-4 right-4 z-20">
         <button

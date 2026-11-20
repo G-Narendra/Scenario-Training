@@ -156,12 +156,12 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
   const overall = report.overall_score ?? 0;
   const scoreTier =
     overall >= 85
-      ? { label: 'Mastery Demonstrated', color: 'text-emerald-600 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30' }
+      ? { label: 'Executive Distinction', color: 'text-emerald-700 dark:text-emerald-400', bg: 'bg-emerald-500/10 border-emerald-500/30' }
       : overall >= 70
-      ? { label: 'Proficient Execution', color: 'text-[#FF6500]', bg: 'bg-[#FF6500]/10 border-[#FF6500]/30' }
+      ? { label: 'Proficient Execution', color: 'text-[#0B192C] dark:text-[#60A5FA]', bg: 'bg-blue-500/10 border-blue-500/30' }
       : overall >= 50
-      ? { label: 'Developing Competency', color: 'text-amber-600 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/30' }
-      : { label: 'Practice Required', color: 'text-rose-600 dark:text-rose-400', bg: 'bg-rose-500/10 border-rose-500/30' };
+      ? { label: 'Developing Competency', color: 'text-amber-700 dark:text-amber-400', bg: 'bg-amber-500/10 border-amber-500/30' }
+      : { label: 'Diagnostic Baseline Established', color: 'text-slate-800 dark:text-slate-200', bg: 'bg-slate-200/80 dark:bg-slate-800 border-slate-300 dark:border-slate-700' };
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 print:p-0 print:max-w-none text-slate-900 dark:text-slate-100">
@@ -278,11 +278,11 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
             </div>
           </div>
           <div className="text-right">
-            <div className="text-4xl font-black text-[#FF6500]">
+            <div className="text-4xl font-black text-[#0B192C] dark:text-white">
               {overall}
               <span className="text-sm font-semibold text-slate-500"> / 100</span>
             </div>
-            <div className="mt-0.5 inline-block rounded border border-amber-300 bg-amber-50 px-2.5 py-0.5 text-xs font-bold text-[#B45309]">
+            <div className="mt-0.5 inline-block rounded-lg border border-slate-300 bg-slate-100 dark:border-[#1E3E62] dark:bg-[#132B45] px-2.5 py-0.5 text-xs font-bold text-slate-800 dark:text-slate-200">
               {scoreTier.label}
             </div>
           </div>
@@ -326,7 +326,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           {/* Radial Score Gauge (Screen only - print uses unified printable header gauge) */}
           <div className="print:hidden flex flex-col items-center justify-center rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-slate-50 dark:bg-[#0B192C] p-6 shadow-inner text-center min-w-[190px]">
             <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-              Overall Score
+              Diagnostic Index
             </span>
             <div className="mt-2 flex items-baseline justify-center">
               <span id="overall-score-display" className={`text-5xl font-black tracking-tight ${scoreTier.color}`}>
@@ -340,8 +340,6 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           </div>
         </div>
 
-
-
         {/* Micro-Debrief (Top Strength + Key Adjustment - Always Visible) */}
         <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="rounded-2xl border-2 border-emerald-500/50 bg-emerald-50/90 dark:bg-emerald-950/40 p-5 shadow-sm">
@@ -354,9 +352,9 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
             </p>
           </div>
 
-          <div className="rounded-2xl border-2 border-[#FF6500] bg-amber-50/90 dark:bg-amber-950/40 p-5 shadow-sm">
-            <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#B45309] dark:text-[#FF6500]">
-              <Target className="h-4 w-4 text-[#FF6500]" />
+          <div className="rounded-2xl border-2 border-[#1E3E62] bg-blue-50/70 dark:bg-[#132B45]/70 p-5 shadow-sm">
+            <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#0B192C] dark:text-[#60A5FA]">
+              <Target className="h-4 w-4 text-[#1E3E62] dark:text-[#60A5FA]" />
               <span>Priority Adjustment</span>
             </div>
             <p className="mt-2 text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-semibold">

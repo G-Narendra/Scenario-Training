@@ -4,7 +4,7 @@ const path = require('path');
 const { chromium } = require(path.resolve(__dirname, '../frontend/node_modules/playwright'));
 const fs = require('fs');
 
-const BASE_URL = 'https://mrdev444-scenario-training-backend.hf.space/app/';
+const BASE_URL = 'http://127.0.0.1:8000/app/';
 const RAW_DIR = path.resolve(__dirname, '../recordings/student_raw');
 const FINAL_DIR = path.resolve(__dirname, '../recordings');
 

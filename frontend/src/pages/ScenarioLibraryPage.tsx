@@ -3,7 +3,7 @@ import { api } from '../api/client';
 import { CapabilityItem, ScenarioDetail, ScenarioListItem } from '../types';
 import { ScenarioBriefingModal } from '../components/ScenarioBriefingModal';
 import { DifficultyBadge } from '../components/DifficultyBadge';
-import { ArrowRight, BookOpen, Clock, Lightbulb, Search, Sparkles } from 'lucide-react';
+import { ArrowRight, BookOpen, Clock, LayoutGrid, Lightbulb, List, Search, Sparkles } from 'lucide-react';
 
 interface ScenarioLibraryPageProps {
   selectedTrack: string;
@@ -22,6 +22,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
   const [mySessions, setMySessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'capabilities' | 'scenarios'>('capabilities');
+  const [layoutMode, setLayoutMode] = useState<'grid' | 'list'>('grid');
   const [trackFilter, setTrackFilter] = useState<string>('all');
   const [difficultyFilter, setDifficultyFilter] = useState<string | 'all'>('all');
   const [selectedPillar, setSelectedPillar] = useState<string | 'all'>('all');
@@ -159,6 +160,18 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
   });
 
   const filteredScenarios = scenarios.filter((s) => {
+    if (trackFilter === 'executive') {
+      const tier = s.difficulty_level || (s.difficulty <= 1 ? 'Normal' : s.difficulty <= 3 ? 'Challenging' : 'Crisis');
+      if (tier === 'Normal' && !s.title.toLowerCase().includes('board') && !s.title.toLowerCase().includes('restruct')) return false;
+    } else if (trackFilter === 'operational') {
+      const tier = s.difficulty_level || (s.difficulty <= 1 ? 'Normal' : s.difficulty <= 3 ? 'Challenging' : 'Crisis');
+      if (tier === 'Crisis') return false;
+    } else if (trackFilter === 'sales') {
+      if (s.track !== 'sales') return false;
+    } else if (trackFilter === 'leadership') {
+      if (s.track === 'sales') return false;
+    }
+
     if (difficultyFilter !== 'all') {
       const tier = s.difficulty_level || (s.difficulty <= 1 ? 'Normal' : s.difficulty <= 3 ? 'Challenging' : 'Crisis');
       if (tier !== difficultyFilter) return false;
@@ -225,34 +238,44 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
         </div>
       </div>
 
-      {/* Executive Participant Orientation Banner */}
+      {/* Executive Participant Orientation & Guide Banner */}
       <div className="mt-5 rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-gradient-to-r from-slate-50 via-white to-blue-50/40 dark:from-[#0B192C] dark:via-[#0F243A] dark:to-[#132B45] p-5 shadow-sm">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="space-y-1">
-            <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#0B192C] dark:text-[#FF6500]">
-              <Sparkles className="h-4 w-4 text-[#FF6500]" />
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+          <div className="space-y-1.5 max-w-3xl">
+            <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#0B192C] dark:text-[#60A5FA]">
+              <Sparkles className="h-4 w-4 text-[#1E3E62] dark:text-[#60A5FA]" />
               <span>Participant Orientation & Practice Guide</span>
             </div>
             <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-heading">
-              Executive Deliberate Practice Method
+              Executive Deliberate Practice Platform
             </h2>
-            <p className="text-xs text-slate-600 dark:text-slate-300 max-w-2xl leading-relaxed font-medium">
-              Explore the <strong>60 core executive competencies</strong> across 6 leadership pillars. In each simulation, you conduct interactive written or speech dialogue with an authentic counterpart. 
-              <strong> 2 Practice Runs</strong> per scenario: Run 1 benchmarks your baseline instincts; Run 2 applies targeted adjustments for executive distinction.
+            <p className="text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed font-medium">
+              Welcome to 3H Solutions Executive Scenario Training. Here you engage in realistic, AI-powered workplace leadership situations—practicing high-stakes conversations, handling objections, and refining executive presence via voice or text in a confidential environment.
             </p>
+            <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold pt-1">
+              Curriculum includes <strong>25 core executive scenarios</strong> mapped to the 60 competencies of Uzair's 3H Leadership Framework.
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 shrink-0">
-            <span className="rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-200 shadow-sm">
-              Max 2 Runs / Scenario
+
+          {/* Core Limits & Structure Badges */}
+          <div className="flex flex-wrap lg:flex-col items-start lg:items-end gap-2 shrink-0">
+            <span className="rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-sm flex items-center space-x-1.5">
+              <span>🎯</span>
+              <span>25 Leadership Scenarios</span>
             </span>
-            <span className="rounded-xl bg-[#0B192C] text-white dark:bg-[#FF6500] px-3 py-1.5 text-xs font-bold shadow-sm">
-              6 Pillars • 60 Scenarios
+            <span className="rounded-xl bg-[#0B192C] text-white dark:bg-[#1E3E62] px-3 py-1.5 text-xs font-bold shadow-sm flex items-center space-x-1.5">
+              <span>🔒</span>
+              <span>10 Attempts Limit / Delegate</span>
+            </span>
+            <span className="rounded-xl border border-blue-500/30 bg-blue-500/10 dark:bg-blue-900/30 px-3 py-1.5 text-xs font-bold text-[#0B192C] dark:text-[#60A5FA] shadow-sm flex items-center space-x-1.5">
+              <span>⚡</span>
+              <span>3 Levels: Normal • Challenging • Crisis</span>
             </span>
           </div>
         </div>
       </div>
 
-      {/* View Mode Switcher: Capabilities vs Practice Scenarios */}
+      {/* View Mode Switcher: Capabilities Framework vs Interactive Simulations */}
       <div className="mt-5 flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 dark:border-[#1E3E62] pb-4">
         <div className="flex items-center space-x-2">
           <button
@@ -263,9 +286,10 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                 ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-md'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#0B192C] dark:text-slate-300 dark:hover:bg-[#1E3E62]'
             }`}
+            title="Browse the 60 3H Executive Competency Definitions"
           >
             <Sparkles className="h-4 w-4" />
-            <span>Capability Curriculum (60)</span>
+            <span>3H Competency Framework (60)</span>
           </button>
 
           <button
@@ -276,26 +300,29 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                 ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-md'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#0B192C] dark:text-slate-300 dark:hover:bg-[#1E3E62]'
             }`}
+            title="Launch Interactive Dialogue Simulations with Counterparts"
           >
             <BookOpen className="h-4 w-4" />
-            <span>Practice Scenarios ({scenarios.length || 60})</span>
+            <span>Interactive Simulations (Start Practice)</span>
           </button>
         </div>
 
         {/* Dynamic Filters Bar */}
         <div className="flex flex-wrap items-center gap-3">
-          {/* Track / Focus Area Dropdown (Available in both views) */}
+          {/* Seniority / Leadership Profile Dropdown (Requested by Uzair) */}
           <div className="flex items-center space-x-2 bg-white dark:bg-[#132B45] border-2 border-slate-300 dark:border-[#1E3E62] rounded-xl px-3 py-1.5 shadow-sm">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Focus:</span>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Profile:</span>
             <select
               id="scenario-track-filter"
               value={trackFilter}
               onChange={(e) => setTrackFilter(e.target.value)}
               className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-2"
             >
-              <option value="all" className="dark:bg-[#0B192C]">All Focus Areas</option>
-              <option value="leadership" className="dark:bg-[#0B192C]">Executive Leadership</option>
-              <option value="sales" className="dark:bg-[#0B192C]">Enterprise Sales</option>
+              <option value="all" className="dark:bg-[#0B192C]">All Leadership Profiles</option>
+              <option value="executive" className="dark:bg-[#0B192C]">Senior Executive & C-Suite</option>
+              <option value="operational" className="dark:bg-[#0B192C]">Operational Leaders & Managers</option>
+              <option value="leadership" className="dark:bg-[#0B192C]">Executive Leadership (All)</option>
+              <option value="sales" className="dark:bg-[#0B192C]">Enterprise Commercial / Sales</option>
             </select>
           </div>
 
@@ -327,12 +354,44 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
               onChange={(e) => setDifficultyFilter(e.target.value)}
               className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-2"
             >
-              <option value="all" className="dark:bg-[#0B192C]">All Levels</option>
+              <option value="all" className="dark:bg-[#0B192C]">All Levels (1 to 3)</option>
               <option value="Normal" className="dark:bg-[#0B192C]">Level 1: Normal</option>
               <option value="Challenging" className="dark:bg-[#0B192C]">Level 2: Challenging</option>
               <option value="Crisis" className="dark:bg-[#0B192C]">Level 3: Crisis</option>
             </select>
           </div>
+
+          {/* Grid vs List View Switcher (Requested by Uzair for Executive Scanning) */}
+          {viewMode === 'scenarios' && (
+            <div className="flex items-center rounded-xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-0.5 shadow-sm">
+              <button
+                id="layout-grid-btn"
+                type="button"
+                onClick={() => setLayoutMode('grid')}
+                title="Grid View (Cards)"
+                className={`p-1.5 rounded-lg transition ${
+                  layoutMode === 'grid'
+                    ? 'bg-[#0B192C] text-white dark:bg-[#FF6500]'
+                    : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                }`}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </button>
+              <button
+                id="layout-list-btn"
+                type="button"
+                onClick={() => setLayoutMode('list')}
+                title="List View (Compact Sequential Roster)"
+                className={`p-1.5 rounded-lg transition ${
+                  layoutMode === 'list'
+                    ? 'bg-[#0B192C] text-white dark:bg-[#FF6500]'
+                    : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
+                }`}
+              >
+                <List className="h-4 w-4" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -429,6 +488,57 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
       ) : filteredScenarios.length === 0 ? (
         <div className="mt-12 rounded-2xl border-2 border-dashed border-slate-300 p-12 text-center text-base text-slate-600 dark:border-[#1E3E62] dark:text-slate-300 font-medium">
           No scenarios found matching your selected filters.
+        </div>
+      ) : layoutMode === 'list' ? (
+        /* ========================================================================= */
+        /* SCENARIO SEQUENTIAL LIST VIEW (Requested by Uzair for Executive Scanning) */
+        /* ========================================================================= */
+        <div className="mt-8 overflow-hidden rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] shadow-sm">
+          <div className="divide-y divide-slate-200 dark:divide-[#1E3E62]">
+            {sortedScenarios.map((scen, idx) => (
+              <div
+                key={scen.id}
+                id={`scenario-row-${scen.slug}`}
+                onClick={() => handleOpenBriefing(scen.id)}
+                className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-[#0B192C]/50 cursor-pointer transition group"
+              >
+                <div className="flex items-start sm:items-center space-x-3.5">
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-[#0B192C] font-mono text-xs font-black text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#1E3E62]">
+                    {idx + 1}
+                  </span>
+                  <div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#0B192C] dark:group-hover:text-[#FF6500]">
+                        {scen.title}
+                      </h3>
+                      <DifficultyBadge difficulty={scen.difficulty} difficultyLevel={scen.difficulty_level} size="sm" />
+                    </div>
+                    <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-slate-500 dark:text-slate-400">
+                      <span className="capitalize font-semibold text-slate-700 dark:text-slate-300">
+                        {scen.topic.replace(/_/g, ' ')}
+                      </span>
+                      <span>•</span>
+                      <span>🎯 Skill: {scen.primary_capability || scen.target_capabilities?.[0] || 'Leadership'}</span>
+                      <span>•</span>
+                      <span>⏱️ ~{Math.round(scen.duration_limit_seconds / 60)} min</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleOpenBriefing(scen.id);
+                  }}
+                  className="flex-shrink-0 flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-4 py-2 text-xs font-bold transition shadow-sm"
+                >
+                  <span>Start Practice</span>
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         /* ========================================================================= */

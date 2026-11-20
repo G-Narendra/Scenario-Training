@@ -214,7 +214,7 @@ def audit_student_code() -> list:
     """Scans codebase for beginner / student anti-patterns."""
     findings = []
     scan_exts = {".py", ".ts", ".tsx", ".js", ".jsx"}
-    ignore_dirs = {".git", ".venv", "node_modules", "dist", "build", ".mypy_cache", ".ruff_cache", "__pycache__", "reviews", "outputs"}
+    ignore_dirs = {".git", ".venv", "node_modules", "dist", "build", ".mypy_cache", ".ruff_cache", "__pycache__", "reviews", "outputs", "Master", "recordings"}
 
     for root, dirs, files in os.walk(ROOT_DIR):
         dirs[:] = [d for d in dirs if d not in ignore_dirs]
@@ -246,7 +246,7 @@ def audit_ai_slop() -> list:
     """Scans documentation, comments, and copy for AI slop patterns."""
     findings = []
     scan_exts = {".md", ".py", ".ts", ".tsx", ".js", ".jsx"}
-    ignore_dirs = {".git", ".venv", "node_modules", "dist", "build", ".mypy_cache", ".ruff_cache", "__pycache__", "reviews", "outputs"}
+    ignore_dirs = {".git", ".venv", "node_modules", "dist", "build", ".mypy_cache", ".ruff_cache", "__pycache__", "reviews", "outputs", "Master", "recordings"}
 
     for root, dirs, files in os.walk(ROOT_DIR):
         dirs[:] = [d for d in dirs if d not in ignore_dirs]
@@ -276,7 +276,7 @@ def audit_faang_architecture() -> list:
     """Audits codebase against FAANG Staff / Principal architectural gates."""
     findings = []
     scan_exts = {".py", ".ts", ".tsx", ".js", ".jsx"}
-    ignore_dirs = {".git", ".venv", "node_modules", "dist", "build", ".mypy_cache", ".ruff_cache", "__pycache__", "reviews", "outputs"}
+    ignore_dirs = {".git", ".venv", "node_modules", "dist", "build", ".mypy_cache", ".ruff_cache", "__pycache__", "reviews", "outputs", "Master", "recordings"}
 
     for root, dirs, files in os.walk(ROOT_DIR):
         dirs[:] = [d for d in dirs if d not in ignore_dirs]

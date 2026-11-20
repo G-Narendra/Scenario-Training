@@ -144,10 +144,15 @@ const AppContent: React.FC = () => {
   }, []);
 
   React.useEffect(() => {
-    if (user && user.role !== 'group_admin' && user.role !== 'super_admin' && currentView === 'admin') {
+    if (user && (user.role === 'group_admin' || user.role === 'super_admin')) {
+      // If facilitator / super admin just logged in and at default root view, route directly to Facilitator Console
+      if (currentView === 'scenarios' && !window.location.hash) {
+        navigateTo('admin', undefined, true);
+      }
+    } else if (user && user.role !== 'group_admin' && user.role !== 'super_admin' && currentView === 'admin') {
       navigateTo('scenarios', undefined, true);
     }
-  }, [user, currentView]);
+  }, [user]);
 
   if (loading) {
     return (
