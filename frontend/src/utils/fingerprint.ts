@@ -19,7 +19,7 @@ export async function getDeviceFingerprint(): Promise<string> {
       return cached;
     }
   } catch (e) {
-    // localStorage may be disabled in strict privacy modes
+    console.debug('Fingerprint cache read unavailable:', e);
   }
 
   const components: string[] = [];
@@ -98,7 +98,7 @@ export async function getDeviceFingerprint(): Promise<string> {
   try {
     localStorage.setItem(STORAGE_KEY, hashHex);
   } catch (e) {
-    // Ignore storage errors
+    console.debug('Fingerprint cache write unavailable:', e);
   }
 
   return hashHex;

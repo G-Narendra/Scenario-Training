@@ -384,8 +384,8 @@ class ScenarioService:
                     loaded = json.loads(val)
                     if isinstance(loaded, list):
                         return loaded
-                except Exception:
-                    pass
+                except (json.JSONDecodeError, TypeError) as exc:
+                    logger.debug("Failed to decode JSON list in scenario skills: %s", exc)
             return []
 
         # Query all published scenarios to find matching scenarios for each capability

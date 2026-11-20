@@ -19,8 +19,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       if (savedTheme === 'light' || savedTheme === 'dark') {
         return savedTheme;
       }
-    } catch {
-      // Ignore storage access errors
+    } catch (readErr) {
+      console.debug('Failed to read theme from localStorage:', readErr);
     }
     return 'light'; // Default to light mode
   });
@@ -37,8 +37,8 @@ export const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     root.setAttribute('data-theme', theme);
     try {
       localStorage.setItem(THEME_STORAGE_KEY, theme);
-    } catch {
-      // Ignore storage errors
+    } catch (saveErr) {
+      console.debug('Failed to save theme to localStorage:', saveErr);
     }
   }, [theme]);
 

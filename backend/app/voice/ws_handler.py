@@ -273,12 +273,12 @@ async def voice_websocket_endpoint(websocket: WebSocket, session_id: str):
                     "message": "Voice call interrupted. Please tap to speak or switch to text mode.",
                 })
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("Failed to send disconnect notice to websocket: %s", exc)
     finally:
         if active_stream_task and not active_stream_task.done():
             active_stream_task.cancel()
         try:
             await websocket.close()
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("Websocket already closed or failed closing: %s", exc)

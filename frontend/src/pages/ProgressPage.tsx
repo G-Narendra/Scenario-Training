@@ -689,7 +689,8 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
 
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               {(() => {
-                const weakSkills = cohortData.skill_score_distribution || (cohortData as any)?.skill_distribution || [];
+                type SkillDistItem = { skill_name?: string; avg_score?: number; score?: number; benchmark?: number; recommendation?: string };
+                const weakSkills: SkillDistItem[] = (cohortData.skill_score_distribution || (cohortData as { skill_score_distribution?: SkillDistItem[]; skill_distribution?: SkillDistItem[] })?.skill_distribution || []) as SkillDistItem[];
                 if (weakSkills.length === 0) {
                   return (
                     <div className="rounded-xl border border-dashed border-slate-300 dark:border-[#1E3E62] bg-slate-50/50 dark:bg-[#0B192C]/50 p-6 text-center col-span-3">

@@ -129,12 +129,16 @@ export class VoiceClient {
     if (typeof window !== 'undefined') {
       try {
         localStorage.setItem('scenariolab_voice_lang', lang);
-      } catch {}
+      } catch (err) {
+        console.debug('Failed to save preferred voice language:', err);
+      }
     }
     if (this.recognition) {
       try {
         this.recognition.lang = lang;
-      } catch {}
+      } catch (err) {
+        console.debug('Failed to set speech recognition language:', err);
+      }
     }
   }
 
@@ -259,13 +263,15 @@ export class VoiceClient {
           this.ttsAudioCache.set(audioUrl, audioBuffer);
         }
       }
-    } catch {
-      // Best-effort prefetch
+    } catch (err) {
+      console.debug('Audio prefetch skipped:', err);
     }
   }
 
   async connect(sessionId: string, token: string): Promise<void> {
-    await this.ensureAudioContext().catch(() => {});
+    await this.ensureAudioContext().catch((ctxErr) => {
+      console.debug('AudioContext ensure notice:', ctxErr);
+    });
 
     const isDevPort = window.location.port === '5173';
     const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
@@ -293,7 +299,9 @@ export class VoiceClient {
             settled = true;
             try {
               ws.close();
-            } catch {}
+            } catch (closeErr) {
+              console.debug('WebSocket close timeout notice:', closeErr);
+            }
             reject(new Error('WebSocket connection timed out'));
           }
         }, timeoutMs);
@@ -441,7 +449,9 @@ export class VoiceClient {
         this.recognition.onresult = null;
         this.recognition.onspeechend = null;
         this.recognition.abort();
-      } catch {}
+      } catch (abortErr) {
+        console.debug('Speech recognition teardown notice:', abortErr);
+      }
       this.recognition = null;
     }
 
@@ -671,7 +681,9 @@ export class VoiceClient {
         this.recognition.onresult = null;
         this.recognition.onspeechend = null;
         this.recognition.abort();
-      } catch {}
+      } catch (abortErr) {
+        console.debug('Recognition stop abort notice:', abortErr);
+      }
       this.recognition = null;
     }
   }
@@ -755,13 +767,17 @@ export class VoiceClient {
       try {
         this.currentBufferSource.stop();
         this.currentBufferSource.disconnect();
-      } catch {}
+      } catch (stopErr) {
+        console.debug('BufferSource stop notice:', stopErr);
+      }
       this.currentBufferSource = null;
     }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
-      } catch {}
+      } catch (cancelErr) {
+        console.debug('SpeechSynthesis cancel notice:', cancelErr);
+      }
     }
 
     this.isSpeaking = false;
@@ -806,20 +822,26 @@ export class VoiceClient {
       try {
         this.currentAudioElement.pause();
         this.currentAudioElement.currentTime = 0;
-      } catch {}
+      } catch (pauseErr) {
+        console.debug('Audio element pause notice:', pauseErr);
+      }
       this.currentAudioElement = null;
     }
     if (this.currentBufferSource) {
       try {
         this.currentBufferSource.stop();
         this.currentBufferSource.disconnect();
-      } catch {}
+      } catch (stopErr) {
+        console.debug('BufferSource stop notice:', stopErr);
+      }
       this.currentBufferSource = null;
     }
     if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
       try {
         window.speechSynthesis.cancel();
-      } catch {}
+      } catch (cancelErr) {
+        console.debug('SpeechSynthesis cancel notice:', cancelErr);
+      }
     }
     this.isSpeaking = false;
     this.isCommitting = false;
@@ -878,7 +900,11 @@ export class VoiceClient {
           resolved = true;
           this.pendingSpeech = null;
           if (this.currentAudioElement) {
-            try { this.currentAudioElement.pause(); } catch {}
+            try {
+              this.currentAudioElement.pause();
+            } catch (pauseErr) {
+              console.debug('Playback complete audio pause notice:', pauseErr);
+            }
             this.currentAudioElement = null;
           }
           this.currentBufferSource = null;
@@ -1008,7 +1034,9 @@ export class VoiceClient {
     if (this.ws) {
       try {
         this.ws.close();
-      } catch {}
+      } catch (closeErr) {
+        console.debug('WebSocket disconnect notice:', closeErr);
+      }
       this.ws = null;
     }
   }

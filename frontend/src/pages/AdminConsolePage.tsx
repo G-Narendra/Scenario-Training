@@ -784,7 +784,8 @@ conclusion_signals:
             </div>
 
             {(() => {
-              const weakSkills = cohortProgress?.skill_score_distribution || (cohortProgress as any)?.skill_distribution || [];
+              type SkillDistItem = { skill_name?: string; avg_score?: number; score?: number; benchmark?: number; recommendation?: string };
+              const weakSkills: SkillDistItem[] = (cohortProgress?.skill_score_distribution || (cohortProgress as { skill_score_distribution?: SkillDistItem[]; skill_distribution?: SkillDistItem[] } | null)?.skill_distribution || []) as SkillDistItem[];
               if (weakSkills.length === 0) {
                 return (
                   <div className="mt-4 rounded-xl border border-dashed border-slate-300 dark:border-[#1E3E62] bg-slate-50/50 dark:bg-[#0B192C]/50 p-6 text-center">

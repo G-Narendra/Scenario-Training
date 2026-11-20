@@ -328,8 +328,8 @@ class ScoringService:
             try:
                 timing_str = eval_record.prompt_version.split("timing:", 1)[1]
                 cached_timing = json.loads(timing_str)
-            except Exception:
-                pass
+            except (json.JSONDecodeError, ValueError) as exc:
+                logger.debug("Failed to parse evaluation timing string: %s", exc)
 
         return FeedbackReportSchema(
             overall_summary=eval_record.summary,

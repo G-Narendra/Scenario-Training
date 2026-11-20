@@ -87,12 +87,10 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   const [autoVoice, setAutoVoice] = useState(session.mode === 'voice');
   const [currentlySpeakingSeq, setCurrentlySpeakingSeq] = useState<number | null>(null);
   const [isDictating, setIsDictating] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dictationRecRef = useRef<any>(null);
+  const dictationRecRef = useRef<{ stop: () => void } | null>(null);
 
   // Resolve Persona Name early with robust scenario fallbacks
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const rawScenario = (session as any).scenario;
+  const rawScenario = (session as { scenario?: { persona?: { name?: string } } }).scenario;
   const personaName =
     scenarioDetail?.persona?.name ||
     rawScenario?.persona?.name ||
@@ -393,7 +391,11 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     setStreamingReply('');
 
     if (isDictating && dictationRecRef.current) {
-      try { dictationRecRef.current.stop(); } catch {}
+      try {
+        dictationRecRef.current.stop();
+      } catch (recErr) {
+        console.debug('Dictation stop notice:', recErr);
+      }
       dictationRecRef.current = null;
       setIsDictating(false);
     }
@@ -472,7 +474,11 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   const toggleDictation = () => {
     if (isDictating) {
       if (dictationRecRef.current) {
-        try { dictationRecRef.current.stop(); } catch {}
+        try {
+          dictationRecRef.current.stop();
+        } catch (recErr) {
+          console.debug('Dictation stop notice:', recErr);
+        }
         dictationRecRef.current = null;
       }
       setIsDictating(false);

@@ -618,8 +618,8 @@ class AccessService:
                 .where(Passcode.id == matched_item["passcode_id"])
                 .values(uses_count=Passcode.uses_count + 1)
             )
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.warning("Could not increment passcode uses_count: %s", exc)
         await db.commit()
 
         # Warm in-memory token cache immediately upon login (30 min TTL)
@@ -627,8 +627,8 @@ class AccessService:
             import time
             from backend.app.security.deps import _token_cache
             _token_cache[hash_token(token_str)] = (user, time.monotonic() + 1800.0)
-        except Exception:
-            pass
+        except Exception as exc:
+            logger.debug("Failed to warm token cache: %s", exc)
 
         return {
             "access_token": token_str,

@@ -20,11 +20,12 @@ import { getDeviceFingerprint } from '../utils/fingerprint';
 const API_BASE = '/api';
 
 // Configurable Multi-Cloud Backend Fallback Pool
+const env = (import.meta as unknown as { env?: Record<string, string> }).env || {};
 export const BACKEND_FALLBACK_URLS: string[] = [
   API_BASE,
-  ((import.meta as any).env?.VITE_HF_BACKEND_URL || '').replace(/\/+$/, ''),
-  ((import.meta as any).env?.VITE_KOYEB_BACKEND_URL || '').replace(/\/+$/, ''),
-  ((import.meta as any).env?.VITE_ORACLE_BACKEND_URL || '').replace(/\/+$/, ''),
+  (env.VITE_HF_BACKEND_URL || '').replace(/\/+$/, ''),
+  (env.VITE_KOYEB_BACKEND_URL || '').replace(/\/+$/, ''),
+  (env.VITE_ORACLE_BACKEND_URL || '').replace(/\/+$/, ''),
   'https://mrdev444-scenario-training-backend.hf.space/api',
 ].filter(Boolean);
 
@@ -53,8 +54,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   let fp = '';
   try {
     fp = await getDeviceFingerprint();
-  } catch {
-    // fallback
+  } catch (fpErr) {
+    console.debug('Fingerprint unavailable:', fpErr);
   }
 
   const headers = {
@@ -113,8 +114,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       } else if (errJson.detail) {
         errorMsg = errJson.detail;
       }
-    } catch {
-      // JSON parse failed, use fallback message
+    } catch (parseErr) {
+      console.debug('Failed to parse error response JSON:', parseErr);
     }
     throw new ApiError(errorMsg, response.status, errorCode);
   }

@@ -1,6 +1,9 @@
 import json
+import logging
 import uuid
 from typing import List, Optional
+
+logger = logging.getLogger(__name__)
 
 import yaml
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request, status
@@ -130,8 +133,8 @@ async def admin_validate_scenario(
         data = json.loads(body_text)
         if isinstance(data, dict) and "content" in data:
             yaml_content = data["content"]
-    except Exception:
-        pass
+    except (json.JSONDecodeError, ValueError) as err:
+        logger.debug("Request body is raw YAML string, not JSON wrapper: %s", err)
 
     try:
         validated = ScenarioService.parse_and_validate_yaml(yaml_content)

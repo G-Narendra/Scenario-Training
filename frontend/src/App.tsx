@@ -30,7 +30,9 @@ const AppContent: React.FC = () => {
     setCurrentView(view);
     try {
       window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-    } catch {}
+    } catch (scrollErr) {
+      window.scrollTo(0, 0);
+    }
     const hash = '#' + view;
     const stateObj = { view, selectedTrack: track || selectedTrack };
     if (replace) {
@@ -120,7 +122,9 @@ const AppContent: React.FC = () => {
         setCurrentView(e.state.view);
         try {
           window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
-        } catch {}
+        } catch (scrollErr) {
+          window.scrollTo(0, 0);
+        }
         if (e.state.selectedTrack) {
           setSelectedTrack(e.state.selectedTrack);
         }
@@ -170,8 +174,12 @@ const AppContent: React.FC = () => {
     if (mode === 'voice') {
       try {
         const unlock = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
-        unlock.play().catch(() => {});
-      } catch {}
+        unlock.play().catch((playErr) => {
+          console.debug('Audio pre-warm play deferred:', playErr);
+        });
+      } catch (audioErr) {
+        console.debug('Audio constructor pre-warm notice:', audioErr);
+      }
     }
     setIsStartingSimulation(true);
     try {

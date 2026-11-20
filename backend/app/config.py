@@ -44,8 +44,8 @@ class Settings(BaseSettings):
                 try:
                     import json
                     return json.loads(v)
-                except Exception:
-                    pass
+                except (json.JSONDecodeError, ValueError) as err:
+                    logging.getLogger(__name__).debug("NVIDIA_API_KEYS not JSON array, falling back to comma-separated: %s", err)
             return [k.strip() for k in v.split(",") if k.strip()]
         if isinstance(v, (list, tuple)):
             return [str(k).strip() for k in v if str(k).strip()]

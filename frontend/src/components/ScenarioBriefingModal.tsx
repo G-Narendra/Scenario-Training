@@ -299,9 +299,13 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
                 if (AudioCtx) {
                   const ctx = windowWithAudio.__sharedAudioContext || new AudioCtx({ sampleRate: 24000 });
                   windowWithAudio.__sharedAudioContext = ctx;
-                  ctx.resume().catch(() => {});
+                  ctx.resume().catch((resumeErr) => {
+                    console.debug('AudioContext resume deferred:', resumeErr);
+                  });
                 }
-              } catch {}
+              } catch (audioErr) {
+                console.debug('AudioContext initialization notice:', audioErr);
+              }
 
               // Upfront microphone permission request on direct user gesture with 800ms non-blocking race
               if (selectedMode === 'voice' && navigator.mediaDevices?.getUserMedia) {
