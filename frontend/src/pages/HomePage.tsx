@@ -14,8 +14,8 @@ import {
   Lock,
   Mail,
   Menu,
-  MessageCircle,
   Moon,
+  ShieldCheck,
   Sparkles,
   Sun,
   Volume2,
@@ -37,9 +37,14 @@ export const HomePage: React.FC<HomePageProps> = () => {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   React.useEffect(() => {
-    if (window.location.hash === '#login' || window.location.hash === '#signin') {
-      setIsSignInModalOpen(true);
-    }
+    const checkHash = () => {
+      if (window.location.hash === '#login' || window.location.hash === '#signin') {
+        setIsSignInModalOpen(true);
+      }
+    };
+    checkHash();
+    window.addEventListener('hashchange', checkHash);
+    return () => window.removeEventListener('hashchange', checkHash);
   }, []);
 
   const sampleScenarios = [
@@ -190,15 +195,6 @@ export const HomePage: React.FC<HomePageProps> = () => {
             <a href="#faq" className="hover:text-blue-900 dark:hover:text-white transition">
               FAQ
             </a>
-            <a
-              href="https://wa.me/?text=Hello%203H%20Solutions%20Team%2C%20I%20have%20a%20question%20regarding%20the%20ScenarioLab%20assessment."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-1 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 transition"
-            >
-              <MessageCircle className="h-3.5 w-3.5" />
-              <span>WhatsApp</span>
-            </a>
           </nav>
 
           {/* Right Action Area */}
@@ -272,17 +268,10 @@ export const HomePage: React.FC<HomePageProps> = () => {
             >
               Participant FAQ
             </a>
-            <a
-              href="https://wa.me/?text=Hello%203H%20Solutions%20Team%2C%20I%20have%20a%20question%20regarding%20the%20ScenarioLab%20assessment."
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block rounded-lg px-3 py-2 text-sm font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-slate-100 dark:hover:bg-[#132B45]"
-            >
-              WhatsApp Concierge
-            </a>
 
             <div className="pt-2">
               <button
+                id="mobile-nav-signin-btn"
                 onClick={handleOpenSignIn}
                 className="w-full flex items-center justify-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white py-3 text-sm font-bold shadow-md transition"
               >
@@ -985,41 +974,39 @@ export const HomePage: React.FC<HomePageProps> = () => {
       </section>
 
       {/* =========================================================================
-          9. WHATSAPP CONCIERGE & CORPORATE CONTACT CARD
+          9. CORPORATE ADVISORY & COHORT ACCESS
          ========================================================================= */}
       <section className="border-t border-slate-200 dark:border-[#1E3E62] bg-slate-100/70 dark:bg-[#081220] py-14">
         <div className="mx-auto max-w-5xl px-4 sm:px-6 lg:px-8">
           <div className="rounded-3xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-8 sm:p-10 shadow-lg flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="space-y-2 text-center md:text-left">
-              <div className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">
-                <MessageCircle className="h-4 w-4" />
-                <span>Executive Concierge Support</span>
+              <div className="inline-flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-blue-600 dark:text-blue-400">
+                <ShieldCheck className="h-4 w-4" />
+                <span>Executive Cohort Advisory & Support</span>
               </div>
               <h3 className="text-2xl font-black text-slate-900 dark:text-white font-heading">
-                Have any questions? We're happy to help.
+                Ready to elevate your leadership communication?
               </h3>
               <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl">
-                Need assistance with your cohort passcode, speech headset configuration, or scenario navigation? Connect directly with the 3H Solutions team.
+                <em>"Learning is a process, NOT an event."</em> Guided by Uzair Hassan with over 35 years of executive consulting experience across the UAE and global markets, 3H Solutions delivers measurable behavioral agility. Connect with our advisory team or enter your enrolled cohort.
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
-              <a
-                href="https://wa.me/?text=Hello%203H%20Solutions%20Team%2C%20I%20have%20a%20question%20regarding%20the%20ScenarioLab%20assessment."
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center space-x-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3.5 text-sm font-bold shadow-md transition"
+              <button
+                onClick={handleOpenSignIn}
+                className="flex items-center justify-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] text-white px-6 py-3.5 text-sm font-bold shadow-md transition"
               >
-                <MessageCircle className="h-4 w-4" />
-                <span>Chat via WhatsApp</span>
-              </a>
+                <Lock className="h-4 w-4 text-[#FF6500]" />
+                <span>Sign In to Cohort</span>
+              </button>
 
               <a
                 href="mailto:info@3hsolutionsgroup.com"
                 className="flex items-center justify-center space-x-2 rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-100 dark:bg-[#132B45] text-slate-800 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-[#1E3E62] px-5 py-3.5 text-sm font-bold transition"
               >
                 <Mail className="h-4 w-4" />
-                <span>Email Support</span>
+                <span>Email Advisory</span>
               </a>
             </div>
           </div>

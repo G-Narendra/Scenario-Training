@@ -823,7 +823,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
               <button
                 type="button"
                 onClick={() => setShowRoleDrawer(false)}
-                className="rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-5 py-2 text-xs font-bold text-white shadow-md transition"
+                className="rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-5 py-2 text-xs font-bold shadow-md transition"
               >
                 Return to Simulation
               </button>
@@ -863,7 +863,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
               <button
                 type="button"
                 onClick={() => setShowClueModal(false)}
-                className="rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 py-2 text-xs font-bold text-white transition shadow-sm"
+                className="rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-4 py-2 text-xs font-bold transition shadow-sm"
               >
                 Got It
               </button>
@@ -1280,7 +1280,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                     id="send-message-btn"
                     type="submit"
                     disabled={!inputText.trim() || isStreaming || isSessionClosed}
-                    className="flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-bold shadow-md transition disabled:opacity-40"
+                    className="flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-bold shadow-md transition disabled:opacity-40"
                   >
                     {isStreaming ? (
                       <>

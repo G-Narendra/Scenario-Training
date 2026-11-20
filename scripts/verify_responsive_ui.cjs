@@ -71,14 +71,15 @@ async function runResponsiveVerification() {
     await page.screenshot({ path: modalPath });
     console.log(`Saved screenshot: ${modalPath}`);
 
-    // Click Quick Fill "Delegate: Dev (Participant)"
-    console.log('Quick-filling delegate credentials and signing in...');
-    await page.click('#quick-fill-delegate-btn');
-    await page.waitForTimeout(300);
+    // Fill "Delegate: Dev (Participant)"
+    console.log('Filling delegate credentials and signing in...');
+    await page.fill('#modal-passcode-input', 'UZAIR-2026');
+    await page.fill('#modal-displayname-input', 'Dev');
     await page.click('#modal-signin-submit-btn');
 
     // Wait for Curriculum & Practice view to load
-    await page.waitForSelector('text=Curriculum & Practice', { timeout: 10000 });
+    await page.waitForSelector('text=Participant Orientation & Practice Guide', { timeout: 10000 });
+    await page.waitForTimeout(1000);
     console.log('Successfully signed in as Delegate Dev!');
 
     const studentLibraryPath = path.join(recordingsDir, 'verified_desktop_student_library.png');
@@ -94,9 +95,9 @@ async function runResponsiveVerification() {
     // Sign In as Uzair (Facilitator)
     console.log('Signing in as Lead Facilitator Uzair...');
     await page.click('#home-signin-cta-btn');
-    await page.waitForSelector('#quick-fill-facilitator-btn', { timeout: 5000 });
-    await page.click('#quick-fill-facilitator-btn');
-    await page.waitForTimeout(300);
+    await page.waitForSelector('#signin-modal-title', { timeout: 5000 });
+    await page.fill('#modal-passcode-input', 'UZAIR-2026');
+    await page.fill('#modal-displayname-input', 'Uzair');
     await page.click('#modal-signin-submit-btn');
 
     await page.waitForSelector('text=Facilitator Console', { timeout: 10000 });
@@ -163,11 +164,12 @@ async function runResponsiveVerification() {
 
     // Complete Mobile Sign In
     console.log('Logging in as delegate on mobile...');
-    await pageMobile.click('#quick-fill-delegate-btn');
-    await pageMobile.waitForTimeout(300);
+    await pageMobile.fill('#modal-passcode-input', 'UZAIR-2026');
+    await pageMobile.fill('#modal-displayname-input', 'Dev');
     await pageMobile.click('#modal-signin-submit-btn');
 
-    await pageMobile.waitForSelector('text=Curriculum & Practice', { timeout: 10000 });
+    await pageMobile.waitForSelector('text=Participant Orientation & Practice Guide', { timeout: 10000 });
+    await pageMobile.waitForTimeout(1000);
     console.log('Successfully navigated to student library on mobile!');
 
     const mobileLibraryPath = path.join(recordingsDir, 'verified_mobile_student_library.png');

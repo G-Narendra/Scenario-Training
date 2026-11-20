@@ -283,7 +283,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
             onClick={() => setViewMode('capabilities')}
             className={`flex items-center space-x-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
               viewMode === 'capabilities'
-                ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-md'
+                ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-md'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#0B192C] dark:text-slate-300 dark:hover:bg-[#1E3E62]'
             }`}
             title="Browse the 60 3H Executive Competency Definitions"
@@ -297,7 +297,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
             onClick={() => setViewMode('scenarios')}
             className={`flex items-center space-x-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
               viewMode === 'scenarios'
-                ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-md'
+                ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-md'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#0B192C] dark:text-slate-300 dark:hover:bg-[#1E3E62]'
             }`}
             title="Launch Interactive Dialogue Simulations with Counterparts"
@@ -371,7 +371,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                 title="Grid View (Cards)"
                 className={`p-1.5 rounded-lg transition ${
                   layoutMode === 'grid'
-                    ? 'bg-[#0B192C] text-white dark:bg-[#FF6500]'
+                    ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D]'
                     : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                 }`}
               >
@@ -384,7 +384,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                 title="List View (Compact Sequential Roster)"
                 className={`p-1.5 rounded-lg transition ${
                   layoutMode === 'list'
-                    ? 'bg-[#0B192C] text-white dark:bg-[#FF6500]'
+                    ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D]'
                     : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'
                 }`}
               >
@@ -458,7 +458,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                         handleOpenBriefing(scenarios[0].id);
                       }
                     }}
-                    className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-3.5 py-1.5 text-xs font-bold transition shadow-sm"
+                    className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-3.5 py-1.5 text-xs font-bold transition shadow-sm"
                   >
                     <span>Practice Scenario</span>
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -531,7 +531,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                     e.stopPropagation();
                     handleOpenBriefing(scen.id);
                   }}
-                  className="flex-shrink-0 flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-4 py-2 text-xs font-bold transition shadow-sm"
+                  className="flex-shrink-0 flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-4 py-2 text-xs font-bold transition shadow-sm"
                 >
                   <span>Start Practice</span>
                   <ArrowRight className="h-3.5 w-3.5" />
@@ -593,7 +593,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
               {/* Action Button */}
               <div className="mt-6 border-t border-slate-200 dark:border-[#1E3E62] pt-4 flex items-center justify-between">
                 <span className="text-xs text-slate-600 dark:text-slate-300 font-bold">Briefing Dossier</span>
-                <span className="rounded-xl bg-[#0B192C] group-hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:group-hover:bg-[#E05A00] px-4 py-1.5 text-xs font-bold transition shadow-sm">
+                <span className="rounded-xl bg-[#0B192C] group-hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:group-hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-4 py-1.5 text-xs font-bold transition shadow-sm">
                   Start Practice
                 </span>
               </div>

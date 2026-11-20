@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { AlertCircle, ArrowRight, KeyRound, Lock, ShieldCheck, User as UserIcon, X } from 'lucide-react';
+import { AlertCircle, ArrowRight, KeyRound, Lock, User as UserIcon, X } from 'lucide-react';
 import { ThreeHSolutionsLogo } from './ThreeHSolutionsLogo';
 
 interface SignInModalProps {
@@ -17,7 +17,7 @@ export const SignInModal: React.FC<SignInModalProps> = ({
   initialPasscode = '',
 }) => {
   const { login } = useAuth();
-  const [passcode, setPasscode] = useState(initialPasscode || 'UZAIR-2026');
+  const [passcode, setPasscode] = useState(initialPasscode || '');
   const [displayName, setDisplayName] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -46,12 +46,6 @@ export const SignInModal: React.FC<SignInModalProps> = ({
 
   const handlePasscodeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setPasscode(formatPasscode(e.target.value));
-  };
-
-  const handleQuickFill = (code: string, name: string) => {
-    setPasscode(code);
-    setDisplayName(name);
-    setError(null);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -127,34 +121,6 @@ export const SignInModal: React.FC<SignInModalProps> = ({
             <p className="mt-1.5 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
               Enter your official cohort passcode and enrolled name to access your private simulation workspace.
             </p>
-          </div>
-
-          {/* Quick Demo Helper Pills */}
-          <div className="mb-5 rounded-2xl border border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#132B45]/50 p-3">
-            <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2 flex items-center justify-between">
-              <span>Quick Selection</span>
-              <span className="text-[10px] font-normal text-slate-400 dark:text-slate-500">Tap to populate</span>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              <button
-                id="quick-fill-delegate-btn"
-                type="button"
-                onClick={() => handleQuickFill('UZAIR-2026', 'Dev')}
-                className="flex items-center space-x-1.5 rounded-xl border border-blue-200 dark:border-blue-900/50 bg-blue-50/80 dark:bg-[#1E3E62]/40 px-3 py-1.5 text-xs font-semibold text-blue-900 dark:text-blue-200 hover:bg-blue-100 dark:hover:bg-[#1E3E62] transition"
-              >
-                <UserIcon className="h-3 w-3 text-blue-600 dark:text-blue-400" />
-                <span>Delegate: Dev (Participant)</span>
-              </button>
-              <button
-                id="quick-fill-facilitator-btn"
-                type="button"
-                onClick={() => handleQuickFill('UZAIR-2026', 'Uzair')}
-                className="flex items-center space-x-1.5 rounded-xl border border-amber-200 dark:border-amber-900/50 bg-amber-50/80 dark:bg-amber-950/30 px-3 py-1.5 text-xs font-semibold text-amber-900 dark:text-amber-200 hover:bg-amber-100 dark:hover:bg-amber-900/50 transition"
-              >
-                <ShieldCheck className="h-3 w-3 text-[#FF6500]" />
-                <span>Facilitator: Uzair</span>
-              </button>
-            </div>
           </div>
 
           {error && (

@@ -44,26 +44,32 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                   <button
                     id="nav-admin-btn"
                     onClick={() => onNavigate('admin')}
-                    className={`flex items-center space-x-1.5 rounded-lg px-2.5 sm:px-3.5 py-1.5 text-xs font-bold transition ${
+                    className={`flex items-center space-x-1 sm:space-x-1.5 rounded-lg px-2 sm:px-3 py-1.5 text-xs font-bold transition ${
                       currentView === 'admin'
-                        ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-sm'
-                        : 'text-slate-700 hover:bg-slate-200 hover:text-[#0B192C] dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-[#FF6500]'
+                        ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-sm'
+                        : 'text-slate-700 hover:bg-slate-200 hover:text-[#0B192C] dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-white'
                     }`}
                   >
                     <ShieldCheck className="h-3.5 w-3.5" />
-                    <span>{user.role === 'super_admin' ? 'Admin Console' : 'Facilitator Console'}</span>
+                    <span>
+                      <span className="inline sm:hidden">Console</span>
+                      <span className="hidden sm:inline">{user.role === 'super_admin' ? 'Admin Console' : 'Facilitator Console'}</span>
+                    </span>
                   </button>
 
                   <button
                     id="nav-curriculum-btn"
                     onClick={() => onNavigate('scenarios')}
-                    className={`rounded-lg px-2.5 sm:px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
+                    className={`rounded-lg px-2 sm:px-3 py-1.5 text-xs font-bold transition whitespace-nowrap ${
                       currentView === 'scenarios' || currentView === 'tracks'
-                        ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-sm'
+                        ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-sm'
                         : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-white'
                     }`}
                   >
-                    <span>Curriculum & Scenarios</span>
+                    <span>
+                      <span className="inline sm:hidden">Scenarios</span>
+                      <span className="hidden sm:inline">Curriculum & Scenarios</span>
+                    </span>
                   </button>
                 </>
               ) : (
@@ -71,25 +77,31 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
                   <button
                     id="nav-curriculum-btn"
                     onClick={() => onNavigate('scenarios')}
-                    className={`rounded-lg px-2.5 sm:px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
+                    className={`rounded-lg px-2 sm:px-3 py-1.5 text-xs font-bold transition whitespace-nowrap ${
                       currentView === 'scenarios' || currentView === 'tracks'
-                        ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-sm'
+                        ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-sm'
                         : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-white'
                     }`}
                   >
-                    <span>Curriculum & Practice</span>
+                    <span>
+                      <span className="inline sm:hidden">Practice</span>
+                      <span className="hidden sm:inline">Curriculum & Practice</span>
+                    </span>
                   </button>
 
                   <button
                     id="nav-progress-btn"
                     onClick={() => onNavigate('progress')}
-                    className={`rounded-lg px-2.5 sm:px-3.5 py-1.5 text-xs font-bold transition whitespace-nowrap ${
+                    className={`rounded-lg px-2 sm:px-3 py-1.5 text-xs font-bold transition whitespace-nowrap ${
                       currentView === 'progress'
-                        ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-sm'
+                        ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-sm'
                         : 'text-slate-700 hover:bg-slate-200 hover:text-slate-900 dark:text-slate-200 dark:hover:bg-[#1E3E62] dark:hover:text-white'
                     }`}
                   >
-                    <span>My Progress</span>
+                    <span>
+                      <span className="inline sm:hidden">Progress</span>
+                      <span className="hidden sm:inline">My Progress</span>
+                    </span>
                   </button>
                 </>
               )}

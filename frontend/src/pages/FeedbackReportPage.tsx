@@ -138,7 +138,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           <button
             id="retry-evaluation-btn"
             onClick={loadEvaluation}
-            className="rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-6 py-2.5 text-sm font-semibold transition shadow-md"
+            className="rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-6 py-2.5 text-sm font-semibold transition shadow-md"
           >
             Retry Report
           </button>
@@ -191,7 +191,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
                 onClick={() => setReportTier('summary')}
                 className={`flex items-center space-x-1.5 rounded-lg px-3 py-1 font-bold transition ${
                   reportTier === 'summary'
-                    ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-sm'
+                    ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-sm'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -204,7 +204,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
                 onClick={() => setReportTier('detailed')}
                 className={`flex items-center space-x-1.5 rounded-lg px-3 py-1 font-bold transition ${
                   reportTier === 'detailed'
-                    ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-sm'
+                    ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-sm'
                     : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
@@ -248,7 +248,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           <button
             id="print-report-btn"
             onClick={handlePrint}
-            className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-4 py-1.5 text-xs font-bold transition shadow-sm"
+            className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-4 py-1.5 text-xs font-bold transition shadow-sm"
           >
             <Printer className="h-3.5 w-3.5" />
             <span>{reportTier === 'summary' ? 'Export Summary PDF' : 'Export Executive PDF (.pdf)'}</span>
@@ -667,7 +667,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
                 type="button"
                 id="preview-full-dossier-btn"
                 onClick={() => setReportTier('detailed')}
-                className="flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-5 py-2.5 text-xs font-bold transition shadow-sm"
+                className="flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-5 py-2.5 text-xs font-bold transition shadow-sm"
               >
                 <Eye className="h-4 w-4" />
                 <span>Facilitator Access: View Comprehensive Diagnostic Dossier</span>
@@ -743,7 +743,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           {session && onRetryScenario && (
             <button
               onClick={() => onRetryScenario(session.scenario_id)}
-              className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-5 py-2.5 text-xs font-bold transition shadow-md"
+              className="flex-1 sm:flex-initial flex items-center justify-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-5 py-2.5 text-xs font-bold transition shadow-md"
             >
               <RotateCcw className="h-4 w-4" />
               <span>Retry Scenario</span>

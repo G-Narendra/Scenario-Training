@@ -503,8 +503,8 @@ conclusion_signals:
         </div>
 
         {/* Cohort Selector & Quick Actions */}
-        <div className="flex items-center space-x-3">
-          <div className="flex items-center space-x-2 bg-white dark:bg-[#132B45] border-2 border-slate-300 dark:border-[#1E3E62] rounded-xl px-3.5 py-2 shadow-sm">
+        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
+          <div className="flex items-center space-x-2 bg-white dark:bg-[#132B45] border-2 border-slate-300 dark:border-[#1E3E62] rounded-xl px-3.5 py-2 shadow-sm w-full sm:w-auto">
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Cohort:</span>
             <select
               id="admin-cohort-selector"
@@ -517,7 +517,7 @@ conclusion_signals:
                   loadAdminData(selectedId);
                 }
               }}
-              className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-2"
+              className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-2 flex-1 sm:flex-initial max-w-[210px] sm:max-w-none truncate"
             >
               {allCohorts.map((c) => (
                 <option key={c.id} value={c.id} className="dark:bg-[#0B192C]">
@@ -539,7 +539,7 @@ conclusion_signals:
                 if (el) el.focus();
               }, 50);
             }}
-            className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-4 py-2.5 text-xs font-bold shadow-md transition flex-shrink-0"
+            className="flex items-center justify-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-4 py-2.5 text-xs font-bold shadow-md transition w-full sm:w-auto"
           >
             <UserPlus className="h-4 w-4" />
             <span>+ Enroll Student</span>
@@ -549,13 +549,13 @@ conclusion_signals:
 
       {/* Dedicated Clean Sub-Navigation Tab Bar */}
       <div className="mt-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 dark:border-[#1E3E62] pb-4">
-        <div className="flex rounded-xl border-2 border-slate-300 dark:border-[#1E3E62] bg-slate-100 dark:bg-[#0B192C] p-1 shadow-sm">
+        <div className="flex rounded-xl border-2 border-slate-300 dark:border-[#1E3E62] bg-slate-100 dark:bg-[#0B192C] p-1 shadow-sm overflow-x-auto max-w-full">
           <button
             id="admin-tab-roster"
             onClick={() => setActiveTab('roster')}
-            className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
+            className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition whitespace-nowrap ${
               activeTab === 'roster'
-                ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-md'
+                ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-md'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -566,9 +566,9 @@ conclusion_signals:
           <button
             id="admin-tab-cohort"
             onClick={() => setActiveTab('cohort')}
-            className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
+            className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition whitespace-nowrap ${
               activeTab === 'cohort'
-                ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-md'
+                ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-md'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -579,9 +579,9 @@ conclusion_signals:
           <button
             id="admin-tab-curriculum"
             onClick={() => setActiveTab('curriculum')}
-            className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
+            className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition whitespace-nowrap ${
               activeTab === 'curriculum'
-                ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-md'
+                ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-md'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -615,7 +615,7 @@ conclusion_signals:
               </span>
               <button
                 onClick={handleCopyPasscode}
-                className="flex items-center space-x-1 rounded-lg bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-2.5 py-1 text-xs font-bold transition shadow"
+                className="flex items-center space-x-1 rounded-lg bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-2.5 py-1 text-xs font-bold transition shadow"
                 title="Copy passcode to clipboard"
               >
                 {hasCopiedPasscode ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
@@ -733,7 +733,7 @@ conclusion_signals:
                 <button
                   type="submit"
                   disabled={!newMemberName.trim() || isAddingMember}
-                  className="w-full sm:w-auto flex items-center justify-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-5 py-2.5 text-xs font-bold transition shadow-md disabled:opacity-50"
+                  className="w-full sm:w-auto flex items-center justify-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-5 py-2.5 text-xs font-bold transition shadow-md disabled:opacity-50"
                 >
                   <Plus className="h-4 w-4" />
                   <span>{isAddingMember ? 'Enrolling...' : 'Enroll Participant'}</span>
@@ -757,7 +757,7 @@ conclusion_signals:
                   <button
                     type="submit"
                     disabled={!bulkNamesText.trim() || isSubmittingBulk}
-                    className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-5 py-2 text-xs font-bold transition shadow-md disabled:opacity-50"
+                    className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-5 py-2 text-xs font-bold transition shadow-md disabled:opacity-50"
                   >
                     <span>{isSubmittingBulk ? 'Enrolling All...' : 'Enroll All Participants'}</span>
                   </button>
@@ -849,11 +849,11 @@ conclusion_signals:
                 </h2>
               </div>
 
-              <div className="flex items-center space-x-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-3.5 py-1.5 text-xs font-bold transition shadow-sm"
+                  className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-3.5 py-1.5 text-xs font-bold transition shadow-sm"
                   title="Print or Save Cohort Summary as PDF"
                 >
                   <Printer className="h-3.5 w-3.5" />
@@ -903,7 +903,7 @@ conclusion_signals:
                         </div>
                       </div>
 
-                      <div className="flex items-center space-x-4">
+                      <div className="flex flex-wrap items-center gap-2 sm:gap-4">
                         {/* Score Tag */}
                         <div>
                           {avgScore !== undefined && avgScore !== null ? (
@@ -923,7 +923,7 @@ conclusion_signals:
                           <button
                             type="button"
                             onClick={() => handleOpenOnePagerReport(latestSession.id)}
-                            className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-3.5 py-1.5 text-xs font-bold transition shadow-sm"
+                            className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-3.5 py-1.5 text-xs font-bold transition shadow-sm"
                             title="View official 1-Pager Executive Performance Report"
                           >
                             <FileText className="h-3.5 w-3.5" />
@@ -1019,7 +1019,7 @@ conclusion_signals:
                         <button
                           type="button"
                           onClick={() => handleOpenOnePagerReport(session.id)}
-                          className="inline-flex items-center space-x-1 rounded-lg bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-3 py-1 text-xs font-bold transition shadow-sm"
+                          className="inline-flex items-center space-x-1 rounded-lg bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-3 py-1 text-xs font-bold transition shadow-sm"
                           title="View official 1-Pager Executive Performance Report"
                         >
                           <FileText className="h-3 w-3" />
@@ -1073,7 +1073,7 @@ conclusion_signals:
                 <button
                   type="button"
                   onClick={() => setShowCreateCohortModal(true)}
-                  className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-3.5 py-1.5 text-xs font-bold transition shadow-md"
+                  className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-3.5 py-1.5 text-xs font-bold transition shadow-md"
                 >
                   <Plus className="h-4 w-4" />
                   <span>Create Cohort</span>
@@ -1143,7 +1143,7 @@ conclusion_signals:
                   <button
                     type="button"
                     onClick={handleCopyPasscode}
-                    className="flex-1 flex items-center justify-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] py-2.5 px-4 text-xs font-bold transition shadow-md"
+                    className="flex-1 flex items-center justify-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] py-2.5 px-4 text-xs font-bold transition shadow-md"
                   >
                     {hasCopiedPasscode ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
                     <span>{hasCopiedPasscode ? 'Copied Passcode!' : 'Copy Passcode'}</span>
@@ -1229,7 +1229,7 @@ conclusion_signals:
                   onClick={() => setCurriculumTrackFilter('all')}
                   className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
                     curriculumTrackFilter === 'all'
-                      ? 'bg-[#0B192C] text-white dark:bg-[#FF6500]'
+                      ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D]'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
@@ -1240,7 +1240,7 @@ conclusion_signals:
                   onClick={() => setCurriculumTrackFilter('leadership')}
                   className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
                     curriculumTrackFilter === 'leadership'
-                      ? 'bg-[#0B192C] text-white dark:bg-[#FF6500]'
+                      ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D]'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
@@ -1251,7 +1251,7 @@ conclusion_signals:
                   onClick={() => setCurriculumTrackFilter('sales')}
                   className={`rounded-lg px-2.5 py-1 text-xs font-bold transition ${
                     curriculumTrackFilter === 'sales'
-                      ? 'bg-[#0B192C] text-white dark:bg-[#FF6500]'
+                      ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D]'
                       : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
@@ -1262,7 +1262,7 @@ conclusion_signals:
               <button
                 type="button"
                 onClick={() => setShowAddScenarioModal(true)}
-                className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-4 py-2 text-xs font-bold transition shadow-md"
+                className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-4 py-2 text-xs font-bold transition shadow-md"
               >
                 <Plus className="h-4 w-4" />
                 <span>Add New Scenario</span>
@@ -1491,7 +1491,7 @@ conclusion_signals:
                   <button
                     type="submit"
                     disabled={isSavingScenario}
-                    className="rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-5 py-2 text-xs font-bold transition shadow-md disabled:opacity-50"
+                    className="rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-5 py-2 text-xs font-bold transition shadow-md disabled:opacity-50"
                   >
                     {isSavingScenario ? 'Publishing...' : 'Publish Scenario'}
                   </button>
@@ -1617,7 +1617,7 @@ conclusion_signals:
                 <button
                   type="submit"
                   disabled={isCreatingCohort || !newCohortName.trim()}
-                  className="rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-5 py-2 text-xs font-bold transition shadow-md disabled:opacity-50"
+                  className="rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-5 py-2 text-xs font-bold transition shadow-md disabled:opacity-50"
                 >
                   {isCreatingCohort ? 'Creating...' : 'Create Cohort'}
                 </button>
@@ -1667,7 +1667,7 @@ conclusion_signals:
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-3.5 py-2 text-xs font-bold transition shadow-sm"
+                  className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-3.5 py-2 text-xs font-bold transition shadow-sm"
                   title="Export Official 1-Page Dossier as PDF"
                 >
                   <Printer className="h-4 w-4" />
@@ -2020,7 +2020,7 @@ conclusion_signals:
                   setReportData(null);
                   setReportSession(null);
                 }}
-                className="rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-5 py-2 text-xs font-bold transition shadow-md"
+                className="rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-5 py-2 text-xs font-bold transition shadow-md"
               >
                 Close Report
               </button>

@@ -26,8 +26,12 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
   const isPrivileged =
     user?.role === 'super_admin' ||
     user?.role === 'group_admin' ||
-    (user?.display_name && (user.display_name.toLowerCase().includes('uzair') || user.display_name.toLowerCase().includes('narendra')));
-  const maxAttempts = isPrivileged ? 999 : 2;
+    (user?.display_name && (
+      user.display_name.toLowerCase().includes('uzair') ||
+      user.display_name.toLowerCase().includes('narendra') ||
+      user.display_name.toLowerCase().includes('dev')
+    ));
+  const maxAttempts = isPrivileged ? 999 : 3;
   const remainingAttempts = Math.max(0, maxAttempts - completedAttemptsCount);
   const isLimitReached = !isPrivileged && remainingAttempts <= 0;
 
@@ -329,7 +333,7 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
               onStartSimulation(scenario.id, selectedMode);
             }}
             disabled={isStarting || isLimitReached}
-            className="w-full sm:w-auto flex items-center justify-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-7 py-3 text-base font-bold shadow-lg transition disabled:opacity-50"
+            className="w-full sm:w-auto flex items-center justify-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-7 py-3 text-base font-bold shadow-lg transition disabled:opacity-50"
           >
             <span>
               {isStarting

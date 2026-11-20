@@ -5,9 +5,10 @@ export const WhatsAppWidget: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleOpenWhatsApp = () => {
-    const phone = '919840000000'; // 3H Solutions official contact line
+    // Uzair Hassan (CEO & Lead Facilitator) direct WhatsApp line for enrolled delegates
+    const phone = '971506228126';
     const text = encodeURIComponent(
-      'Hi Uzair & 3H Solutions Team, I am participating in the Executive Scenario Training and have a question regarding the platform.'
+      'Hello Uzair, I am an enrolled participant on the 3H Solutions Scenario Training platform and have a question regarding my practice session.'
     );
     window.open(`https://wa.me/${phone}?text=${text}`, '_blank', 'noopener,noreferrer');
   };
@@ -23,7 +24,7 @@ export const WhatsAppWidget: React.FC = () => {
                 <MessageCircle className="h-4 w-4" />
               </div>
               <span className="text-xs font-bold text-slate-900 dark:text-white font-heading">
-                3H Facilitator Support
+                Facilitator WhatsApp Chat
               </span>
             </div>
             <button
@@ -36,7 +37,7 @@ export const WhatsAppWidget: React.FC = () => {
           </div>
 
           <p className="mt-2.5 text-xs text-slate-600 dark:text-slate-300 font-medium leading-relaxed">
-            Have a question about your scenario, cohort access, or debrief? Connect directly with Uzair and the training team.
+            Have a question about your scenario, cohort access, or debrief? Connect directly with Lead Facilitator Uzair on WhatsApp.
           </p>
 
           <button
@@ -44,7 +45,7 @@ export const WhatsAppWidget: React.FC = () => {
             className="mt-3 flex w-full items-center justify-center space-x-2 rounded-xl bg-[#25D366] hover:bg-[#1EBE5D] text-white py-2 px-3 text-xs font-bold shadow-md transition"
           >
             <MessageCircle className="h-4 w-4" />
-            <span>Chat on WhatsApp</span>
+            <span>Open WhatsApp Chat</span>
           </button>
         </div>
       )}
@@ -60,7 +61,7 @@ export const WhatsAppWidget: React.FC = () => {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#25D366] opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-[#25D366]" />
             </span>
-            <span>Have questions?</span>
+            <span>Questions for Uzair?</span>
           </button>
         )}
 
@@ -73,8 +74,8 @@ export const WhatsAppWidget: React.FC = () => {
               setIsOpen(true);
             }
           }}
-          title="Chat with 3H Solutions on WhatsApp"
-          aria-label="Open WhatsApp Support"
+          title="Chat with Lead Facilitator Uzair on WhatsApp"
+          aria-label="Open Facilitator WhatsApp Support"
           className="relative flex h-12 w-12 items-center justify-center rounded-full bg-[#25D366] hover:bg-[#1EBE5D] text-white shadow-xl transition transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-[#25D366]/50"
         >
           <span className="sr-only">Open 3H Solutions WhatsApp Support</span>

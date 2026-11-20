@@ -4,14 +4,38 @@ import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/HomePage';
-import { ScenarioLibraryPage } from './pages/ScenarioLibraryPage';
-import { SimulationChatPage } from './pages/SimulationChatPage';
-import { FeedbackReportPage } from './pages/FeedbackReportPage';
 import { api } from './api/client';
 import { SimulationSession } from './types';
-import { ProgressPage } from './pages/ProgressPage';
-import { AdminConsolePage } from './pages/AdminConsolePage';
 import { WhatsAppWidget } from './components/WhatsAppWidget';
+
+// Route-level code splitting for ultra-fast initial load times
+const ScenarioLibraryPage = React.lazy(() =>
+  import('./pages/ScenarioLibraryPage').then((m) => ({ default: m.ScenarioLibraryPage }))
+);
+const SimulationChatPage = React.lazy(() =>
+  import('./pages/SimulationChatPage').then((m) => ({ default: m.SimulationChatPage }))
+);
+const FeedbackReportPage = React.lazy(() =>
+  import('./pages/FeedbackReportPage').then((m) => ({ default: m.FeedbackReportPage }))
+);
+const ProgressPage = React.lazy(() =>
+  import('./pages/ProgressPage').then((m) => ({ default: m.ProgressPage }))
+);
+const AdminConsolePage = React.lazy(() =>
+  import('./pages/AdminConsolePage').then((m) => ({ default: m.AdminConsolePage }))
+);
+
+const PageSkeleton: React.FC = () => (
+  <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 animate-pulse space-y-6">
+    <div className="h-8 bg-slate-200 dark:bg-[#1E3E62] rounded-xl w-64" />
+    <div className="h-28 bg-slate-100 dark:bg-[#132B45] rounded-2xl w-full border border-slate-200 dark:border-[#1E3E62]" />
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4">
+      <div className="h-64 bg-slate-100 dark:bg-[#132B45] rounded-2xl border border-slate-200 dark:border-[#1E3E62]" />
+      <div className="h-64 bg-slate-100 dark:bg-[#132B45] rounded-2xl border border-slate-200 dark:border-[#1E3E62]" />
+      <div className="h-64 bg-slate-100 dark:bg-[#132B45] rounded-2xl border border-slate-200 dark:border-[#1E3E62]" />
+    </div>
+  </div>
+);
 
 export type ViewMode = 'tracks' | 'scenarios' | 'chat' | 'evaluation' | 'progress' | 'admin';
 
@@ -242,88 +266,90 @@ const AppContent: React.FC = () => {
       <Navbar currentView={currentView} onNavigate={(v) => navigateTo(v as ViewMode)} />
 
       <main className="flex-1">
-        {(currentView === 'tracks' || currentView === 'scenarios') && (
-          <ScenarioLibraryPage
-            selectedTrack={selectedTrack}
-            onBackToTracks={() => navigateTo('scenarios')}
-            onLaunchSimulation={handleLaunchSimulation}
-            isStarting={isStartingSimulation}
-          />
-        )}
-
-        {currentView === 'chat' && (
-          isRestoringSession ? (
-            <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100">
-              <div className="flex flex-col items-center space-y-4">
-                <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#FF6500] border-t-transparent" />
-                <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Restoring your practice session...</p>
-              </div>
-            </div>
-          ) : activeSession ? (
-            <SimulationChatPage
-              session={activeSession}
-              onSessionEnded={handleSessionEnded}
-              onViewEvaluation={handleViewEvaluation}
+        <React.Suspense fallback={<PageSkeleton />}>
+          {(currentView === 'tracks' || currentView === 'scenarios') && (
+            <ScenarioLibraryPage
+              selectedTrack={selectedTrack}
+              onBackToTracks={() => navigateTo('scenarios')}
+              onLaunchSimulation={handleLaunchSimulation}
+              isStarting={isStartingSimulation}
             />
-          ) : (
-            <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100 p-6 text-center">
-              <p className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">No active practice session in progress.</p>
-              <button
-                onClick={() => navigateTo('scenarios')}
-                className="px-5 py-2.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] text-white text-sm font-bold shadow-md transition"
-              >
-                Go to Scenario Library
-              </button>
-            </div>
-          )
-        )}
+          )}
 
-        {currentView === 'evaluation' && (
-          (evalSessionId || activeSession) ? (
-            <FeedbackReportPage
-              sessionId={evalSessionId || activeSession!.id}
-              onBackToScenarios={() => navigateTo('scenarios')}
-              onRetryScenario={(scenId) => handleLaunchSimulation(scenId, 'text')}
-              onNavigateProgress={() => navigateTo('progress')}
-            />
-          ) : (
-            <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100 p-6 text-center">
-              <div className="h-12 w-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 text-amber-500 flex items-center justify-center text-2xl mb-4">
-                📊
+          {currentView === 'chat' && (
+            isRestoringSession ? (
+              <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100">
+                <div className="flex flex-col items-center space-y-4">
+                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#0B192C] dark:border-[#1E3E62] border-t-transparent" />
+                  <p className="text-sm font-semibold text-slate-700 dark:text-slate-200">Restoring your practice session...</p>
+                </div>
               </div>
-              <p className="text-base font-bold text-slate-900 dark:text-white mb-2">No Evaluation Selected</p>
-              <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6">
-                Complete a practice scenario or choose a completed session from your progress page to review your detailed rubric feedback.
-              </p>
-              <div className="flex items-center space-x-3">
+            ) : activeSession ? (
+              <SimulationChatPage
+                session={activeSession}
+                onSessionEnded={handleSessionEnded}
+                onViewEvaluation={handleViewEvaluation}
+              />
+            ) : (
+              <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100 p-6 text-center">
+                <p className="text-base font-semibold text-slate-700 dark:text-slate-200 mb-4">No active practice session in progress.</p>
                 <button
                   onClick={() => navigateTo('scenarios')}
-                  className="px-5 py-2.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] text-white text-sm font-bold shadow-md transition"
+                  className="px-5 py-2.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] text-sm font-bold shadow-md transition"
                 >
-                  Go to Scenarios
-                </button>
-                <button
-                  onClick={() => navigateTo('progress')}
-                  className="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition"
-                >
-                  View My Progress
+                  Go to Scenario Library
                 </button>
               </div>
-            </div>
-          )
-        )}
+            )
+          )}
 
-        {currentView === 'progress' && (
-          <ProgressPage
-            onSelectScenario={(scenId) => handleLaunchSimulation(scenId, 'text')}
-            onResumeSession={handleResumeSession}
-            onViewSessionEvaluation={handleViewEvaluation}
-          />
-        )}
+          {currentView === 'evaluation' && (
+            (evalSessionId || activeSession) ? (
+              <FeedbackReportPage
+                sessionId={evalSessionId || activeSession!.id}
+                onBackToScenarios={() => navigateTo('scenarios')}
+                onRetryScenario={(scenId) => handleLaunchSimulation(scenId, 'text')}
+                onNavigateProgress={() => navigateTo('progress')}
+              />
+            ) : (
+              <div className="flex h-[calc(100vh-4rem)] flex-col items-center justify-center bg-slate-50 dark:bg-[#0B192C] text-slate-800 dark:text-slate-100 p-6 text-center">
+                <div className="h-12 w-12 rounded-2xl bg-blue-500/15 border border-blue-500/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xl mb-4">
+                  📊
+                </div>
+                <p className="text-base font-bold text-slate-900 dark:text-white mb-2">No Evaluation Selected</p>
+                <p className="text-sm text-slate-500 dark:text-slate-400 max-w-sm mb-6">
+                  Complete a practice scenario or choose a completed session from your progress page to review your detailed rubric feedback.
+                </p>
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => navigateTo('scenarios')}
+                    className="px-5 py-2.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] text-sm font-bold shadow-md transition"
+                  >
+                    Go to Scenarios
+                  </button>
+                  <button
+                    onClick={() => navigateTo('progress')}
+                    className="px-5 py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 text-sm font-bold hover:bg-slate-100 dark:hover:bg-slate-700 transition"
+                  >
+                    View My Progress
+                  </button>
+                </div>
+              </div>
+            )
+          )}
 
-        {currentView === 'admin' && (user?.role === 'group_admin' || user?.role === 'super_admin') && (
-          <AdminConsolePage onViewEvaluation={handleViewEvaluation} />
-        )}
+          {currentView === 'progress' && (
+            <ProgressPage
+              onSelectScenario={(scenId) => handleLaunchSimulation(scenId, 'text')}
+              onResumeSession={handleResumeSession}
+              onViewSessionEvaluation={handleViewEvaluation}
+            />
+          )}
+
+          {currentView === 'admin' && (user?.role === 'group_admin' || user?.role === 'super_admin') && (
+            <AdminConsolePage onViewEvaluation={handleViewEvaluation} />
+          )}
+        </React.Suspense>
 
         {/* Anti-Abuse Max 2 Attempts Modal */}
         {attemptLimitMessage && (
@@ -363,7 +389,7 @@ const AppContent: React.FC = () => {
           </div>
         )}
       </main>
-      {currentView !== 'chat' && <WhatsAppWidget />}
+      {currentView !== 'chat' && user && user.role === 'trainee' && <WhatsAppWidget />}
       {currentView !== 'chat' && <Footer />}
     </div>
   );

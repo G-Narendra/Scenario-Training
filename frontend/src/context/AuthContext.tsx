@@ -39,6 +39,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (passcode: string, displayName: string) => {
     const res = await api.login(passcode, displayName);
+    const defaultHash = res.user.role === 'group_admin' || res.user.role === 'super_admin' ? 'admin' : 'scenarios';
+    window.location.hash = '#' + defaultHash;
     setUser(res.user);
   };
 
@@ -48,6 +50,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch {
       localStorage.removeItem('auth_token');
     } finally {
+      sessionStorage.removeItem('scenariolab_eval_session_id');
+      try {
+        window.history.replaceState(null, '', window.location.pathname);
+      } catch {
+        window.location.hash = '';
+      }
       setUser(null);
     }
   };

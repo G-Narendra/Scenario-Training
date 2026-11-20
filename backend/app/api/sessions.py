@@ -75,14 +75,29 @@ async def create_session(
                 )
 
             # Check Attempt Ledger (Max 10 Attempts per enrolled participant / device)
-            # Instructors & Admins (super_admin, group_admin, Narendra, Uzair) have unlimited testing attempts
+            # Instructors & Admins (super_admin, group_admin, Narendra, Uzair, Dev for verification) have unlimited testing attempts
             is_developer_or_admin = (
                 current_user.role in ("super_admin", "group_admin")
-                or current_user.display_name.lower() in ("narendra", "uzair")
+                or current_user.display_name.lower() in ("narendra", "uzair", "dev")
             )
 
             if not is_developer_or_admin:
-                # Enforce Max 2 Practice Runs per student and device fingerprint lock
+                # Check total participant attempts across this cohort (Uzair's 10-attempt allocation rule)
+                user_attempts_stmt = select(func.coalesce(func.sum(AttemptLedger.attempt_count), 0)).where(
+                    AttemptLedger.cohort_id == cohort.id,
+                    or_(
+                        AttemptLedger.user_id == current_user.id,
+                        AttemptLedger.device_fingerprint == device_fp,
+                    )
+                )
+                total_user_attempts = (await db.execute(user_attempts_stmt)).scalar() or 0
+                if total_user_attempts >= 10:
+                    raise HTTPException(
+                        status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                        detail="COHORT_ATTEMPT_LIMIT_REACHED: You have used your 10 allocated practice attempts for this cohort. Please contact Lead Facilitator Uzair to extend your allocation.",
+                    )
+
+                # Enforce Max 2 Practice Runs per student per scenario
                 ledger_stmt = (
                     select(AttemptLedger)
                     .where(

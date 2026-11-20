@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Globe, HelpCircle, Mail, MessageCircle, X } from 'lucide-react';
+import { Globe, HelpCircle, Mail, X } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   const [showFaqModal, setShowFaqModal] = useState(false);
@@ -63,17 +63,6 @@ export const Footer: React.FC = () => {
               >
                 <Mail className="h-3.5 w-3.5 text-[#FF6500]" />
                 <span>Contact Us</span>
-              </a>
-
-              <a
-                href="https://wa.me/?text=Hello%203H%20Solutions%20Team%2C%20I%20have%20a%20question%20regarding%20the%20ScenarioLab%20assessment."
-                target="_blank"
-                rel="noopener noreferrer"
-                title="Chat with 3H Solutions on WhatsApp"
-                className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300 hover:text-emerald-500 dark:hover:text-emerald-400 transition"
-              >
-                <MessageCircle className="h-3.5 w-3.5 text-emerald-500" />
-                <span>WhatsApp Help</span>
               </a>
 
               <button

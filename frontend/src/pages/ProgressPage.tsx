@@ -154,7 +154,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
               onClick={() => setActiveTab('me')}
               className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
                 activeTab === 'me'
-                  ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/25'
+                  ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -165,7 +165,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
               onClick={() => setActiveTab('cohort')}
               className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
                 activeTab === 'cohort'
-                  ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/25'
+                  ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-sm'
                   : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
               }`}
             >
@@ -190,7 +190,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
           <p className="text-rose-700 dark:text-rose-300 font-bold">{error}</p>
           <button
             onClick={loadProgress}
-            className="mt-4 inline-flex items-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 py-2 text-sm font-bold text-white shadow-md transition"
+            className="mt-4 inline-flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-4 py-2 text-sm font-bold shadow-md transition"
           >
             <RotateCcw className="h-4 w-4" />
             <span>Retry</span>
@@ -493,7 +493,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
 
                     <button
                       onClick={() => onSelectScenario(rec.scenario_id)}
-                      className="mt-4 flex items-center justify-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-3 py-2 text-xs font-bold text-white shadow-md shadow-[#FF6500]/25 transition"
+                      className="mt-4 flex items-center justify-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-3 py-2 text-xs font-bold shadow-md transition"
                     >
                       <Play className="h-3.5 w-3.5 fill-current" />
                       <span>Start Drill</span>
