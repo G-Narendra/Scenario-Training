@@ -3,7 +3,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
-import { LoginPage } from './pages/LoginPage';
+import { HomePage } from './pages/HomePage';
 import { ScenarioLibraryPage } from './pages/ScenarioLibraryPage';
 import { SimulationChatPage } from './pages/SimulationChatPage';
 import { FeedbackReportPage } from './pages/FeedbackReportPage';
@@ -173,7 +173,7 @@ const AppContent: React.FC = () => {
   }
 
   if (!isAuthenticated) {
-    return <LoginPage />;
+    return <HomePage />;
   }
 
   const handleLaunchSimulation = async (scenarioId: string, mode: 'text' | 'voice') => {
