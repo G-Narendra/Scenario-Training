@@ -876,7 +876,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
           <button
             id="view-evaluation-btn"
             onClick={() => onViewEvaluation(session.id)}
-            className="flex items-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 py-2 text-xs font-bold text-white shadow-md shadow-[#FF6500]/30 transition transform hover:scale-105"
+            className="flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-4 py-2 text-xs font-bold shadow-md transition transform hover:scale-105"
           >
             <span>View Evaluation</span>
             <ArrowRight className="h-4 w-4" />
@@ -1178,7 +1178,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                 type="button"
                 id="inline-view-evaluation-btn"
                 onClick={() => onViewEvaluation(session.id)}
-                className="flex items-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-6 py-2.5 text-xs font-bold text-white shadow-lg shadow-[#FF6500]/30 transition transform hover:scale-105"
+                className="flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-6 py-2.5 text-xs font-bold shadow-lg transition transform hover:scale-105"
               >
                 <span>View Performance Evaluation</span>
                 <ArrowRight className="h-4 w-4" />
@@ -1274,7 +1274,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                     id="send-message-btn"
                     type="submit"
                     disabled={!inputText.trim() || isStreaming || isSessionClosed}
-                    className="flex items-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-bold text-white shadow-md shadow-[#FF6500]/25 transition disabled:opacity-40"
+                    className="flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-4 sm:px-5 py-1.5 sm:py-2 text-xs sm:text-sm font-bold shadow-md transition disabled:opacity-40"
                   >
                     {isStreaming ? (
                       <>

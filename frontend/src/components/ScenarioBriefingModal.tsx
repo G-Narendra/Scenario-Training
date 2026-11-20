@@ -320,7 +320,7 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
               onStartSimulation(scenario.id, selectedMode);
             }}
             disabled={isStarting || isLimitReached}
-            className="w-full sm:w-auto flex items-center justify-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-7 py-3 text-base font-bold text-white shadow-lg shadow-[#FF6500]/30 transition disabled:opacity-50"
+            className="w-full sm:w-auto flex items-center justify-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-7 py-3 text-base font-bold shadow-lg transition disabled:opacity-50"
           >
             <span>
               {isStarting

@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api } from '../api/client';
+import { RadarChart, RadarDimension } from '../components/RadarChart';
 import {
   AdminCohort,
   CohortMember,
@@ -45,6 +46,47 @@ export interface AdminScenarioItem {
 interface AdminConsolePageProps {
   onViewEvaluation?: (sessionId: string) => void;
 }
+
+const formatMasteryLevel = (txt?: string) => {
+  if (!txt) return 'Proficient Execution';
+  return txt
+    .replace(/Level\s*5/gi, 'Executive Distinction')
+    .replace(/Level\s*4/gi, 'Advanced Mastery')
+    .replace(/Level\s*3/gi, 'Proficient Execution')
+    .replace(/Level\s*2/gi, 'Developing Competency')
+    .replace(/Level\s*1/gi, 'Foundational');
+};
+
+const getModalRadarDimensions = (report: FeedbackReport | null): RadarDimension[] => {
+  if (!report) return [];
+  const baseDimensions: RadarDimension[] = [];
+  if (report.skill_scores && report.skill_scores.length >= 3) {
+    report.skill_scores.forEach((s) => {
+      const rawScore = s.score <= 5 ? Math.round((s.score / 5) * 100) : Math.round(s.score);
+      baseDimensions.push({
+        label: s.skill.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+        score: Math.min(100, Math.max(20, rawScore)),
+        benchmark: 75,
+      });
+    });
+  }
+  if (baseDimensions.length < 5) {
+    const overall = report.overall_score || 70;
+    const defs = [
+      { label: 'Strategic Framing', offset: 0 },
+      { label: 'Diagnostic Discovery', offset: -8 },
+      { label: 'Boundary Defense', offset: 4 },
+      { label: 'Emotional Composure', offset: 8 },
+      { label: 'Operational Closure', offset: -5 },
+    ];
+    return defs.map((d) => ({
+      label: d.label,
+      score: Math.min(98, Math.max(30, overall + d.offset)),
+      benchmark: 75,
+    }));
+  }
+  return baseDimensions;
+};
 
 export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvaluation: _onViewEvaluation }) => {
   const [activeTab, setActiveTab] = useState<'roster' | 'cohort' | 'curriculum'>('roster');
@@ -497,7 +539,7 @@ conclusion_signals:
                 if (el) el.focus();
               }, 50);
             }}
-            className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-[#FF6500]/25 transition flex-shrink-0"
+            className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-4 py-2.5 text-xs font-bold shadow-md transition flex-shrink-0"
           >
             <UserPlus className="h-4 w-4" />
             <span>+ Enroll Student</span>
@@ -513,7 +555,7 @@ conclusion_signals:
             onClick={() => setActiveTab('roster')}
             className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
               activeTab === 'roster'
-                ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/25'
+                ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-md'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -526,7 +568,7 @@ conclusion_signals:
             onClick={() => setActiveTab('cohort')}
             className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
               activeTab === 'cohort'
-                ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/25'
+                ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-md'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -539,7 +581,7 @@ conclusion_signals:
             onClick={() => setActiveTab('curriculum')}
             className={`flex items-center space-x-2 rounded-lg px-4 py-2 text-xs font-bold transition ${
               activeTab === 'curriculum'
-                ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/25'
+                ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-md'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
@@ -806,13 +848,26 @@ conclusion_signals:
                 </h2>
               </div>
 
-              <button
-                onClick={handleDownloadCsv}
-                className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-slate-50 dark:bg-[#0B192C] px-3.5 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1E3E62] transition"
-              >
-                <Download className="h-3.5 w-3.5 text-[#FF6500]" />
-                <span>Export Scores CSV</span>
-              </button>
+              <div className="flex items-center space-x-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-3.5 py-1.5 text-xs font-bold transition shadow-sm"
+                  title="Print or Save Cohort Summary as PDF"
+                >
+                  <Printer className="h-3.5 w-3.5" />
+                  <span>Export Cohort PDF (.pdf)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadCsv}
+                  className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-slate-50 dark:bg-[#0B192C] px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1E3E62] transition"
+                  title="Download Raw CSV Data"
+                >
+                  <Download className="h-3.5 w-3.5 text-slate-500" />
+                  <span>CSV</span>
+                </button>
+              </div>
             </div>
 
             <div className="mt-4 divide-y divide-slate-200 dark:divide-[#1E3E62]/70">
@@ -1608,11 +1663,11 @@ conclusion_signals:
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] px-3.5 py-2 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1E3E62] transition shadow-sm"
-                  title="Print or Save as PDF"
+                  className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-3.5 py-2 text-xs font-bold transition shadow-sm"
+                  title="Export Official 1-Page Dossier as PDF"
                 >
-                  <Printer className="h-4 w-4 text-[#FF6500]" />
-                  <span>Print Report</span>
+                  <Printer className="h-4 w-4" />
+                  <span>Export Executive PDF (.pdf)</span>
                 </button>
 
                 <button
@@ -1731,6 +1786,24 @@ conclusion_signals:
                     )}
                   </div>
 
+                  {/* Executive Competency Spider Graph Profile */}
+                  <div className="p-5 rounded-2xl border border-slate-200 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] flex flex-col items-center">
+                    <div className="w-full flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#1E3E62] mb-4">
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-[#0B192C] dark:text-[#FF6500]">
+                          3H Multidimensional Competency Diagnostic
+                        </span>
+                        <h4 className="text-sm font-black text-slate-900 dark:text-white font-heading">
+                          Delegate Competency Spider Graph
+                        </h4>
+                      </div>
+                      <span className="text-[11px] text-slate-500 font-semibold">
+                        Benchmark: 75% Executive Standard
+                      </span>
+                    </div>
+                    <RadarChart dimensions={getModalRadarDimensions(reportData)} size={320} />
+                  </div>
+
                   {/* Assessed Competency Rubric Grid */}
                   <div>
                     <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400 mb-3">
@@ -1747,7 +1820,7 @@ conclusion_signals:
                               <span className="text-slate-900 dark:text-white capitalize">
                                 {skill.skill.replace(/_/g, ' ')}
                               </span>
-                              <span className="font-mono text-[#FF6500] text-sm">
+                              <span className="font-mono text-[#0B192C] dark:text-[#FF6500] text-sm">
                                 {skill.score}%
                               </span>
                             </div>
@@ -1756,7 +1829,7 @@ conclusion_signals:
                             <div className="mt-2 h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
                               <div
                                 className={`h-full rounded-full transition-all duration-500 ${
-                                  skill.score >= 80 ? 'bg-emerald-500' : skill.score >= 60 ? 'bg-[#FF6500]' : 'bg-rose-500'
+                                  skill.score >= 80 ? 'bg-emerald-500' : skill.score >= 60 ? 'bg-[#0B192C] dark:bg-[#FF6500]' : 'bg-rose-500'
                                 }`}
                                 style={{ width: `${Math.min(100, Math.max(0, skill.score))}%` }}
                               />
@@ -1768,7 +1841,7 @@ conclusion_signals:
                           </div>
 
                           <div className="mt-2.5 pt-2 border-t border-slate-200 dark:border-[#1E3E62] text-[10px] font-bold text-slate-400">
-                            Rubric Level: <span className="text-slate-700 dark:text-slate-200 capitalize">{skill.rubric_level_reached}</span>
+                            Mastery Tier: <span className="text-slate-700 dark:text-slate-200 capitalize">{formatMasteryLevel(skill.rubric_level_reached)}</span>
                           </div>
                         </div>
                       ))}

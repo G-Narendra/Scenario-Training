@@ -143,7 +143,7 @@ export const LoginPage: React.FC = () => {
               id="login-submit-btn"
               type="submit"
               disabled={isSubmitting}
-              className="mt-2 flex w-full items-center justify-center space-x-2 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] py-3.5 px-4 text-base font-bold text-white shadow-md shadow-[#FF6500]/30 transition focus:outline-none focus:ring-2 focus:ring-[#FF6500] focus:ring-offset-2 focus:ring-offset-slate-900 disabled:opacity-50"
+              className="mt-2 flex w-full items-center justify-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] py-3.5 px-4 text-base font-bold shadow-md transition focus:outline-none focus:ring-2 focus:ring-[#0B192C] dark:focus:ring-[#FF6500] focus:ring-offset-2 disabled:opacity-50"
             >
               <span>{isSubmitting ? 'Verifying & Entering...' : 'Enter Training Platform'}</span>
               <ArrowRight className="h-5 w-5" />

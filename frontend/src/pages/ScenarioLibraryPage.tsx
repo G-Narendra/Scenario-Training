@@ -90,13 +90,13 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
   };
 
   const pillars = [
-    { key: 'all', label: 'All Capabilities' },
-    { key: 'Strategy & Market Leadership', label: 'Strategy & Market Leadership' },
-    { key: 'Cognitive Agility & Problem Solving', label: 'Cognitive Agility & Problem Solving' },
-    { key: 'People Leadership & Culture', label: 'People Leadership & Culture' },
-    { key: 'Operational Execution & Governance', label: 'Operational Execution & Governance' },
-    { key: 'Personal Mastery & Resilience', label: 'Personal Mastery & Resilience' },
-    { key: 'Influence & Executive Presence', label: 'Influence & Executive Presence' },
+    { key: 'all', label: 'All Capabilities (60)' },
+    { key: 'Strategy & Market Leadership', label: 'Strategy & Market Leadership (10)' },
+    { key: 'Cognitive Agility & Problem Solving', label: 'Cognitive Agility & Problem Solving (10)' },
+    { key: 'People Leadership & Culture', label: 'People Leadership & Culture (10)' },
+    { key: 'Operational Execution & Governance', label: 'Operational Execution & Governance (10)' },
+    { key: 'Personal Mastery & Resilience', label: 'Personal Mastery & Resilience (10)' },
+    { key: 'Influence & Executive Presence', label: 'Influence & Executive Presence (10)' },
   ];
 
   const difficultyOrder: Record<string, number> = {
@@ -198,16 +198,16 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
           </div>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 dark:text-white font-heading">
             {viewMode === 'capabilities'
-              ? 'Executive Curriculum & Core Capabilities'
+              ? 'Executive Curriculum & 3H Competency Framework'
               : trackFilter === 'sales'
               ? 'Enterprise Sales Scenarios'
               : trackFilter === 'leadership'
               ? 'Executive Leadership Scenarios'
               : 'Executive Practice Scenarios'}
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-slate-500 dark:text-slate-400 font-medium">
+          <p className="mt-1 text-xs sm:text-sm text-slate-600 dark:text-slate-400 font-medium">
             {viewMode === 'capabilities'
-              ? 'Select an executive competency to review its briefing and launch deliberate practice.'
+              ? 'Explore the 60 executive competencies taught by Uzair. Review briefings and launch targeted deliberate practice.'
               : 'Authentic workplace dialogue simulations with simulated counterparts.'}
           </p>
         </div>
@@ -220,7 +220,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
             placeholder={viewMode === 'capabilities' ? 'Search capabilities...' : 'Search scenarios, skills...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-10 pr-4 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:border-[#FF6500] focus:outline-none focus:ring-2 focus:ring-[#FF6500]/25 shadow-sm dark:border-[#2D5B8D] dark:bg-[#132B45] dark:text-white dark:placeholder-slate-500"
+            className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-10 pr-4 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:border-[#0B192C] dark:focus:border-[#FF6500] focus:outline-none focus:ring-2 focus:ring-slate-900/10 dark:focus:ring-[#FF6500]/25 shadow-sm dark:border-[#2D5B8D] dark:bg-[#132B45] dark:text-white dark:placeholder-slate-500"
           />
         </div>
       </div>
@@ -233,7 +233,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
             onClick={() => setViewMode('capabilities')}
             className={`flex items-center space-x-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
               viewMode === 'capabilities'
-                ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/20'
+                ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-md'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#0B192C] dark:text-slate-300 dark:hover:bg-[#1E3E62]'
             }`}
           >
@@ -246,7 +246,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
             onClick={() => setViewMode('scenarios')}
             className={`flex items-center space-x-2 rounded-xl px-3.5 py-2 text-xs font-bold transition ${
               viewMode === 'scenarios'
-                ? 'bg-[#FF6500] text-white shadow-md shadow-[#FF6500]/20'
+                ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-md'
                 : 'bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-[#0B192C] dark:text-slate-300 dark:hover:bg-[#1E3E62]'
             }`}
           >
@@ -372,7 +372,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                         handleOpenBriefing(scenarios[0].id);
                       }
                     }}
-                    className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-3.5 py-1.5 text-xs font-bold text-white shadow-sm transition"
+                    className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-3.5 py-1.5 text-xs font-bold transition shadow-sm"
                   >
                     <span>Practice Scenario</span>
                     <ArrowRight className="h-3.5 w-3.5" />
@@ -456,7 +456,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
               {/* Action Button */}
               <div className="mt-6 border-t border-slate-200 dark:border-[#1E3E62] pt-4 flex items-center justify-between">
                 <span className="text-xs text-slate-600 dark:text-slate-300 font-bold">Briefing Dossier</span>
-                <span className="rounded-xl bg-[#FF6500] group-hover:bg-[#E05A00] px-4 py-1.5 text-xs font-bold text-white shadow-sm transition">
+                <span className="rounded-xl bg-[#0B192C] group-hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:group-hover:bg-[#E05A00] px-4 py-1.5 text-xs font-bold transition shadow-sm">
                   Start Practice
                 </span>
               </div>

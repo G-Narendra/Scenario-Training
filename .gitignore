@@ -48,6 +48,8 @@ frontend/.vite/
 .env
 .env*
 *.pem
+Master.zip
+Master/
 *.key
 
 # Skills & Orchestration (Rule 2)

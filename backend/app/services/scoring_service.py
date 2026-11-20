@@ -151,9 +151,9 @@ class ScoringService:
                         "key": item.get("skill", "communication"),
                         "name": item.get("skill", "communication").replace("_", " ").title(),
                         "rubric": {
-                            "1": "Level 1: Minimal demonstration of skill.",
-                            "3": "Level 3: Competent execution with balanced inquiry and response.",
-                            "5": "Level 5: Masterful strategic execution.",
+                            "1": "Foundational: Minimal demonstration of skill.",
+                            "3": "Proficient: Competent execution with balanced inquiry and response.",
+                            "5": "Executive Mastery: Masterful strategic execution.",
                         },
                     }
                     for item in assessed
@@ -164,9 +164,9 @@ class ScoringService:
                         "key": "communication",
                         "name": "Executive Communication",
                         "rubric": {
-                            "1": "Level 1: Developing communication.",
-                            "3": "Level 3: Competent execution with balanced inquiry and response.",
-                            "5": "Level 5: Masterful communication.",
+                            "1": "Foundational: Developing communication.",
+                            "3": "Proficient: Competent execution with balanced inquiry and response.",
+                            "5": "Executive Mastery: Masterful communication.",
                         },
                     }
                 ]
@@ -179,23 +179,23 @@ class ScoringService:
 
             if is_trivial:
                 score_val = 1
-                rubric_text = s_rubric.get("1", f"Level 1: Minimal demonstration of {s_name.lower()} during preliminary exchange.")
+                rubric_text = s_rubric.get("1", f"Foundational: Minimal demonstration of {s_name.lower()} during preliminary exchange.")
                 just_text = f"Session concluded early ('{first_quote}') before demonstrating {s_name.lower()}."
             elif any(k in s_key for k in ["clarity", "directness", "communication"]):
                 score_val = 2
-                rubric_text = s_rubric.get("2", s_rubric.get("3", "Level 2: Raised topic directly but lost clarity as discussion progressed."))
+                rubric_text = s_rubric.get("2", s_rubric.get("3", "Developing: Raised topic directly but lost clarity as discussion progressed."))
                 just_text = f"You initiated dialogue directly with '{m1.get('content', first_quote)}', but subsequent turns became overly brief or vague regarding resolution."
             elif any(k in s_key for k in ["accountability", "boundary", "assertive"]):
                 score_val = 2
-                rubric_text = s_rubric.get("2", s_rubric.get("1", "Level 2: Conceded to counterpart resistance without securing firm boundaries."))
+                rubric_text = s_rubric.get("2", s_rubric.get("1", "Developing: Conceded to counterpart resistance without securing firm boundaries."))
                 just_text = f"Conceded to counterpart pushback ('{m2.get('content', first_quote)}') rather than securing a clear mutual agreement."
             elif any(k in s_key for k in ["empathy", "listening", "rapport"]):
                 score_val = 3
-                rubric_text = s_rubric.get("3", "Level 3: Acknowledged counterpart perspective but did not probe underlying motivations.")
+                rubric_text = s_rubric.get("3", "Proficient: Acknowledged counterpart perspective but did not probe underlying motivations.")
                 just_text = f"Maintained a constructive tone under pushback, but did not ask open discovery questions to uncover why schedule adherence felt stifling."
             else:
                 score_val = 3
-                rubric_text = s_rubric.get("3", f"Level 3: Competent baseline demonstration of {s_name.lower()}.")
+                rubric_text = s_rubric.get("3", f"Proficient: Competent baseline demonstration of {s_name.lower()}.")
                 just_text = f"Demonstrated basic professional capability for {s_name.lower()} across conversational exchanges."
 
             skill_scores.append(
@@ -212,7 +212,7 @@ class ScoringService:
                 SkillScoreItem(
                     skill="clarity",
                     score=2,
-                    rubric_level_reached="Level 2: Raised topic directly but lacked structured resolution.",
+                    rubric_level_reached="Developing: Raised topic directly but lacked structured resolution.",
                     justification="Initiated the discussion but concluded before establishing a concrete action plan.",
                 )
             )

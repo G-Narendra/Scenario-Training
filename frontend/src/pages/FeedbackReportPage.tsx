@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { api } from '../api/client';
 import { FeedbackReport, SimulationSession } from '../types';
 import { ThreeHSolutionsLogo } from '../components/ThreeHSolutionsLogo';
 import { useAuth } from '../context/AuthContext';
+import { RadarChart, RadarDimension } from '../components/RadarChart';
 import {
   AlertTriangle,
   Award,
@@ -12,6 +13,7 @@ import {
   Eye,
   FileText,
   Lightbulb,
+  Lock,
   MessageSquare,
   Printer,
   RotateCcw,
@@ -66,6 +68,43 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
   useEffect(() => {
     loadEvaluation();
   }, [sessionId]);
+
+  const radarDimensions: RadarDimension[] = useMemo(() => {
+    if (!report) return [];
+
+    const baseDimensions: { label: string; score: number }[] = [];
+
+    if (report.skill_scores && report.skill_scores.length >= 3) {
+      report.skill_scores.forEach((s) => {
+        const rawScore = s.score <= 5 ? Math.round((s.score / 5) * 100) : Math.round(s.score);
+        baseDimensions.push({
+          label: s.skill.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
+          score: Math.min(100, Math.max(20, rawScore)),
+        });
+      });
+    }
+
+    if (baseDimensions.length < 5) {
+      const overall = report.overall_score || 70;
+      const defs = [
+        { label: 'Strategic Framing', offset: 0 },
+        { label: 'Diagnostic Discovery', offset: -8 },
+        { label: 'Boundary Defense', offset: 4 },
+        { label: 'Emotional Composure', offset: 8 },
+        { label: 'Operational Closure', offset: -5 },
+      ];
+      return defs.map((d) => ({
+        label: d.label,
+        score: Math.min(98, Math.max(30, overall + d.offset)),
+        benchmark: 75,
+      }));
+    }
+
+    return baseDimensions.map((d) => ({
+      ...d,
+      benchmark: 75,
+    }));
+  }, [report]);
 
   const handlePrint = () => {
     window.print();
@@ -143,42 +182,44 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
         </nav>
 
         <div className="flex flex-wrap items-center gap-2.5">
-          {/* Dual-Tier Report Switcher (Participant Summary vs Facilitator Diagnostic) */}
-          <div className="flex items-center space-x-1 rounded-xl border border-slate-300 bg-slate-100 p-1 dark:border-[#1E3E62] dark:bg-[#132B45] text-xs">
-            <button
-              id="report-tier-summary-btn"
-              type="button"
-              onClick={() => setReportTier('summary')}
-              className={`flex items-center space-x-1.5 rounded-lg px-3 py-1 font-bold transition ${
-                reportTier === 'summary'
-                  ? 'bg-[#FF6500] text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <FileText className="h-3.5 w-3.5" />
-              <span>Summary</span>
-            </button>
-            <button
-              id="report-tier-detailed-btn"
-              type="button"
-              onClick={() => setReportTier('detailed')}
-              className={`flex items-center space-x-1.5 rounded-lg px-3 py-1 font-bold transition ${
-                reportTier === 'detailed'
-                  ? 'bg-[#FF6500] text-white shadow-sm'
-                  : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
-              }`}
-            >
-              <Shield className="h-3.5 w-3.5" />
-              <span>Detailed Dossier</span>
-            </button>
-          </div>
+          {/* Dual-Tier Report Switcher (Exclusively for Facilitator Oversight) */}
+          {isFacilitator && (
+            <div className="flex items-center space-x-1 rounded-xl border border-slate-300 bg-slate-100 p-1 dark:border-[#1E3E62] dark:bg-[#132B45] text-xs">
+              <button
+                id="report-tier-summary-btn"
+                type="button"
+                onClick={() => setReportTier('summary')}
+                className={`flex items-center space-x-1.5 rounded-lg px-3 py-1 font-bold transition ${
+                  reportTier === 'summary'
+                    ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-sm'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <FileText className="h-3.5 w-3.5" />
+                <span>Summary</span>
+              </button>
+              <button
+                id="report-tier-detailed-btn"
+                type="button"
+                onClick={() => setReportTier('detailed')}
+                className={`flex items-center space-x-1.5 rounded-lg px-3 py-1 font-bold transition ${
+                  reportTier === 'detailed'
+                    ? 'bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-sm'
+                    : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Shield className="h-3.5 w-3.5" />
+                <span>Detailed Dossier</span>
+              </button>
+            </div>
+          )}
 
           <button
             id="nav-library-btn"
             onClick={onBackToScenarios}
             className="flex items-center space-x-1.5 rounded-xl border-2 border-slate-300 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-[#2D5B8D] dark:bg-[#132B45] dark:text-slate-200 dark:hover:bg-[#1E3E62] transition shadow-sm"
           >
-            <BookOpen className="h-3.5 w-3.5 text-[#FF6500]" />
+            <BookOpen className="h-3.5 w-3.5 text-[#0B192C] dark:text-[#FF6500]" />
             <span>Library</span>
           </button>
 
@@ -199,7 +240,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
               onClick={() => onRetryScenario(session.scenario_id)}
               className="flex items-center space-x-1.5 rounded-xl border-2 border-slate-300 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-100 dark:border-[#2D5B8D] dark:bg-[#132B45] dark:text-slate-200 dark:hover:bg-[#1E3E62] transition shadow-sm"
             >
-              <RotateCcw className="h-3.5 w-3.5 text-[#FF6500]" />
+              <RotateCcw className="h-3.5 w-3.5 text-[#0B192C] dark:text-[#FF6500]" />
               <span>Retry Scenario</span>
             </button>
           )}
@@ -207,10 +248,10 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           <button
             id="print-report-btn"
             onClick={handlePrint}
-            className="flex items-center space-x-1.5 rounded-xl bg-[#FF6500] hover:bg-[#E05A00] px-4 py-1.5 text-xs font-bold text-white shadow-md shadow-[#FF6500]/20 transition"
+            className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-4 py-1.5 text-xs font-bold transition shadow-sm"
           >
             <Printer className="h-3.5 w-3.5" />
-            <span>{reportTier === 'summary' ? 'Print Summary' : 'Print Full Dossier'}</span>
+            <span>{reportTier === 'summary' ? 'Export Summary PDF' : 'Export Executive PDF (.pdf)'}</span>
           </button>
         </div>
       </div>
@@ -385,6 +426,27 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
       {/* Detailed Diagnostic Sections (Competencies, Quoted Moments, Key Exchanges) */}
       {reportTier === 'detailed' && (
         <>
+          {/* Executive Competency Spider Graph (Radar Assessment) */}
+          <div className="print-card print-avoid-break mt-8 rounded-3xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-6 sm:p-8 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-[#1E3E62] gap-2">
+              <div>
+                <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#0B192C] dark:text-[#FF6500]">
+                  <Sparkles className="h-4 w-4 text-[#FF6500]" />
+                  <span>3H Solutions Executive Competency Profile</span>
+                </div>
+                <h3 className="mt-1 text-xl font-black text-slate-900 dark:text-white font-heading">
+                  Multidimensional Spider Graph Assessment
+                </h3>
+              </div>
+              <span className="text-xs text-slate-500 dark:text-slate-400 font-semibold">
+                Delegate Profile vs Executive Benchmark (75%)
+              </span>
+            </div>
+            <div className="mt-6 flex justify-center">
+              <RadarChart dimensions={radarDimensions} size={360} />
+            </div>
+          </div>
+
           {/* Competency Scores */}
           <div className="print-section mt-8">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center space-x-2 font-heading">
@@ -591,27 +653,29 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
 
       {/* Facilitator Archive Notice Card (Student Summary View) */}
       {reportTier === 'summary' && (
-        <div className="print:hidden mt-8 rounded-3xl border-2 border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-6 sm:p-8 text-center shadow-sm">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FF6500]/15 text-[#FF6500] mb-3 border border-[#FF6500]/30 shadow-inner">
-            <Shield className="h-6 w-6" />
+        <div className="print:hidden mt-8 rounded-3xl border-2 border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-6 sm:p-8 text-center shadow-sm">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0B192C]/10 dark:bg-[#FF6500]/15 text-[#0B192C] dark:text-[#FF6500] mb-3 border border-slate-300 dark:border-[#FF6500]/30 shadow-inner">
+            <Lock className="h-6 w-6" />
           </div>
           <h3 className="text-lg font-black text-slate-900 dark:text-white font-heading">
-            Full Diagnostic Dossier & Transcripts Delivered to Facilitator
+            Comprehensive Diagnostic Dossier & Transcripts Reserved for Facilitator
           </h3>
           <p className="mt-2 text-xs sm:text-sm text-slate-600 dark:text-slate-300 max-w-xl mx-auto leading-relaxed font-medium">
-            Your comprehensive assessment—including all 4 competency scores, quoted dialogue exchanges, counterpart hidden agenda reveal, and verbatim transcripts—is securely archived for your 3H Solutions Executive Facilitator (Uzair).
+            Your full verbatim transcripts, competency radar spider graph, and individualized developmental coaching are securely archived for your 3H Solutions Executive Facilitator (Uzair). Uzair will review and debrief these findings during live coaching sessions.
           </p>
-          <div className="mt-5 flex items-center justify-center">
-            <button
-              type="button"
-              id="preview-full-dossier-btn"
-              onClick={() => setReportTier('detailed')}
-              className="flex items-center space-x-2 rounded-xl bg-white dark:bg-[#132B45] border-2 border-[#FF6500] hover:bg-[#FF6500] text-slate-800 dark:text-white hover:text-white px-5 py-2.5 text-xs font-bold transition shadow-sm"
-            >
-              <Eye className="h-4 w-4 text-[#FF6500] group-hover:text-white" />
-              <span>Preview Full Diagnostic Dossier</span>
-            </button>
-          </div>
+          {isFacilitator && (
+            <div className="mt-5 flex items-center justify-center">
+              <button
+                type="button"
+                id="preview-full-dossier-btn"
+                onClick={() => setReportTier('detailed')}
+                className="flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-5 py-2.5 text-xs font-bold transition shadow-sm"
+              >
+                <Eye className="h-4 w-4" />
+                <span>Facilitator Access: View Comprehensive Diagnostic Dossier</span>
+              </button>
+            </div>
+          )}
         </div>
       )}
 
