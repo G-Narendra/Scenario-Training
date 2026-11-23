@@ -34,6 +34,11 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        from sqlalchemy import text
+        try:
+            await conn.execute(text("DELETE FROM login_attempts WHERE success = false"))
+        except Exception:
+            pass
     yield
     # Shutdown actions
     await engine.dispose()
