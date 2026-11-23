@@ -36,7 +36,7 @@ export const ThreeHSolutionsLogo: React.FC<ThreeHSolutionsLogoProps> = ({
   };
 
   const logoMark = !imageError ? (
-    <div className={`${iconSizes[size]} flex items-center justify-center rounded-xl overflow-hidden shadow-sm flex-shrink-0 bg-white/90 dark:bg-[#071322] p-1 border border-slate-200 dark:border-[#1E3E62] transition hover:scale-105 hover:border-[#FF6500]`}>
+    <div className={`${iconSizes[size]} flex items-center justify-center rounded-xl overflow-hidden shadow-sm flex-shrink-0 bg-white/90 dark:bg-[#071322] p-1 border border-slate-200 dark:border-[#1E3E62] transition hover:scale-105 hover:border-[#B91C1C]`}>
       <img
         src="/logo_3h_solutions.webp"
         alt="3H Solutions"
@@ -58,7 +58,7 @@ export const ThreeHSolutionsLogo: React.FC<ThreeHSolutionsLogoProps> = ({
         <polygon
           points="50,6 90,28 90,72 50,94 10,72 10,28"
           fill="#0B192C"
-          stroke="#FF6500"
+          stroke="#B91C1C"
           strokeWidth="5"
         />
         {/* 3 Pillars (Head, Heart, Hands) */}
@@ -70,7 +70,7 @@ export const ThreeHSolutionsLogo: React.FC<ThreeHSolutionsLogoProps> = ({
         />
         <path
           d="M50 24 V76"
-          stroke="#FF6500"
+          stroke="#B91C1C"
           strokeWidth="8"
           strokeLinecap="round"
         />
@@ -83,7 +83,7 @@ export const ThreeHSolutionsLogo: React.FC<ThreeHSolutionsLogoProps> = ({
         {/* Crossbeam linking pillars */}
         <path
           d="M32 50 H68"
-          stroke="#FF6500"
+          stroke="#B91C1C"
           strokeWidth="6"
           strokeLinecap="round"
         />
@@ -102,7 +102,7 @@ export const ThreeHSolutionsLogo: React.FC<ThreeHSolutionsLogoProps> = ({
             <span
               className={`font-black tracking-wider text-slate-900 dark:text-white font-heading ${titleSizes[size]}`}
             >
-              3H <span className="text-[#FF6500]">SOLUTIONS</span>
+              3H <span className="text-[#B91C1C]">SOLUTIONS</span>
             </span>
           </div>
           {variant === 'full' && (

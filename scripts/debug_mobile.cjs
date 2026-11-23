@@ -30,7 +30,7 @@ async function debugMobile() {
 
   const html = await page.content();
   console.log('HTML length:', html.length);
-  
+
   const text = await page.evaluate(() => document.body.innerText);
   console.log('Body text preview:\n', text.slice(0, 1000));
 

@@ -117,7 +117,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
 
   const getScoreColor = (score: number) => {
     if (score >= 80) return 'text-emerald-700 dark:text-emerald-400 border-emerald-500/40 bg-emerald-50 dark:bg-emerald-950/40';
-    if (score >= 65) return 'text-[#FF6500] border-[#FF6500]/40 bg-amber-50 dark:bg-amber-950/40';
+    if (score >= 65) return 'text-[#B91C1C] border-[#B91C1C]/40 bg-amber-50 dark:bg-amber-950/40';
     if (score >= 50) return 'text-amber-700 dark:text-amber-400 border-amber-500/40 bg-amber-50 dark:bg-amber-950/40';
     return 'text-rose-700 dark:text-rose-400 border-rose-500/40 bg-rose-50 dark:bg-rose-950/40';
   };
@@ -135,7 +135,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
       <div className="flex flex-col justify-between gap-4 border-b border-slate-300 dark:border-[#1E3E62] pb-6 sm:flex-row sm:items-center">
         <div>
           <div className="flex items-center space-x-2">
-            <span className="inline-flex items-center rounded-lg bg-[#FF6500]/15 border border-[#FF6500]/30 px-2.5 py-0.5 text-xs font-bold text-[#FF6500]">
+            <span className="inline-flex items-center rounded-lg bg-[#B91C1C]/15 border border-[#B91C1C]/30 px-2.5 py-0.5 text-xs font-bold text-[#B91C1C]">
               PERFORMANCE ANALYTICS
             </span>
           </div>
@@ -178,8 +178,8 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
 
       {loading && (
         <div className="flex min-h-[350px] items-center justify-center">
-          <div className="flex items-center space-x-3 text-[#FF6500] font-semibold text-sm">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#FF6500] border-t-transparent" />
+          <div className="flex items-center space-x-3 text-[#B91C1C] font-semibold text-sm">
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#B91C1C] border-t-transparent" />
             <span className="text-slate-700 dark:text-slate-200">Calculating competency analytics...</span>
           </div>
         </div>
@@ -209,7 +209,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Sessions Completed
                 </span>
-                <div className="rounded-xl bg-[#FF6500]/15 p-2 text-[#FF6500] border border-[#FF6500]/30">
+                <div className="rounded-xl bg-[#B91C1C]/15 p-2 text-[#B91C1C] border border-[#B91C1C]/30">
                   <Compass className="h-5 w-5" />
                 </div>
               </div>
@@ -232,7 +232,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Total Practice Time
                 </span>
-                <div className="rounded-xl bg-[#FF6500]/15 p-2 text-[#FF6500] border border-[#FF6500]/30">
+                <div className="rounded-xl bg-[#B91C1C]/15 p-2 text-[#B91C1C] border border-[#B91C1C]/30">
                   <Clock className="h-5 w-5" />
                 </div>
               </div>
@@ -303,7 +303,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
             <div className="rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-6 shadow-sm">
               <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#1E3E62] pb-4">
                 <div className="flex items-center space-x-2">
-                  <BarChart3 className="h-5 w-5 text-[#FF6500]" />
+                  <BarChart3 className="h-5 w-5 text-[#B91C1C]" />
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">Assessed Skill Competencies</h2>
                 </div>
                 <span className="text-xs text-slate-500 dark:text-slate-400 font-mono font-bold">
@@ -337,7 +337,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                               skill.average_score >= 75
                                 ? 'text-emerald-600 dark:text-emerald-400'
                                 : skill.average_score >= 60
-                                ? 'text-[#FF6500]'
+                                ? 'text-[#B91C1C]'
                                 : 'text-rose-600 dark:text-rose-400'
                             }`}
                           >
@@ -352,7 +352,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                             skill.average_score >= 75
                               ? 'bg-gradient-to-r from-emerald-500 to-teal-500'
                               : skill.average_score >= 60
-                              ? 'bg-gradient-to-r from-amber-500 to-[#FF6500]'
+                              ? 'bg-gradient-to-r from-amber-500 to-[#B91C1C]'
                               : 'bg-gradient-to-r from-rose-500 to-rose-600'
                           }`}
                           style={{ width: `${Math.min(100, Math.max(8, skill.average_score))}%` }}
@@ -368,7 +368,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
             <div className="rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-6 shadow-sm">
               <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#1E3E62] pb-4">
                 <div className="flex items-center space-x-2">
-                  <TrendingUp className="h-5 w-5 text-[#FF6500]" />
+                  <TrendingUp className="h-5 w-5 text-[#B91C1C]" />
                   <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">Score Trajectory Curve</h2>
                 </div>
                 <span className="text-xs text-slate-500 dark:text-slate-400 font-mono font-bold">CHRONOLOGICAL</span>
@@ -390,8 +390,8 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                     <svg viewBox="0 0 500 160" className="h-full w-full overflow-visible">
                       <defs>
                         <linearGradient id="scoreGrad" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#FF6500" stopOpacity="0.3" />
-                          <stop offset="100%" stopColor="#FF6500" stopOpacity="0.0" />
+                          <stop offset="0%" stopColor="#B91C1C" stopOpacity="0.3" />
+                          <stop offset="100%" stopColor="#B91C1C" stopOpacity="0.0" />
                         </linearGradient>
                       </defs>
                       {/* Grid lines */}
@@ -418,7 +418,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                             <path
                               d={pathD}
                               fill="none"
-                              stroke="#FF6500"
+                              stroke="#B91C1C"
                               strokeWidth="3"
                               strokeLinecap="round"
                               strokeLinejoin="round"
@@ -429,7 +429,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                                   cx={p.x}
                                   cy={p.y}
                                   r="4"
-                                  className="fill-[#FF6500] stroke-white dark:stroke-[#0B192C] stroke-2"
+                                  className="fill-[#B91C1C] stroke-white dark:stroke-[#0B192C] stroke-2"
                                 />
                                 <text
                                   x={p.x}
@@ -464,7 +464,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
           {traineeData.recommended_scenarios.length > 0 && (
             <div className="space-y-4">
               <div className="flex items-center space-x-2">
-                <Sparkles className="h-5 w-5 text-[#FF6500]" />
+                <Sparkles className="h-5 w-5 text-[#B91C1C]" />
                 <h2 className="text-xl font-bold text-slate-900 dark:text-white font-heading">Recommended Practice Drills</h2>
               </div>
               <p className="text-sm text-slate-600 dark:text-slate-400 font-medium">
@@ -475,18 +475,18 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                 {traineeData.recommended_scenarios.map((rec) => (
                   <div
                     key={rec.scenario_id}
-                    className="flex flex-col justify-between rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-5 transition hover:border-[#FF6500] shadow-sm"
+                    className="flex flex-col justify-between rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-5 transition hover:border-[#B91C1C] shadow-sm"
                   >
                     <div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="font-mono uppercase font-bold text-[#FF6500]">{rec.track_key}</span>
+                        <span className="font-mono uppercase font-bold text-[#B91C1C]">{rec.track_key}</span>
                         <span className="rounded bg-slate-100 dark:bg-[#0B192C] px-2 py-0.5 text-xs font-bold text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-[#1E3E62]">
                           Diff {rec.difficulty}/5
                         </span>
                       </div>
                       <h3 className="mt-2 text-base font-bold text-slate-900 dark:text-white">{rec.title}</h3>
                       <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 line-clamp-2 font-medium">{rec.topic}</p>
-                      <div className="mt-3 rounded-xl bg-amber-50 dark:bg-[#0B192C] border border-[#FF6500]/30 p-2.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
+                      <div className="mt-3 rounded-xl bg-amber-50 dark:bg-[#0B192C] border border-[#B91C1C]/30 p-2.5 text-xs text-slate-800 dark:text-slate-200 font-medium">
                         {rec.reason}
                       </div>
                     </div>
@@ -507,7 +507,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
           {/* Flight History Log */}
           <div className="space-y-4">
             <div className="flex items-center space-x-2">
-              <Calendar className="h-5 w-5 text-[#FF6500]" />
+              <Calendar className="h-5 w-5 text-[#B91C1C]" />
               <h2 className="text-xl font-bold text-slate-900 dark:text-white font-heading">Recent Practice Sessions</h2>
             </div>
 
@@ -542,7 +542,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                             <span
                               className={`rounded px-2 py-0.5 font-bold ${
                                 sess.mode === 'voice'
-                                  ? 'bg-[#FF6500]/20 text-[#FF6500] border border-[#FF6500]/40'
+                                  ? 'bg-[#B91C1C]/20 text-[#B91C1C] border border-[#B91C1C]/40'
                                   : 'bg-slate-100 dark:bg-[#0B192C] text-slate-700 dark:text-slate-300 border border-slate-300 dark:border-[#1E3E62]'
                               }`}
                             >
@@ -580,7 +580,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                             {sess.status === 'completed' ? (
                               <button
                                 onClick={() => onViewSessionEvaluation(sess.session_id)}
-                                className="inline-flex items-center space-x-1 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#0B192C] px-3.5 py-1.5 text-xs font-bold text-[#FF6500] hover:bg-slate-100 dark:hover:bg-[#1E3E62] transition shadow-sm"
+                                className="inline-flex items-center space-x-1 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#0B192C] px-3.5 py-1.5 text-xs font-bold text-[#B91C1C] hover:bg-slate-100 dark:hover:bg-[#1E3E62] transition shadow-sm"
                               >
                                 <span>Debrief</span>
                               </button>
@@ -616,7 +616,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
           {/* Cohort Header & Actions */}
           <div className="flex flex-col justify-between gap-4 rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-6 shadow-sm sm:flex-row sm:items-center">
             <div>
-              <span className="font-mono text-xs uppercase font-bold text-[#FF6500]">COHORT ROSTER</span>
+              <span className="font-mono text-xs uppercase font-bold text-[#B91C1C]">COHORT ROSTER</span>
               <h2 className="text-2xl font-black text-slate-900 dark:text-white font-heading">{cohortData.cohort_name}</h2>
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 font-mono font-semibold">
                 ID: {cohortData.cohort_id}
@@ -643,7 +643,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
 
             <div className="rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-5 shadow-sm">
               <span className="text-xs font-bold uppercase text-slate-500 dark:text-slate-400">Active Participants</span>
-              <div className="mt-2 text-3xl font-black text-[#FF6500]">{cohortData.active_members}</div>
+              <div className="mt-2 text-3xl font-black text-[#B91C1C]">{cohortData.active_members}</div>
               <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
                 {cohortData.total_members > 0
                   ? `${Math.round((cohortData.active_members / cohortData.total_members) * 100)}% engagement rate`
@@ -671,10 +671,10 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
           </div>
 
           {/* Top 3 Group Weaknesses Card (For Live Instructor Debriefs) */}
-          <div className="rounded-2xl border-2 border-[#FF6500]/60 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-6 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#FF6500]/30 pb-3">
+          <div className="rounded-2xl border-2 border-[#B91C1C]/60 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-[#B91C1C]/30 pb-3">
               <div>
-                <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#FF6500]">
+                <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#B91C1C]">
                   <Target className="h-4 w-4" />
                   <span>Instructor Group Debrief: Top 3 Cohort Weaknesses & Live Agenda</span>
                 </div>
@@ -682,7 +682,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                   Synthesized across all cohort attempts. Use these 3 core gaps as your primary group talking points during live coaching.
                 </p>
               </div>
-              <span className="self-start sm:self-auto rounded-full bg-[#FF6500]/15 border border-[#FF6500]/40 px-3 py-1 text-[11px] font-bold text-[#FF6500]">
+              <span className="self-start sm:self-auto rounded-full bg-[#B91C1C]/15 border border-[#B91C1C]/40 px-3 py-1 text-[11px] font-bold text-[#B91C1C]">
                 Live Group Focus
               </span>
             </div>
@@ -734,7 +734,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
                             Cohort aggregate score: {Math.round(ws.avg_score || ws.score || 0)}% across recorded simulations.
                           </p>
                         </div>
-                        <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
+                        <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#B91C1C]">
                           Target for deliberate practice during upcoming coaching sessions.
                         </div>
                       </div>
@@ -806,7 +806,7 @@ export const ProgressPage: React.FC<ProgressPageProps> = ({
       {/* Cohort Empty State Fallback */}
       {!loading && !error && activeTab === 'cohort' && !cohortData && (
         <div className="mt-8 rounded-2xl border-2 border-dashed border-slate-300 dark:border-[#2D5B8D] p-12 text-center bg-white dark:bg-[#132B45]/50">
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FF6500]/15 text-[#FF6500] mb-4 border border-[#FF6500]/30 text-2xl">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#B91C1C]/15 text-[#B91C1C] mb-4 border border-[#B91C1C]/30 text-2xl">
             👥
           </div>
           <h3 className="text-xl font-black text-slate-900 dark:text-white">No Cohort Progress Data Available</h3>

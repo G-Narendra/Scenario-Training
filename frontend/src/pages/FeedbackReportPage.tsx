@@ -113,7 +113,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
   if (loading) {
     return (
       <div className="flex min-h-[60vh] flex-col items-center justify-center space-y-4 px-4">
-        <div className="h-10 w-10 animate-spin rounded-full border-3 border-[#FF6500] border-t-transparent" />
+        <div className="h-10 w-10 animate-spin rounded-full border-3 border-[#B91C1C] border-t-transparent" />
         <div className="text-center">
           <h3 className="text-base font-bold text-slate-900 dark:text-white">
             Compiling Performance Report
@@ -170,13 +170,13 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
         <nav aria-label="Breadcrumb" className="flex items-center space-x-2 text-xs font-bold">
           <button
             onClick={onBackToScenarios}
-            className="text-slate-500 dark:text-slate-400 hover:text-[#FF6500] dark:hover:text-[#FF6500] transition flex items-center space-x-1"
+            className="text-slate-500 dark:text-slate-400 hover:text-[#B91C1C] dark:hover:text-[#B91C1C] transition flex items-center space-x-1"
           >
             <BookOpen className="h-3.5 w-3.5" />
             <span>Scenario Library</span>
           </button>
           <ChevronRight className="h-3 w-3 text-slate-400" />
-          <span className="text-[#FF6500]">
+          <span className="text-[#B91C1C]">
             {reportTier === 'summary' ? 'Performance Summary Debrief' : 'Executive Diagnostic Dossier'}
           </span>
         </nav>
@@ -219,7 +219,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
             onClick={onBackToScenarios}
             className="flex items-center space-x-1.5 rounded-xl border-2 border-slate-300 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-700 hover:bg-slate-100 dark:border-[#2D5B8D] dark:bg-[#132B45] dark:text-slate-200 dark:hover:bg-[#1E3E62] transition shadow-sm"
           >
-            <BookOpen className="h-3.5 w-3.5 text-[#0B192C] dark:text-[#FF6500]" />
+            <BookOpen className="h-3.5 w-3.5 text-[#0B192C] dark:text-[#DC2626]" />
             <span>Library</span>
           </button>
 
@@ -240,7 +240,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
               onClick={() => onRetryScenario(session.scenario_id)}
               className="flex items-center space-x-1.5 rounded-xl border-2 border-slate-300 bg-white px-3.5 py-1.5 text-xs font-bold text-slate-800 hover:bg-slate-100 dark:border-[#2D5B8D] dark:bg-[#132B45] dark:text-slate-200 dark:hover:bg-[#1E3E62] transition shadow-sm"
             >
-              <RotateCcw className="h-3.5 w-3.5 text-[#0B192C] dark:text-[#FF6500]" />
+              <RotateCcw className="h-3.5 w-3.5 text-[#0B192C] dark:text-[#DC2626]" />
               <span>Retry Scenario</span>
             </button>
           )}
@@ -259,14 +259,14 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
 
 
       {/* Printable Header */}
-      <div className="hidden print:block mb-6 border-b-2 border-[#FF6500] pb-4">
+      <div className="hidden print:block mb-6 border-b-2 border-[#B91C1C] pb-4">
         <div className="flex items-start justify-between">
           <div>
             <ThreeHSolutionsLogo size="md" variant="full" />
             <h1 className="mt-2 text-2xl font-black text-slate-900 font-heading">
               {session?.scenario_title || 'Executive Performance Report'}
             </h1>
-            <p className="text-xs font-bold text-[#FF6500] uppercase tracking-wider mt-0.5">
+            <p className="text-xs font-bold text-[#B91C1C] uppercase tracking-wider mt-0.5">
               {reportTier === 'summary' ? '1-Page Executive Summary Debrief' : 'Comprehensive Executive Diagnostic Dossier'}
             </p>
             <div className="mt-2 grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-slate-700">
@@ -293,7 +293,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
       <div className="print-section mt-6 rounded-3xl border border-slate-200 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-6 sm:p-8 shadow-xl ring-1 ring-slate-100 dark:ring-0 print:p-4 print:mt-2 print:border-slate-300 print:ring-0">
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-6 print:block">
           <div>
-            <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
+            <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#B91C1C]">
               <Award className="h-4 w-4" />
               <span>{reportTier === 'summary' ? 'Executive Performance Debrief' : 'Comprehensive Performance Assessment'}</span>
             </div>
@@ -314,7 +314,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
               <span className="text-slate-400">•</span>
               <span className="flex items-center space-x-1.5">
                 <span className="text-slate-400">Report Tier:</span>
-                <span className="text-[#FF6500] font-bold capitalize">{reportTier === 'summary' ? 'Concise Debrief' : 'Full Diagnostic'}</span>
+                <span className="text-[#B91C1C] font-bold capitalize">{reportTier === 'summary' ? 'Concise Debrief' : 'Full Diagnostic'}</span>
               </span>
             </div>
 
@@ -367,8 +367,8 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
         {reportTier === 'detailed' && (
           <>
             {/* Recommended Phrasing Options */}
-            <div className="print-card print-avoid-break mt-8 rounded-2xl border-2 border-[#FF6500]/60 bg-gradient-to-br from-[#FF6500]/10 via-amber-500/5 to-transparent p-6 shadow-sm">
-              <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#FF6500]">
+            <div className="print-card print-avoid-break mt-8 rounded-2xl border-2 border-[#B91C1C]/60 bg-gradient-to-br from-[#B91C1C]/10 via-amber-500/5 to-transparent p-6 shadow-sm">
+              <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#B91C1C]">
                 <Award className="h-4 w-4" />
                 <span>Recommended Response Strategies</span>
               </div>
@@ -379,10 +379,10 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
               <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm">
                   <div className="flex items-center justify-between text-xs font-bold text-slate-500 uppercase tracking-wider">
-                    <span className="text-[#FF6500] font-black">Discovery-Led</span>
-                    <span className="rounded bg-[#FF6500]/15 px-2 py-0.5 text-[10px] text-[#FF6500] font-black">Empathy</span>
+                    <span className="text-[#B91C1C] font-black">Discovery-Led</span>
+                    <span className="rounded bg-[#B91C1C]/15 px-2 py-0.5 text-[10px] text-[#B91C1C] font-black">Empathy</span>
                   </div>
-                  <blockquote className="mt-2 text-sm font-semibold text-slate-900 dark:text-white leading-relaxed italic border-l-2 border-[#FF6500] pl-3 py-0.5">
+                  <blockquote className="mt-2 text-sm font-semibold text-slate-900 dark:text-white leading-relaxed italic border-l-2 border-[#B91C1C] pl-3 py-0.5">
                     "{report.key_moments?.[0]?.alternative_phrasing || 'I hear your concern. Before we finalize next steps, can you walk me through the primary operational hurdles you see?'}"
                   </blockquote>
                   <p className="mt-2.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
@@ -409,7 +409,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
 
             {/* Counterpart Perspective */}
             <div className="print-card print-avoid-break mt-8 rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-slate-50 dark:bg-[#0B192C] p-5">
-              <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
+              <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#B91C1C]">
                 <Eye className="h-4 w-4" />
                 <span>Counterpart Priorities & Mindset</span>
               </div>
@@ -428,8 +428,8 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           <div className="print-card print-avoid-break mt-8 rounded-3xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-6 sm:p-8 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-slate-200 dark:border-[#1E3E62] gap-2">
               <div>
-                <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#0B192C] dark:text-[#FF6500]">
-                  <Sparkles className="h-4 w-4 text-[#FF6500]" />
+                <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#0B192C] dark:text-[#DC2626]">
+                  <Sparkles className="h-4 w-4 text-[#B91C1C]" />
                   <span>3H Solutions Executive Competency Profile</span>
                 </div>
                 <h3 className="mt-1 text-xl font-black text-slate-900 dark:text-white font-heading">
@@ -448,7 +448,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           {/* Competency Scores */}
           <div className="print-section mt-8">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center space-x-2 font-heading">
-          <Target className="h-5 w-5 text-[#FF6500]" />
+          <Target className="h-5 w-5 text-[#B91C1C]" />
           <span>Competency Assessment</span>
         </h2>
 
@@ -465,7 +465,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
                 <div className="flex items-center space-x-1.5">
                   <span className={`text-sm font-black ${
                     skill.score >= 4 ? 'text-emerald-600 dark:text-emerald-400' :
-                    skill.score === 3 ? 'text-[#FF6500]' :
+                    skill.score === 3 ? 'text-[#B91C1C]' :
                     'text-rose-600 dark:text-rose-400'
                   }`}>
                     Level {skill.score}
@@ -478,7 +478,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
                     skill.score >= 4 ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
-                    skill.score === 3 ? 'bg-gradient-to-r from-amber-500 to-[#FF6500]' :
+                    skill.score === 3 ? 'bg-gradient-to-r from-amber-500 to-[#B91C1C]' :
                     'bg-gradient-to-r from-rose-500 to-rose-600'
                   }`}
                   style={{ width: `${(skill.score / 5) * 100}%` }}
@@ -546,7 +546,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
       {/* Key Moments */}
       <div className="print-section mt-8">
         <h2 className="text-xl font-bold text-slate-900 dark:text-white flex items-center space-x-2 font-heading">
-          <Sparkles className="h-5 w-5 text-[#FF6500]" />
+          <Sparkles className="h-5 w-5 text-[#B91C1C]" />
           <span>Key Conversation Moments</span>
         </h2>
         <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
@@ -560,7 +560,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
               className="print-card print-avoid-break rounded-2xl border-2 border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-6 shadow-md"
             >
               <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 font-bold">
-                <span className="uppercase tracking-wider text-[#FF6500]">
+                <span className="uppercase tracking-wider text-[#B91C1C]">
                   Moment #{idx + 1} • Exchange {km.moment_seq}
                 </span>
                 <span>{km.what_happened}</span>
@@ -580,8 +580,8 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
                 {km.why_it_matters}
               </div>
 
-              <div className="mt-4 rounded-xl border-2 border-[#FF6500]/40 bg-amber-50/70 dark:bg-[#0B192C] p-4">
-                <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#B45309] dark:text-[#FF6500]">
+              <div className="mt-4 rounded-xl border-2 border-[#B91C1C]/40 bg-amber-50/70 dark:bg-[#0B192C] p-4">
+                <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#B45309] dark:text-[#DC2626]">
                   <Lightbulb className="h-4 w-4" />
                   <span>Recommended Alternative</span>
                 </div>
@@ -601,7 +601,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
 
       {/* Action Plan */}
       <div className="print-section mt-8 rounded-3xl border border-slate-200 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-8 shadow-xl ring-1 ring-slate-100 dark:ring-0 print:p-4 print:ring-0">
-        <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
+        <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#B91C1C]">
           <TrendingUp className="h-4 w-4" />
           <span>Action Plan</span>
         </div>
@@ -620,7 +620,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
             >
               <div>
                 <div className="flex items-center justify-between">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#FF6500]/20 text-xs font-bold text-[#FF6500]">
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#B91C1C]/20 text-xs font-bold text-[#B91C1C]">
                     {idx + 1}
                   </span>
                   <span className="rounded bg-slate-200 dark:bg-[#132B45] px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:text-slate-300 capitalize">
@@ -637,7 +637,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
               </div>
 
               <div className="mt-4 border-t border-slate-200 dark:border-[#1E3E62] pt-3">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#FF6500]">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#B91C1C]">
                   Practice Drill:
                 </span>
                 <p className="mt-1 text-xs text-slate-800 dark:text-slate-200 font-semibold leading-relaxed">
@@ -652,7 +652,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
       {/* Facilitator Archive Notice Card (Student Summary View) */}
       {reportTier === 'summary' && (
         <div className="print:hidden mt-8 rounded-3xl border-2 border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-6 sm:p-8 text-center shadow-sm">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0B192C]/10 dark:bg-[#FF6500]/15 text-[#0B192C] dark:text-[#FF6500] mb-3 border border-slate-300 dark:border-[#FF6500]/30 shadow-inner">
+          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#0B192C]/10 dark:bg-[#DC2626]/15 text-[#0B192C] dark:text-[#DC2626] mb-3 border border-slate-300 dark:border-[#DC2626]/30 shadow-inner">
             <Lock className="h-6 w-6" />
           </div>
           <h3 className="text-lg font-black text-slate-900 dark:text-white font-heading">
@@ -682,7 +682,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
         <div className="print-section mt-8 rounded-3xl border border-slate-200 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-8 shadow-xl print:p-4 print:border-slate-300">
           <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#1E3E62] pb-4">
             <div>
-              <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
+              <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#B91C1C]">
                 <MessageSquare className="h-4 w-4" />
                 <span>Transcript</span>
               </div>
@@ -701,12 +701,12 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
                 key={idx}
                 className={`rounded-2xl p-4 border-2 text-sm ${
                   msg.role === 'trainee'
-                    ? 'border-[#FF6500]/40 bg-amber-50/60 dark:border-[#FF6500]/40 dark:bg-[#0B192C] ml-6'
+                    ? 'border-[#B91C1C]/40 bg-amber-50/60 dark:border-[#DC2626]/40 dark:bg-[#0B192C] ml-6'
                     : 'border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0F2238] mr-6'
                 }`}
               >
                 <div className="flex items-center justify-between text-xs mb-1.5">
-                  <span className={`font-bold uppercase tracking-wider ${msg.role === 'trainee' ? 'text-[#FF6500]' : 'text-slate-600 dark:text-slate-300'}`}>
+                  <span className={`font-bold uppercase tracking-wider ${msg.role === 'trainee' ? 'text-[#B91C1C]' : 'text-slate-600 dark:text-slate-300'}`}>
                     {msg.role === 'trainee' ? 'You' : 'Counterpart'}
                   </span>
                 </div>
@@ -725,7 +725,7 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           onClick={onBackToScenarios}
           className="w-full sm:w-auto flex items-center justify-center space-x-2 rounded-xl border-2 border-slate-300 bg-white dark:bg-[#132B45] dark:border-[#2D5B8D] px-5 py-2.5 text-xs font-bold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1E3E62] transition shadow-sm"
         >
-          <BookOpen className="h-4 w-4 text-[#FF6500]" />
+          <BookOpen className="h-4 w-4 text-[#B91C1C]" />
           <span>Return to Scenario Library</span>
         </button>
 

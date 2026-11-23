@@ -63,7 +63,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
         <defs>
           <linearGradient id="participantRadarGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="#1E3E62" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#FF6500" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#B91C1C" stopOpacity="0.25" />
           </linearGradient>
           <filter id="radarShadow" x="-10%" y="-10%" width="130%" height="130%">
             <feDropShadow dx="0" dy="2" stdDeviation="3" floodOpacity="0.25" />
@@ -132,7 +132,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
           stroke="#0B192C"
           strokeWidth="2.5"
           filter="url(#radarShadow)"
-          className="dark:stroke-[#FF6500]"
+          className="dark:stroke-[#DC2626]"
         />
 
         {/* Data Points (Dots on Vertices with Score) */}
@@ -148,7 +148,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
                 cx={x}
                 cy={y}
                 r="4.5"
-                fill="#FF6500"
+                fill="#B91C1C"
                 stroke="#FFFFFF"
                 strokeWidth="2"
                 className="dark:stroke-[#0B192C]"
@@ -185,7 +185,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
                 x={lx}
                 y={ly + (ly > cy ? 12 : -12)}
                 textAnchor={textAnchor}
-                className="fill-[#FF6500] font-black text-[10px]"
+                className="fill-[#B91C1C] font-black text-[10px]"
                 dominantBaseline="central"
               >
                 {Math.round(dim.score)}%
@@ -198,7 +198,7 @@ export const RadarChart: React.FC<RadarChartProps> = ({
       {/* Spider Graph Legend */}
       <div className="mt-4 flex flex-wrap items-center justify-center gap-6 text-xs font-semibold">
         <div className="flex items-center space-x-2">
-          <span className="h-3 w-3 rounded-full bg-[#0B192C] dark:bg-[#FF6500] border-2 border-white dark:border-[#0B192C]" />
+          <span className="h-3 w-3 rounded-full bg-[#0B192C] dark:bg-[#DC2626] border-2 border-white dark:border-[#0B192C]" />
           <span className="text-slate-800 dark:text-slate-200 font-bold">Delegate Performance</span>
         </div>
         {showBenchmark && (

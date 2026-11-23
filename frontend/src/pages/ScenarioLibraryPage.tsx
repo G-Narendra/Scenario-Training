@@ -138,12 +138,13 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
       if (!matches) return false;
     }
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchName = (cap.name || '').toLowerCase().includes(q);
-      const matchDesc = (cap.description || '').toLowerCase().includes(q);
-      const matchPillar = (cap.pillar || '').toLowerCase().includes(q);
-      const matchNum = String(cap.number) === q;
-      const matchScenario = (cap.matching_scenario_title || '').toLowerCase().includes(q);
+      const q = searchQuery.toLowerCase().trim();
+      const cleanQ = q.replace(/^#/, '');
+      const matchName = (cap.name || '').toLowerCase().includes(q) || (cap.name || '').toLowerCase().includes(cleanQ);
+      const matchDesc = (cap.description || '').toLowerCase().includes(q) || (cap.description || '').toLowerCase().includes(cleanQ);
+      const matchPillar = (cap.pillar || '').toLowerCase().includes(q) || (cap.pillar || '').toLowerCase().includes(cleanQ);
+      const matchNum = String(cap.number) === cleanQ || String(cap.number) === q;
+      const matchScenario = (cap.matching_scenario_title || '').toLowerCase().includes(q) || (cap.matching_scenario_title || '').toLowerCase().includes(cleanQ);
       if (!matchName && !matchDesc && !matchPillar && !matchNum && !matchScenario) return false;
     }
     return true;
@@ -177,12 +178,16 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
       if (tier !== difficultyFilter) return false;
     }
     if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      const matchTitle = s.title.toLowerCase().includes(q);
-      const matchTopic = s.topic.toLowerCase().includes(q);
-      const matchTags = s.tags.some((t) => t.toLowerCase().includes(q));
-      const matchCapabilities = s.target_capabilities?.some((c) => c.toLowerCase().includes(q));
-      if (!matchTitle && !matchTopic && !matchTags && !matchCapabilities) return false;
+      const rawQ = searchQuery.toLowerCase().trim();
+      const q = rawQ.replace(/^#/, '');
+      const matchTitle = s.title.toLowerCase().includes(rawQ) || s.title.toLowerCase().includes(q);
+      const matchTopic = s.topic.toLowerCase().includes(rawQ) || s.topic.toLowerCase().includes(q);
+      const matchTags = s.tags.some((t) => t.toLowerCase().includes(rawQ) || t.toLowerCase().includes(q));
+      const matchCapabilities = s.target_capabilities?.some((c) => c.toLowerCase().includes(rawQ) || c.toLowerCase().includes(q));
+      // Number-based search: typing "47" or "#47" accurately matches scenario #47
+      const numQuery = Number(q);
+      const matchNum = !isNaN(numQuery) && numQuery > 0 && (scenarios.findIndex((x) => x.id === s.id) + 1 === numQuery);
+      if (!matchTitle && !matchTopic && !matchTags && !matchCapabilities && !matchNum) return false;
     }
     return true;
   });
@@ -204,8 +209,8 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
       {/* Top Header */}
       <div className="flex flex-col space-y-4 sm:flex-row sm:items-center sm:justify-between sm:space-y-0 pb-4 border-b border-slate-200 dark:border-[#1E3E62]">
         <div>
-          <div className="flex items-center space-x-2 text-xs font-bold text-[#FF6500] mb-1">
-            <span className="rounded-full bg-[#FF6500]/10 px-2.5 py-0.5 text-xs font-bold text-[#FF6500] border border-[#FF6500]/30">
+          <div className="flex items-center space-x-2 text-xs font-bold text-[#B91C1C] mb-1">
+            <span className="rounded-full bg-[#B91C1C]/10 px-2.5 py-0.5 text-xs font-bold text-[#B91C1C] border border-[#B91C1C]/30">
               3H Solutions Executive Training
             </span>
           </div>
@@ -230,10 +235,10 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             type="text"
-            placeholder={viewMode === 'capabilities' ? 'Search capabilities...' : 'Search scenarios, skills...'}
+            placeholder={viewMode === 'capabilities' ? 'Search capabilities or #number...' : 'Search scenarios, skills, or type #47...'}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-10 pr-4 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:border-[#0B192C] dark:focus:border-[#FF6500] focus:outline-none focus:ring-2 focus:ring-slate-900/10 dark:focus:ring-[#FF6500]/25 shadow-sm dark:border-[#2D5B8D] dark:bg-[#132B45] dark:text-white dark:placeholder-slate-500"
+            className="w-full rounded-xl border border-slate-300 bg-white py-2 pl-10 pr-4 text-xs sm:text-sm text-slate-900 placeholder-slate-400 focus:border-[#0B192C] dark:focus:border-[#B91C1C] focus:outline-none focus:ring-2 focus:ring-slate-900/10 dark:focus:ring-[#B91C1C]/25 shadow-sm dark:border-[#2D5B8D] dark:bg-[#132B45] dark:text-white dark:placeholder-slate-500"
           />
         </div>
       </div>
@@ -398,7 +403,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
       {/* Main Grid View */}
       {loading ? (
         <div className="flex h-96 flex-col items-center justify-center space-y-3">
-          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#FF6500] border-t-transparent" />
+          <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#B91C1C] border-t-transparent" />
           <p className="text-xs font-semibold text-slate-500 dark:text-slate-400 animate-pulse">
             Loading executive curriculum & scenarios...
           </p>
@@ -410,14 +415,19 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
               <div
                 key={cap.key}
                 id={`capability-card-${cap.key}`}
-                className="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100 dark:border-[#2D5B8D] dark:bg-[#132B45] dark:ring-0 transition-all duration-200 hover:-translate-y-1 hover:border-[#FF6500] hover:shadow-xl"
+                className="group flex flex-col justify-between rounded-2xl border border-slate-200 bg-white p-5 shadow-sm ring-1 ring-slate-100 dark:border-[#2D5B8D] dark:bg-[#132B45] dark:ring-0 transition-all duration-200 hover:-translate-y-1 hover:border-[#B91C1C] hover:shadow-xl"
               >
                 <div>
-                  {/* Top Bar: Pillar Tag & Difficulty Badge */}
+                  {/* Top Bar: Number Badge + Pillar Tag & Difficulty Badge */}
                   <div className="flex items-center justify-between gap-2">
-                    <span className="rounded-md bg-amber-500/10 dark:bg-[#0B192C] border border-[#FF6500]/30 px-2.5 py-0.5 text-[11px] font-bold text-[#FF6500] uppercase tracking-wider">
-                      {cap.pillar}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="flex h-6 w-9 items-center justify-center rounded-md bg-[#B91C1C]/15 border border-[#B91C1C]/30 font-mono text-[10px] font-black text-[#B91C1C] flex-shrink-0">
+                        #{String(cap.number).padStart(2, '0')}
+                      </span>
+                      <span className="rounded-md bg-amber-500/10 dark:bg-[#0B192C] border border-[#B91C1C]/30 px-2.5 py-0.5 text-[11px] font-bold text-[#B91C1C] uppercase tracking-wider">
+                        {cap.pillar}
+                      </span>
+                    </div>
                     <DifficultyBadge
                       difficulty={cap.matching_scenario_difficulty || 2}
                       difficultyLevel={cap.matching_scenario_difficulty_level || 'Normal'}
@@ -426,7 +436,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                   </div>
 
                   {/* Capability Name */}
-                  <h3 className="mt-3 text-lg font-black text-slate-900 dark:text-white font-heading group-hover:text-[#FF6500] transition-colors leading-snug">
+                  <h3 className="mt-3 text-lg font-black text-slate-900 dark:text-white font-heading group-hover:text-[#B91C1C] transition-colors leading-snug">
                     {cap.name}
                   </h3>
 
@@ -478,7 +488,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                   setSelectedPillar('all');
                   setSearchQuery('');
                 }}
-                className="mt-4 rounded-xl bg-[#FF6500] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#E05A00] transition"
+                className="mt-4 rounded-xl bg-[#B91C1C] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#BE2626] transition"
               >
                 Reset Filters
               </button>
@@ -503,12 +513,12 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                 className="p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-[#0B192C]/50 cursor-pointer transition group"
               >
                 <div className="flex items-start sm:items-center space-x-3.5">
-                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 dark:bg-[#0B192C] font-mono text-xs font-black text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-[#1E3E62]">
-                    {idx + 1}
+                  <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[#B91C1C] font-mono text-[10px] font-black text-white border border-[#B91C1C]/50 shadow-sm">
+                    #{String(idx + 1).padStart(2, '0')}
                   </span>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
-                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#0B192C] dark:group-hover:text-[#FF6500]">
+                      <h3 className="text-sm sm:text-base font-bold text-slate-900 dark:text-white group-hover:text-[#0B192C] dark:group-hover:text-[#B91C1C]">
                         {scen.title}
                       </h3>
                       <DifficultyBadge difficulty={scen.difficulty} difficultyLevel={scen.difficulty_level} size="sm" />
@@ -545,38 +555,43 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
         /* SCENARIO CATALOG GRID                                                     */
         /* ========================================================================= */
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {sortedScenarios.map((scen) => (
+          {sortedScenarios.map((scen, idx) => (
             <div
               key={scen.id}
               id={`scenario-card-${scen.slug}`}
               onClick={() => handleOpenBriefing(scen.id)}
-              className="group flex flex-col justify-between cursor-pointer rounded-2xl border border-slate-200 bg-white p-6 shadow-md ring-1 ring-slate-100 dark:border-[#2D5B8D] dark:bg-[#132B45] dark:ring-0 transition-all duration-200 hover:-translate-y-1 hover:border-[#FF6500] hover:shadow-2xl hover:ring-[#FF6500]/20"
+              className="group flex flex-col justify-between cursor-pointer rounded-2xl border border-slate-200 bg-white p-6 shadow-md ring-1 ring-slate-100 dark:border-[#2D5B8D] dark:bg-[#132B45] dark:ring-0 transition-all duration-200 hover:-translate-y-1 hover:border-[#B91C1C] hover:shadow-2xl hover:ring-[#B91C1C]/20"
             >
               <div>
-                {/* Card Top: Topic & Difficulty Badge */}
+                {/* Card Top: Scenario Number + Topic & Difficulty Badge */}
                 <div className="flex items-center justify-between gap-2">
-                  <span className="rounded-md bg-slate-100 dark:bg-[#0B192C] border border-slate-300 dark:border-[#1E3E62] px-2.5 py-0.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                    {scen.topic.replace(/_/g, ' ')}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#B91C1C] text-white font-black text-[10px] tracking-tight shadow-sm flex-shrink-0">
+                      #{String(idx + 1).padStart(2, '0')}
+                    </span>
+                    <span className="rounded-md bg-slate-100 dark:bg-[#0B192C] border border-slate-300 dark:border-[#1E3E62] px-2.5 py-0.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
+                      {scen.topic.replace(/_/g, ' ')}
+                    </span>
+                  </div>
                   <DifficultyBadge difficulty={scen.difficulty} difficultyLevel={scen.difficulty_level} size="sm" />
                 </div>
 
                 {/* Scenario Title */}
-                <h3 className="mt-4 text-xl font-black text-slate-900 dark:text-white font-heading group-hover:text-[#FF6500] transition-colors leading-snug">
+                <h3 className="mt-4 text-xl font-black text-slate-900 dark:text-white font-heading group-hover:text-[#B91C1C] transition-colors leading-snug">
                   {scen.title}
                 </h3>
 
                 {/* Primary Target Capability Highlight */}
                 <div className="mt-2.5">
-                  <span className="inline-flex items-center rounded-md bg-[#FF6500]/15 px-2.5 py-1 text-xs font-bold text-[#FF6500] border border-[#FF6500]/30">
+                  <span className="inline-flex items-center rounded-md bg-[#B91C1C]/15 px-2.5 py-1 text-xs font-bold text-[#B91C1C] border border-[#B91C1C]/30">
                     🎯 Target Skill: {scen.primary_capability || scen.target_capabilities?.[0] || 'Leadership Capability'}
                   </span>
                 </div>
 
                 {/* Tactical Coaching Clue Teaser */}
                 {scen.tactical_coaching_clue && (
-                  <div className="mt-3.5 rounded-xl border border-amber-400/60 bg-amber-50/90 dark:border-[#FF6500]/40 dark:bg-[#0B192C] p-3 text-xs text-slate-800 dark:text-amber-100 flex items-start space-x-2">
-                    <Lightbulb className="h-4 w-4 text-[#FF6500] flex-shrink-0 mt-0.5" />
+                  <div className="mt-3.5 rounded-xl border border-amber-400/60 bg-amber-50/90 dark:border-[#DC2626]/40 dark:bg-[#0B192C] p-3 text-xs text-slate-800 dark:text-amber-100 flex items-start space-x-2">
+                    <Lightbulb className="h-4 w-4 text-[#B91C1C] flex-shrink-0 mt-0.5" />
                     <p className="line-clamp-2 italic font-medium leading-relaxed">
                       "{scen.tactical_coaching_clue}"
                     </p>
@@ -585,7 +600,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
 
                 {/* Duration Benchmark */}
                 <div className="mt-3.5 flex items-center space-x-2 text-xs text-slate-600 dark:text-slate-300 font-semibold">
-                  <Clock className="h-3.5 w-3.5 text-[#FF6500]" />
+                  <Clock className="h-3.5 w-3.5 text-[#B91C1C]" />
                   <span>Est. {Math.round(scen.duration_limit_seconds / 60)} minutes</span>
                 </div>
               </div>

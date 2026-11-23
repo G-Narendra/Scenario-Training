@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTheme } from '../context/ThemeContext';
+import { useAuth } from '../context/AuthContext';
 import {
   ArrowRight,
   BookOpen,
@@ -28,8 +29,9 @@ interface HomePageProps {
   onOpenSignIn?: () => void;
 }
 
-export const HomePage: React.FC<HomePageProps> = () => {
+export const HomePage: React.FC<HomePageProps> = ({ onOpenSignIn }) => {
   const { theme, toggleTheme } = useTheme();
+  const { user } = useAuth();
   const [isSignInModalOpen, setIsSignInModalOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedDifficulty, setSelectedDifficulty] = useState<'all' | 'Normal' | 'Challenging' | 'Crisis'>('all');
@@ -156,12 +158,16 @@ export const HomePage: React.FC<HomePageProps> = () => {
   ];
 
   const handleOpenSignIn = () => {
+    if (user && onOpenSignIn) {
+      onOpenSignIn();
+      return;
+    }
     setIsSignInModalOpen(true);
     setMobileMenuOpen(false);
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-[#070F1E] text-slate-900 dark:text-slate-100 font-sans selection:bg-[#0B192C] selection:text-white dark:selection:bg-[#FF6500] dark:selection:text-white transition-colors duration-200">
+    <div className="min-h-screen bg-slate-50 dark:bg-[#070F1E] text-slate-900 dark:text-slate-100 font-sans selection:bg-[#0B192C] selection:text-white dark:selection:bg-[#B91C1C] dark:selection:text-white transition-colors duration-200">
       {/* =========================================================================
           1. FROSTED-GLASS TOP NAVIGATION BAR (APPLE-TIER)
          ========================================================================= */}
@@ -216,7 +222,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
               className="hidden sm:flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-4 py-2 text-xs sm:text-sm font-bold shadow-sm transition"
             >
               <Lock className="h-3.5 w-3.5 text-blue-300 dark:text-slate-300" />
-              <span>Cohort Sign In</span>
+              <span>{user ? 'Open Practice' : 'Cohort Sign In'}</span>
             </button>
 
             {/* Mobile Hamburger Button */}
@@ -294,7 +300,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
           <div className="text-center max-w-4xl mx-auto">
             {/* Category Pill */}
             <div className="inline-flex items-center space-x-2 rounded-full border border-blue-900/20 dark:border-blue-400/20 bg-blue-50/80 dark:bg-[#132B45] px-4 py-1.5 text-xs font-bold uppercase tracking-wider text-blue-950 dark:text-blue-200 shadow-sm mb-6">
-              <Sparkles className="h-3.5 w-3.5 text-[#FF6500]" />
+              <Sparkles className="h-3.5 w-3.5 text-[#B91C1C]" />
               <span>3H SOLUTIONS GROUP · EXECUTIVE LEARNING PLATFORM</span>
             </div>
 
@@ -320,7 +326,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
                 onClick={handleOpenSignIn}
                 className="w-full sm:w-auto flex items-center justify-center space-x-2.5 rounded-2xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-8 py-4 text-base font-bold shadow-lg transition"
               >
-                <span>Enter Practice Environment</span>
+                <span>{user ? 'Enter Practice Environment' : 'Enter Practice Environment'}</span>
                 <ArrowRight className="h-5 w-5 text-blue-300 dark:text-slate-300" />
               </button>
 
@@ -436,7 +442,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
 
             {/* Metric 3 */}
             <div className="space-y-1">
-              <div className="text-3xl sm:text-4xl font-black text-[#FF6500] font-heading">
+              <div className="text-3xl sm:text-4xl font-black text-[#B91C1C] font-heading">
                 10
               </div>
               <div className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
@@ -997,7 +1003,7 @@ export const HomePage: React.FC<HomePageProps> = () => {
                 onClick={handleOpenSignIn}
                 className="flex items-center justify-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] text-white px-6 py-3.5 text-sm font-bold shadow-md transition"
               >
-                <Lock className="h-4 w-4 text-[#FF6500]" />
+                <Lock className="h-4 w-4 text-[#B91C1C]" />
                 <span>Sign In to Cohort</span>
               </button>
 

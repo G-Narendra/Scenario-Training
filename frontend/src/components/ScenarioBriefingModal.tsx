@@ -63,7 +63,7 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
         <div className="flex items-start justify-between border-b border-slate-300 dark:border-[#1E3E62] p-6 bg-slate-50 dark:bg-[#0B192C]">
           <div>
             <div className="flex items-center space-x-3 mb-2">
-              <span className="rounded-full bg-[#FF6500]/15 border border-[#FF6500]/30 px-2.5 py-0.5 text-xs font-bold text-[#FF6500] uppercase tracking-wider">
+              <span className="rounded-full bg-[#B91C1C]/15 border border-[#B91C1C]/30 px-2.5 py-0.5 text-xs font-bold text-[#B91C1C] uppercase tracking-wider">
                 {scenario.track} Track
               </span>
               <DifficultyBadge difficulty={scenario.difficulty} difficultyLevel={scenario.difficulty_level} size="sm" />
@@ -85,8 +85,8 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
         <div className="overflow-y-auto p-6 space-y-6 flex-1">
           {/* Primary Capability Banner */}
           <div className="rounded-2xl border border-amber-500/30 bg-amber-500/5 dark:border-[#1E3E62] dark:bg-[#0B192C] p-4 shadow-sm">
-            <div className="flex items-center space-x-2 text-xs font-bold text-[#FF6500] uppercase tracking-wider">
-              <Target className="h-4 w-4 text-[#FF6500]" />
+            <div className="flex items-center space-x-2 text-xs font-bold text-[#B91C1C] uppercase tracking-wider">
+              <Target className="h-4 w-4 text-[#B91C1C]" />
               <span>Core Focus Area</span>
             </div>
             <p className="mt-1 text-base font-bold text-slate-900 dark:text-white">
@@ -104,15 +104,15 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
           )}
 
           {/* Your Role & Counterpart */}
-          <div className="rounded-2xl border-2 border-[#FF6500]/60 bg-gradient-to-br from-[#FF6500]/15 via-[#FF6500]/5 to-transparent p-5 shadow-sm">
-            <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#FF6500] mb-3">
+          <div className="rounded-2xl border-2 border-[#B91C1C]/60 bg-gradient-to-br from-[#B91C1C]/15 via-[#B91C1C]/5 to-transparent p-5 shadow-sm">
+            <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#B91C1C] mb-3">
               <UserCheck className="h-4 w-4" />
               <span>Meeting Setup</span>
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4">
-                <div className="flex items-center space-x-1.5 text-[11px] font-bold uppercase tracking-wider text-[#FF6500]">
+                <div className="flex items-center space-x-1.5 text-[11px] font-bold uppercase tracking-wider text-[#B91C1C]">
                   <Shield className="h-3.5 w-3.5" />
                   <span>Your Role</span>
                 </div>
@@ -131,7 +131,7 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
                   Your Counterpart
                 </div>
                 <div className="text-sm font-black text-slate-900 dark:text-white mt-1">
-                  {scenario.persona.name} • <span className="text-xs font-semibold text-[#FF6500]">{scenario.persona.role}</span>
+                  {scenario.persona.name} • <span className="text-xs font-semibold text-[#B91C1C]">{scenario.persona.role}</span>
                 </div>
                 <p className="text-xs text-slate-600 dark:text-slate-300 mt-1.5 leading-relaxed font-medium">
                   Communication Style: {scenario.persona.communication_style}
@@ -166,7 +166,7 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
               </div>
               <div className="text-sm flex-1">
                 <div className="font-bold text-slate-900 dark:text-white text-base">{scenario.persona.name}</div>
-                <div className="text-xs font-semibold text-[#FF6500] uppercase tracking-wider">{scenario.persona.role}</div>
+                <div className="text-xs font-semibold text-[#B91C1C] uppercase tracking-wider">{scenario.persona.role}</div>
                 <div className="mt-2 text-sm text-slate-700 dark:text-slate-200 leading-relaxed">
                   <span className="font-semibold text-slate-900 dark:text-white">Communication Style: </span>
                   {scenario.persona.communication_style}
@@ -179,7 +179,7 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
           {scenario.target_capabilities && scenario.target_capabilities.length > 0 && (
             <div>
               <h3 className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200 mb-2 flex items-center space-x-1.5">
-                <Target className="h-4 w-4 text-[#FF6500]" />
+                <Target className="h-4 w-4 text-[#B91C1C]" />
                 <span>Competencies Evaluated</span>
               </h3>
               <div className="flex flex-wrap gap-2">
@@ -199,7 +199,7 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
           <div className="grid grid-cols-2 gap-4">
             <div className="rounded-2xl border border-slate-300 bg-slate-50 dark:border-[#1E3E62] dark:bg-[#0B192C] p-4">
               <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
-                <Clock className="h-4 w-4 text-[#FF6500]" />
+                <Clock className="h-4 w-4 text-[#B91C1C]" />
                 <span>Duration Benchmark</span>
               </div>
               <div className="mt-2 text-sm text-slate-900 dark:text-slate-100 font-bold">
@@ -209,7 +209,7 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
 
             <div className="rounded-2xl border border-slate-300 bg-slate-50 dark:border-[#1E3E62] dark:bg-[#0B192C] p-4">
               <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-200">
-                <Sparkles className="h-4 w-4 text-[#FF6500]" />
+                <Sparkles className="h-4 w-4 text-[#B91C1C]" />
                 <span>Competency Rubrics</span>
               </div>
               <div className="mt-2 flex flex-wrap gap-1.5">
@@ -237,11 +237,11 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
                 onClick={() => setSelectedMode('text')}
                 className={`flex items-center space-x-3 rounded-2xl border-2 p-4 text-left transition ${
                   selectedMode === 'text'
-                    ? 'border-[#FF6500] bg-amber-50 text-slate-900 ring-2 ring-[#FF6500]/30 dark:bg-[#0B192C] dark:text-white dark:border-[#FF6500]'
+                    ? 'border-[#B91C1C] bg-amber-50 text-slate-900 ring-2 ring-[#B91C1C]/30 dark:bg-[#0B192C] dark:text-white dark:border-[#DC2626]'
                     : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 dark:border-[#1E3E62] dark:bg-[#0B192C] dark:text-slate-300 dark:hover:border-[#2D5B8D]'
                 }`}
               >
-                <MessageSquare className={`h-5 w-5 ${selectedMode === 'text' ? 'text-[#FF6500]' : 'text-slate-500'}`} />
+                <MessageSquare className={`h-5 w-5 ${selectedMode === 'text' ? 'text-[#B91C1C]' : 'text-slate-500'}`} />
                 <div>
                   <div className="text-sm font-bold text-slate-900 dark:text-white">Text Practice</div>
                   <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Interactive direct dialogue</div>
@@ -254,11 +254,11 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
                 onClick={() => setSelectedMode('voice')}
                 className={`flex items-center space-x-3 rounded-2xl border-2 p-4 text-left transition ${
                   selectedMode === 'voice'
-                    ? 'border-[#FF6500] bg-amber-50 text-slate-900 ring-2 ring-[#FF6500]/30 dark:bg-[#0B192C] dark:text-white dark:border-[#FF6500]'
+                    ? 'border-[#B91C1C] bg-amber-50 text-slate-900 ring-2 ring-[#B91C1C]/30 dark:bg-[#0B192C] dark:text-white dark:border-[#DC2626]'
                     : 'border-slate-300 bg-white text-slate-700 hover:border-slate-400 dark:border-[#1E3E62] dark:bg-[#0B192C] dark:text-slate-300 dark:hover:border-[#2D5B8D]'
                 }`}
               >
-                <Mic className={`h-5 w-5 ${selectedMode === 'voice' ? 'text-[#FF6500]' : 'text-slate-500'}`} />
+                <Mic className={`h-5 w-5 ${selectedMode === 'voice' ? 'text-[#B91C1C]' : 'text-slate-500'}`} />
                 <div>
                   <div className="text-sm font-bold text-slate-900 dark:text-white">Voice Practice</div>
                   <div className="text-xs text-slate-600 dark:text-slate-400 font-medium">Speech dialogue with audio</div>
@@ -272,7 +272,7 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
         <div className="border-t border-slate-300 dark:border-[#1E3E62] p-4 sm:p-6 bg-slate-50 dark:bg-[#0B192C] flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="text-xs text-slate-600 dark:text-slate-400 font-medium text-center sm:text-left">
             {isPrivileged ? (
-              <span className="inline-flex items-center space-x-1.5 font-bold text-[#FF6500]">
+              <span className="inline-flex items-center space-x-1.5 font-bold text-[#B91C1C]">
                 <span>⚡ Facilitator Testing</span>
                 <span className="text-slate-400">•</span>
                 <span className="text-slate-600 dark:text-slate-300">Unlimited Practice Runs</span>
@@ -282,7 +282,7 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
                 <div className="flex items-center space-x-1.5 font-bold text-slate-900 dark:text-white">
                   <span>{completedAttemptsCount} of 2 Practice Runs Completed</span>
                   {remainingAttempts > 0 ? (
-                    <span className="text-[#FF6500]">({remainingAttempts} remaining)</span>
+                    <span className="text-[#B91C1C]">({remainingAttempts} remaining)</span>
                   ) : (
                     <span className="text-rose-500">(Max 2 runs completed)</span>
                   )}

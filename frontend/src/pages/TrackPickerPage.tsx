@@ -11,7 +11,7 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
       {/* Hero Heading */}
       <div className="text-center max-w-3xl mx-auto">
         <div className="inline-flex items-center space-x-2 rounded-full border border-slate-200 bg-white/80 dark:border-slate-700 dark:bg-slate-800/60 px-3.5 py-1 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-sm">
-          <Sparkles className="h-3.5 w-3.5 text-[#FF6500]" />
+          <Sparkles className="h-3.5 w-3.5 text-[#B91C1C]" />
           <span>3H Solutions Executive Scenario Training</span>
         </div>
         <h1 className="mt-4 text-4xl font-black tracking-tight text-slate-900 dark:text-white font-heading sm:text-5xl">
@@ -26,11 +26,11 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
       <div
         id="track-card-capabilities"
         onClick={() => onSelectTrack('all')}
-        className="mt-10 group cursor-pointer overflow-hidden rounded-2xl border-2 border-[#FF6500]/60 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-6 sm:p-8 dark:border-[#1E3E62] dark:bg-[#132B45] transition-all hover:border-[#FF6500] hover:shadow-xl"
+        className="mt-10 group cursor-pointer overflow-hidden rounded-2xl border-2 border-[#B91C1C]/60 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent p-6 sm:p-8 dark:border-[#1E3E62] dark:bg-[#132B45] transition-all hover:border-[#B91C1C] hover:shadow-xl"
       >
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center space-x-4">
-            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0B192C] text-white dark:bg-[#FF6500] shadow-md">
+            <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#0B192C] text-white dark:bg-[#DC2626] shadow-md">
               <Sparkles className="h-7 w-7" />
             </div>
             <div>
@@ -38,7 +38,7 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
                 <h2 className="text-2xl font-black text-slate-900 dark:text-white font-heading">
                   Executive Capability Framework
                 </h2>
-                <span className="rounded-full bg-[#0B192C]/10 dark:bg-[#FF6500]/20 px-2.5 py-0.5 text-xs font-bold text-[#0B192C] dark:text-[#FF6500] border border-slate-300 dark:border-[#FF6500]/30">
+                <span className="rounded-full bg-[#0B192C]/10 dark:bg-[#DC2626]/20 px-2.5 py-0.5 text-xs font-bold text-[#0B192C] dark:text-[#DC2626] border border-slate-300 dark:border-[#DC2626]/30">
                   Master Curriculum • Strategic Competencies
                 </span>
               </div>
@@ -47,7 +47,7 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
               </p>
             </div>
           </div>
-          <div className="flex items-center space-x-1.5 text-sm font-bold text-[#0B192C] dark:text-[#FF6500] group-hover:translate-x-1 transition-transform whitespace-nowrap">
+          <div className="flex items-center space-x-1.5 text-sm font-bold text-[#0B192C] dark:text-[#DC2626] group-hover:translate-x-1 transition-transform whitespace-nowrap">
             <span>Explore Curriculum</span>
             <ArrowRight className="h-4 w-4" />
           </div>
@@ -60,17 +60,17 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
         <div
           id="track-card-leadership"
           onClick={() => onSelectTrack('leadership')}
-          className="group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-slate-300 bg-white dark:border-[#2D5B8D] dark:bg-[#132B45] p-8 shadow-md dark:shadow-xl transition-all duration-200 hover:-translate-y-1 hover:border-[#FF6500] hover:shadow-xl"
+          className="group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-slate-300 bg-white dark:border-[#2D5B8D] dark:bg-[#132B45] p-8 shadow-md dark:shadow-xl transition-all duration-200 hover:-translate-y-1 hover:border-[#B91C1C] hover:shadow-xl"
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FF6500]/15 text-[#FF6500] dark:bg-[#FF6500]/20 dark:text-[#FF6500] group-hover:bg-[#FF6500] group-hover:text-white transition-colors">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#B91C1C]/15 text-[#B91C1C] dark:bg-[#DC2626]/20 dark:text-[#DC2626] group-hover:bg-[#B91C1C] group-hover:text-white transition-colors">
             <Users className="h-7 w-7" />
           </div>
 
           <div className="mt-6 flex items-center space-x-2">
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white font-heading group-hover:text-[#FF6500] transition-colors">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white font-heading group-hover:text-[#B91C1C] transition-colors">
               Executive Leadership Scenarios
             </h2>
-            <span className="rounded-full bg-[#FF6500]/15 px-2.5 py-0.5 text-xs font-bold text-[#FF6500] border border-[#FF6500]/30">
+            <span className="rounded-full bg-[#B91C1C]/15 px-2.5 py-0.5 text-xs font-bold text-[#B91C1C] border border-[#B91C1C]/30">
               Leadership Track
             </span>
           </div>
@@ -96,7 +96,7 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
             <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
               Levels 1–3: Normal, Challenging, Crisis
             </span>
-            <div className="flex items-center space-x-1.5 text-base font-bold text-[#FF6500] group-hover:translate-x-1 transition-transform">
+            <div className="flex items-center space-x-1.5 text-base font-bold text-[#B91C1C] group-hover:translate-x-1 transition-transform">
               <span>Enter Leadership</span>
               <ArrowRight className="h-5 w-5" />
             </div>
@@ -107,14 +107,14 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
         <div
           id="track-card-sales"
           onClick={() => onSelectTrack('sales')}
-          className="group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-slate-300 bg-white dark:border-[#2D5B8D] dark:bg-[#132B45] p-8 shadow-md dark:shadow-xl transition-all duration-200 hover:-translate-y-1 hover:border-[#FF6500] hover:shadow-xl"
+          className="group relative cursor-pointer overflow-hidden rounded-2xl border-2 border-slate-300 bg-white dark:border-[#2D5B8D] dark:bg-[#132B45] p-8 shadow-md dark:shadow-xl transition-all duration-200 hover:-translate-y-1 hover:border-[#B91C1C] hover:shadow-xl"
         >
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 group-hover:bg-[#FF6500] group-hover:text-white transition-colors">
+          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-500/15 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400 group-hover:bg-[#B91C1C] group-hover:text-white transition-colors">
             <TrendingUp className="h-7 w-7" />
           </div>
 
           <div className="mt-6 flex items-center space-x-2">
-            <h2 className="text-2xl font-black text-slate-900 dark:text-white font-heading group-hover:text-[#FF6500] transition-colors">
+            <h2 className="text-2xl font-black text-slate-900 dark:text-white font-heading group-hover:text-[#B91C1C] transition-colors">
               Enterprise Sales Scenarios
             </h2>
             <span className="rounded-full bg-amber-500/15 px-2.5 py-0.5 text-xs font-bold text-amber-700 dark:text-amber-300 border border-amber-500/30">
@@ -143,7 +143,7 @@ export const TrackPickerPage: React.FC<TrackPickerPageProps> = ({ onSelectTrack 
             <span className="text-xs font-bold text-slate-600 dark:text-slate-300 uppercase tracking-wider">
               Levels 1–3: Normal, Challenging, Crisis
             </span>
-            <div className="flex items-center space-x-1.5 text-base font-bold text-[#FF6500] group-hover:translate-x-1 transition-transform">
+            <div className="flex items-center space-x-1.5 text-base font-bold text-[#B91C1C] group-hover:translate-x-1 transition-transform">
               <span>Enter Sales</span>
               <ArrowRight className="h-5 w-5" />
             </div>

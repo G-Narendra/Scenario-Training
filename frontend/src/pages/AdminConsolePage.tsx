@@ -498,7 +498,7 @@ conclusion_signals:
             Executive Facilitator & Cohort Oversight
           </h1>
           <p className="mt-1 text-sm text-slate-600 dark:text-slate-300 font-medium">
-            Lead Facilitator: <span className="text-[#0B192C] dark:text-[#FF6500] font-bold">Uzair</span> · 3H Solutions Executive Scenario Training Platform
+            Lead Facilitator: <span className="text-[#0B192C] dark:text-[#DC2626] font-bold">Uzair</span> · 3H Solutions Executive Scenario Training Platform
           </p>
         </div>
 
@@ -524,7 +524,7 @@ conclusion_signals:
                   {c.name} ({c.initial_passcode || 'Passcode'})
                 </option>
               ))}
-              <option value="__new__" className="text-[#FF6500] font-bold">
+              <option value="__new__" className="text-[#B91C1C] font-bold">
                 + Create New Cohort...
               </option>
             </select>
@@ -650,7 +650,7 @@ conclusion_signals:
           <div>
             <div className="flex items-center justify-between text-slate-500 dark:text-slate-400 text-xs font-bold uppercase tracking-wider">
               <span>Completed Scenarios</span>
-              <Award className="h-4 w-4 text-[#FF6500]" />
+              <Award className="h-4 w-4 text-[#B91C1C]" />
             </div>
             <div className="mt-3 text-3xl font-black text-slate-900 dark:text-white">
               {completedSessions.length}
@@ -686,7 +686,7 @@ conclusion_signals:
 
       {loading && (
         <div className="mt-12 flex flex-col items-center justify-center space-y-3 py-16">
-          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#FF6500] border-t-transparent" />
+          <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#B91C1C] border-t-transparent" />
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500">Loading admin roster...</span>
         </div>
       )}
@@ -701,18 +701,18 @@ conclusion_signals:
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
               <div>
                 <h2 className="text-base font-bold text-slate-900 dark:text-white flex items-center space-x-2">
-                  <UserPlus className="h-4 w-4 text-[#0B192C] dark:text-[#FF6500]" />
+                  <UserPlus className="h-4 w-4 text-[#0B192C] dark:text-[#DC2626]" />
                   <span>Enroll New Participant into {cohort?.name || 'Cohort'}</span>
                 </h2>
                 <p className="mt-0.5 text-xs text-slate-600 dark:text-slate-400">
-                  Authorized participants can log in using cohort passcode <strong className="text-[#0B192C] dark:text-[#FF6500] font-mono">{cohort?.initial_passcode || (cohort?.name?.toLowerCase().includes('uzair') ? 'UZAIR-2026' : '—')}</strong>.
+                  Authorized participants can log in using cohort passcode <strong className="text-[#0B192C] dark:text-[#DC2626] font-mono">{cohort?.initial_passcode || (cohort?.name?.toLowerCase().includes('uzair') ? 'UZAIR-2026' : '—')}</strong>.
                 </p>
               </div>
 
               <button
                 type="button"
                 onClick={() => setShowBulkAdd(!showBulkAdd)}
-                className="text-xs font-bold text-[#0B192C] dark:text-[#FF6500] hover:underline"
+                className="text-xs font-bold text-[#0B192C] dark:text-[#DC2626] hover:underline"
               >
                 {showBulkAdd ? 'Hide Bulk Paste' : '+ Bulk Paste 15-20 Participant Names'}
               </button>
@@ -727,7 +727,7 @@ conclusion_signals:
                   placeholder="Enter participant's full name (e.g., Sarah Jenkins)"
                   value={newMemberName}
                   onChange={(e) => setNewMemberName(e.target.value)}
-                  className="flex-1 w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500] font-medium"
+                  className="flex-1 w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-4 py-2.5 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#B91C1C] font-medium"
                   required
                 />
                 <button
@@ -749,7 +749,7 @@ conclusion_signals:
                   placeholder="Paste participant names here (one name per line, or separated by commas)...&#10;Andrew Doherty&#10;Sarah Jenkins&#10;Michael Chen"
                   value={bulkNamesText}
                   onChange={(e) => setBulkNamesText(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500] font-medium"
+                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#B91C1C] font-medium"
                   required
                 />
                 <div className="flex items-center justify-between">
@@ -766,74 +766,89 @@ conclusion_signals:
             )}
           </div>
 
-          {/* Top 3 Group Weaknesses Card (Requested by Uzair for Live Group Debriefs) */}
-          <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-6 shadow-sm">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 border-b border-slate-200 dark:border-[#1E3E62] pb-3">
+          {/* GROUP REPORT — Cohort-Level Coaching Guide (Day 2 Workshop) */}
+          <div className="rounded-2xl border-2 border-[#B91C1C]/30 bg-white dark:bg-[#132B45] p-6 shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200 dark:border-[#1E3E62] pb-3">
               <div>
-                <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#0B192C] dark:text-[#60A5FA]">
-                  <Target className="h-4 w-4 text-[#1E3E62] dark:text-[#60A5FA]" />
-                  <span>Facilitator Group Debrief: Cohort Trends & Live Coaching Agenda</span>
+                <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#B91C1C]">
+                  <Users className="h-4 w-4" />
+                  <span>Group Report — Day 2 Facilitation Coaching Guide</span>
                 </div>
                 <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
-                  Synthesized across all cohort attempts. Use these core gaps as your primary group talking points during live coaching.
+                  Cohort-wide patterns & aggregated data. Use this to coach and guide participants as a group on Day 2 of the workshop.
                 </p>
               </div>
-              <span className="self-start sm:self-auto rounded-full bg-blue-500/10 border border-blue-500/30 px-3 py-1 text-[11px] font-bold text-[#0B192C] dark:text-[#60A5FA]">
-                Live Group Focus
-              </span>
+              <button
+                type="button"
+                onClick={() => window.print()}
+                className="self-start sm:self-auto flex items-center space-x-1.5 rounded-xl bg-[#B91C1C] hover:bg-[#991B1B] text-white px-3.5 py-1.5 text-xs font-bold transition shadow-sm"
+                title="Print or Save Group Report as PDF"
+              >
+                <Printer className="h-3.5 w-3.5" />
+                <span>Print Group Report</span>
+              </button>
             </div>
 
+            {/* Group Statistics Row */}
+            <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="rounded-xl border border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-center">
+                <div className="text-2xl font-black text-slate-900 dark:text-white">{cohortMembers.filter((m) => m.role === 'trainee').length}</div>
+                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">Participants</div>
+              </div>
+              <div className="rounded-xl border border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-center">
+                <div className="text-2xl font-black text-slate-900 dark:text-white">{completedSessions.length}</div>
+                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">Total Attempts</div>
+              </div>
+              <div className="rounded-xl border border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-center">
+                <div className="text-2xl font-black text-[#B91C1C]">
+                  {completedSessions.length > 0 ? Math.round(completedSessions.reduce((acc, s) => acc + (s.overall_score || 0), 0) / completedSessions.length) : '—'}
+                </div>
+                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">Cohort Avg Score</div>
+              </div>
+              <div className="rounded-xl border border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-center">
+                <div className="text-2xl font-black text-emerald-600 dark:text-emerald-400">{cohortProgress?.total_sessions_completed ?? completedSessions.length}</div>
+                <div className="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mt-0.5">Sessions Done</div>
+              </div>
+            </div>
+
+            {/* Top Group Weaknesses / Day 2 Priorities */}
             {(() => {
               type SkillDistItem = { skill_name?: string; avg_score?: number; score?: number; benchmark?: number; recommendation?: string };
               const weakSkills: SkillDistItem[] = (cohortProgress?.skill_score_distribution || (cohortProgress as { skill_score_distribution?: SkillDistItem[]; skill_distribution?: SkillDistItem[] } | null)?.skill_distribution || []) as SkillDistItem[];
               if (weakSkills.length === 0) {
                 return (
                   <div className="mt-4 rounded-xl border border-dashed border-slate-300 dark:border-[#1E3E62] bg-slate-50/50 dark:bg-[#0B192C]/50 p-6 text-center">
-                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">
-                      Cohort Analytics Initializing
-                    </p>
+                    <p className="text-sm font-bold text-slate-800 dark:text-slate-200">Group Coaching Data Initializing</p>
                     <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 max-w-lg mx-auto">
-                      Live coaching focus and group debrief priorities will automatically synthesize here once cohort participants complete scenario simulations.
+                      Group competency gaps and Day 2 coaching priorities will auto-populate here once participants complete scenario simulations.
                     </p>
                   </div>
                 );
               }
               return (
-                <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {weakSkills.slice(0, 3).map((ws: { skill_name?: string; avg_score?: number; score?: number; benchmark?: number; recommendation?: string }, idx: number) => (
-                    <div
-                      key={ws.skill_name || idx}
-                      className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between"
-                    >
-                      <div>
-                        <div className="flex items-center justify-between text-xs font-bold">
-                          <span
-                            className={`rounded px-2 py-0.5 font-black uppercase ${
-                              idx === 0
-                                ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400'
-                                : idx === 1
-                                ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400'
-                                : 'bg-teal-500/15 text-teal-600 dark:text-teal-400'
-                            }`}
-                          >
-                            Priority #{idx + 1}
-                          </span>
-                          <span className="font-mono text-slate-500 text-xs font-bold">
-                            {Math.round(ws.avg_score || ws.score || 0)}% Avg
-                          </span>
+                <div className="mt-4">
+                  <div className="text-xs font-black uppercase tracking-wider text-slate-700 dark:text-slate-300 mb-3">Priority Coaching Areas — Cohort Weakest Competencies</div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {weakSkills.slice(0, 3).map((ws: SkillDistItem, idx: number) => (
+                      <div key={ws.skill_name || idx} className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-4 shadow-sm flex flex-col justify-between">
+                        <div>
+                          <div className="flex items-center justify-between text-xs font-bold">
+                            <span className={`rounded px-2 py-0.5 font-black uppercase ${idx === 0 ? 'bg-rose-500/15 text-rose-600 dark:text-rose-400' : idx === 1 ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400' : 'bg-teal-500/15 text-teal-600 dark:text-teal-400'}`}>
+                              Day 2 Priority #{idx + 1}
+                            </span>
+                            <span className="font-mono text-slate-500 text-xs font-bold">{Math.round(ws.avg_score || ws.score || 0)}% Avg</span>
+                          </div>
+                          <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">{ws.skill_name}</h3>
+                          <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
+                            {ws.recommendation || `Focus group debriefing on this competency gap. Avg score ${Math.round(ws.avg_score || ws.score || 0)}% across cohort.`}
+                          </p>
                         </div>
-                        <h3 className="mt-2.5 text-sm font-bold text-slate-900 dark:text-white">
-                          {ws.skill_name}
-                        </h3>
-                        <p className="mt-1.5 text-xs text-slate-600 dark:text-slate-400 font-medium leading-relaxed">
-                          Cohort score average: {Math.round(ws.avg_score || ws.score || 0)}% across recorded attempts.
-                        </p>
+                        <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#B91C1C]">
+                          💡 Debrief & Reframe for Group Coaching
+                        </div>
                       </div>
-                      <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-[#1E3E62] text-[11px] font-bold text-[#FF6500]">
-                        💡 Focus Area: Target for deliberate practice during live facilitation.
-                      </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               );
             })()}
@@ -847,17 +862,18 @@ conclusion_signals:
                 <h2 className="text-lg font-bold text-slate-900 dark:text-white font-heading">
                   Enrolled Participants ({cohortMembers.filter((m) => m.role === 'trainee').length})
                 </h2>
+                <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">Individual Report per row · Group Report covers whole cohort</p>
               </div>
 
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-3.5 py-1.5 text-xs font-bold transition shadow-sm"
-                  title="Print or Save Cohort Summary as PDF"
+                  className="flex items-center space-x-1.5 rounded-xl bg-[#B91C1C] hover:bg-[#991B1B] text-white px-3.5 py-1.5 text-xs font-bold transition shadow-sm"
+                  title="Group Report — Print or Save full cohort as PDF (Day 2 facilitation guide)"
                 >
-                  <Printer className="h-3.5 w-3.5" />
-                  <span>Export Cohort PDF (.pdf)</span>
+                  <Users className="h-3.5 w-3.5" />
+                  <span>Group Report (Print)</span>
                 </button>
                 <button
                   type="button"
@@ -924,10 +940,10 @@ conclusion_signals:
                             type="button"
                             onClick={() => handleOpenOnePagerReport(latestSession.id)}
                             className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-3.5 py-1.5 text-xs font-bold transition shadow-sm"
-                            title="View official 1-Pager Executive Performance Report"
+                            title="View Individual Report — targeted performance dossier for this participant"
                           >
                             <FileText className="h-3.5 w-3.5" />
-                            <span>1-Pager Debrief</span>
+                            <span>Individual Report</span>
                           </button>
                         ) : (
                           <button
@@ -943,7 +959,7 @@ conclusion_signals:
                         <button
                           type="button"
                           onClick={() => handleResetAttempts(participant.id, participant.display_name)}
-                          className="p-1.5 text-slate-400 hover:text-[#FF6500] transition rounded-lg"
+                          className="p-1.5 text-slate-400 hover:text-[#B91C1C] transition rounded-lg"
                           title="Reset practice chances to 10 for this participant"
                         >
                           <RefreshCw className="h-4 w-4" />
@@ -1008,7 +1024,7 @@ conclusion_signals:
                       </td>
                       <td className="py-3 px-3">
                         {session.overall_score !== undefined && session.overall_score !== null ? (
-                          <span className="font-bold text-[#FF6500]">
+                          <span className="font-bold text-[#B91C1C]">
                             {session.overall_score} / 100
                           </span>
                         ) : (
@@ -1101,7 +1117,7 @@ conclusion_signals:
                 <div className="grid grid-cols-2 gap-4 pt-2">
                   <div className="rounded-xl bg-slate-50 dark:bg-[#0B192C] p-3 border border-slate-200 dark:border-[#1E3E62]">
                     <span className="text-xs text-slate-500 font-bold uppercase">Attempts / Participant</span>
-                    <div className="text-lg font-bold text-[#FF6500] mt-1">Max 2 Runs / Scenario</div>
+                    <div className="text-lg font-bold text-[#B91C1C] mt-1">Max 2 Runs / Scenario</div>
                   </div>
 
                   <div className="rounded-xl bg-slate-50 dark:bg-[#0B192C] p-3 border border-slate-200 dark:border-[#1E3E62]">
@@ -1128,9 +1144,9 @@ conclusion_signals:
               </div>
 
               {/* Right Column: Passcode Action Box */}
-              <div className="rounded-2xl border-2 border-[#FF6500]/50 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-[#0B192C] dark:to-[#132B45] p-6 flex flex-col justify-between">
+              <div className="rounded-2xl border-2 border-[#B91C1C]/50 bg-gradient-to-br from-amber-50 to-orange-50 dark:from-[#0B192C] dark:to-[#132B45] p-6 flex flex-col justify-between">
                 <div>
-                  <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#FF6500]">
+                  <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#B91C1C]">
                     <Key className="h-4 w-4" />
                     <span>Cohort Entry Passcode</span>
                   </div>
@@ -1154,7 +1170,7 @@ conclusion_signals:
                     onClick={handleRotatePasscode}
                     className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] py-2.5 px-3.5 text-xs font-bold text-slate-700 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#1E3E62] transition"
                   >
-                    <RefreshCw className="h-4 w-4 text-[#FF6500]" />
+                    <RefreshCw className="h-4 w-4 text-[#B91C1C]" />
                     <span>Rotate</span>
                   </button>
 
@@ -1219,7 +1235,7 @@ conclusion_signals:
                   placeholder="Search scenarios..."
                   value={curriculumSearch}
                   onChange={(e) => setCurriculumSearch(e.target.value)}
-                  className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] pl-9 pr-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500] font-medium"
+                  className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] pl-9 pr-3 py-1.5 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#B91C1C] font-medium"
                 />
               </div>
 
@@ -1279,7 +1295,7 @@ conclusion_signals:
               >
                 <div>
                   <div className="flex items-center justify-between text-[11px] font-bold uppercase tracking-wider">
-                    <span className="text-[#FF6500] font-black">
+                    <span className="text-[#B91C1C] font-black">
                       {scen.track === 'sales' ? 'Enterprise Sales' : 'Executive Leadership'}
                     </span>
                     <span className="rounded-full bg-slate-100 dark:bg-[#0B192C] px-2 py-0.5 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-[#1E3E62]">
@@ -1333,7 +1349,7 @@ conclusion_signals:
           <div className="relative w-full max-w-2xl overflow-hidden rounded-2xl border-2 border-slate-300 bg-white dark:border-[#2D5B8D] dark:bg-[#132B45] shadow-2xl z-10 max-h-[90vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-slate-300 dark:border-[#1E3E62] p-5 bg-slate-50 dark:bg-[#0B192C]">
               <div>
-                <span className="text-xs font-black uppercase tracking-wider text-[#FF6500]">
+                <span className="text-xs font-black uppercase tracking-wider text-[#B91C1C]">
                   Scenario Studio
                 </span>
                 <h2 className="text-lg font-black text-slate-900 dark:text-white font-heading">
@@ -1359,7 +1375,7 @@ conclusion_signals:
                   placeholder="e.g., Addressing Executive AI Workforce Anxiety & Role Shifts"
                   value={newScenTitle}
                   onChange={(e) => setNewScenTitle(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500]"
+                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#B91C1C]"
                   required
                 />
               </div>
@@ -1417,7 +1433,7 @@ conclusion_signals:
                   placeholder="Describe the background situation, friction, and the participant's operational objective..."
                   value={newScenBrief}
                   onChange={(e) => setNewScenBrief(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500]"
+                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#B91C1C]"
                   required
                 />
               </div>
@@ -1518,7 +1534,7 @@ conclusion_signals:
           <div className="relative w-full max-w-lg overflow-hidden rounded-2xl border-2 border-slate-300 bg-white dark:border-[#2D5B8D] dark:bg-[#132B45] shadow-2xl z-10 flex flex-col">
             <div className="flex items-center justify-between border-b border-slate-300 dark:border-[#1E3E62] p-5 bg-slate-50 dark:bg-[#0B192C]">
               <div>
-                <span className="text-xs font-black uppercase tracking-wider text-[#FF6500]">
+                <span className="text-xs font-black uppercase tracking-wider text-[#B91C1C]">
                   Cohort Management
                 </span>
                 <h2 className="text-lg font-black text-slate-900 dark:text-white font-heading">
@@ -1547,7 +1563,7 @@ conclusion_signals:
                   placeholder="e.g., Executive Leadership Q4 Cohort"
                   value={newCohortName}
                   onChange={(e) => setNewCohortName(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500]"
+                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#B91C1C]"
                   required
                 />
               </div>
@@ -1561,7 +1577,7 @@ conclusion_signals:
                   placeholder="e.g., UZAIR-OCT26 (Leave blank for auto-generated)"
                   value={newCohortPasscode}
                   onChange={(e) => setNewCohortPasscode(e.target.value.toUpperCase())}
-                  className="w-full font-mono rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500]"
+                  className="w-full font-mono rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] px-3.5 py-2 text-sm text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#B91C1C]"
                 />
                 <span className="text-[11px] text-slate-500 mt-1 block">
                   Participants will use this passcode together with their enrolled name to log in.
@@ -1587,7 +1603,7 @@ conclusion_signals:
                   <label className="block font-bold text-slate-700 dark:text-slate-200 uppercase tracking-wider mb-1">
                     Chances / Scenario
                   </label>
-                  <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-100 dark:bg-[#0B192C] px-3 py-2 text-xs font-bold text-[#FF6500]">
+                  <div className="rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-100 dark:bg-[#0B192C] px-3 py-2 text-xs font-bold text-[#B91C1C]">
                     2 Practice Runs
                   </div>
                 </div>
@@ -1602,7 +1618,7 @@ conclusion_signals:
                   placeholder="e.g., High-stakes simulation practice for senior leadership teams."
                   value={newCohortDesc}
                   onChange={(e) => setNewCohortDesc(e.target.value)}
-                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#FF6500]"
+                  className="w-full rounded-xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-[#B91C1C]"
                 />
               </div>
 
@@ -1650,15 +1666,15 @@ conclusion_signals:
             {/* Modal Top Action Bar */}
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#1E3E62] px-6 py-4 bg-slate-50 dark:bg-[#132B45] flex-shrink-0">
               <div className="flex items-center space-x-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FF6500]/15 text-[#FF6500] border border-[#FF6500]/30 font-bold text-sm">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#B91C1C]/15 text-[#B91C1C] border border-[#B91C1C]/30 font-bold text-sm">
                   3H
                 </div>
                 <div>
-                  <span className="text-[10px] font-black uppercase tracking-wider text-[#FF6500] block">
-                    Executive Facilitator Report Card
+                  <span className="text-[10px] font-black uppercase tracking-wider text-[#B91C1C] block">
+                    Individual Participant Report
                   </span>
                   <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-heading">
-                    1-Pager Executive Performance Evaluation
+                    Targeted Performance Report — Strengths & Blind Spots
                   </h3>
                 </div>
               </div>
@@ -1671,7 +1687,7 @@ conclusion_signals:
                   title="Export Official 1-Page Dossier as PDF"
                 >
                   <Printer className="h-4 w-4" />
-                  <span>Export Executive PDF (.pdf)</span>
+                  <span>Individual Report (PDF)</span>
                 </button>
 
                 <button
@@ -1693,7 +1709,7 @@ conclusion_signals:
             <div className="overflow-y-auto p-6 space-y-6 text-sm">
               {isLoadingReport ? (
                 <div className="py-20 flex flex-col items-center justify-center space-y-4">
-                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#FF6500] border-t-transparent" />
+                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#B91C1C] border-t-transparent" />
                   <p className="text-sm font-bold text-slate-600 dark:text-slate-300">
                     Generating Official 1-Pager Executive Performance Report...
                   </p>
@@ -1718,7 +1734,7 @@ conclusion_signals:
 
                     <div>
                       <span className="font-bold text-slate-400 uppercase text-[10px] tracking-wider block">Simulation Mode</span>
-                      <p className="font-bold text-[#FF6500] text-xs mt-0.5 capitalize">
+                      <p className="font-bold text-[#B91C1C] text-xs mt-0.5 capitalize">
                         {reportSession?.mode === 'voice' ? '🎙️ Live Voice Dialogue' : '💬 Interactive Text Dialogue'}
                       </p>
                     </div>
@@ -1732,10 +1748,10 @@ conclusion_signals:
                   </div>
 
                   {/* Executive Score & Level Hero */}
-                  <div className="rounded-2xl border-2 border-[#FF6500]/50 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-5">
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#FF6500]/25 pb-4">
+                  <div className="rounded-2xl border-2 border-[#B91C1C]/50 bg-gradient-to-br from-amber-500/10 via-amber-500/5 to-transparent p-5">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#B91C1C]/25 pb-4">
                       <div>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-[#FF6500]">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-[#B91C1C]">
                           3H Executive Rubric Rating
                         </span>
                         <div className="flex items-baseline space-x-3 mt-1">
@@ -1765,7 +1781,7 @@ conclusion_signals:
 
                       <div className="text-xs text-slate-500 dark:text-slate-400 sm:text-right">
                         <div>Evaluated against 3H Deliberate Practice Standard</div>
-                        <div className="font-bold text-[#FF6500] mt-0.5">Facilitator: Uzair</div>
+                        <div className="font-bold text-[#B91C1C] mt-0.5">Facilitator: Uzair</div>
                       </div>
                     </div>
 
@@ -1780,7 +1796,7 @@ conclusion_signals:
 
                     {reportData.hidden_reveal && (
                       <div className="mt-3.5 pt-3.5 border-t border-amber-500/20 text-xs">
-                        <span className="font-black uppercase tracking-wider text-[#FF6500] text-[10px]">
+                        <span className="font-black uppercase tracking-wider text-[#B91C1C] text-[10px]">
                           Counterpart Hidden Motivations Revealed:
                         </span>
                         <p className="mt-0.5 text-slate-600 dark:text-slate-300 font-medium">
@@ -1794,7 +1810,7 @@ conclusion_signals:
                   <div className="p-5 rounded-2xl border border-slate-200 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] flex flex-col items-center">
                     <div className="w-full flex items-center justify-between pb-3 border-b border-slate-200 dark:border-[#1E3E62] mb-4">
                       <div>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-[#0B192C] dark:text-[#FF6500]">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-[#0B192C] dark:text-[#DC2626]">
                           3H Multidimensional Competency Diagnostic
                         </span>
                         <h4 className="text-sm font-black text-slate-900 dark:text-white font-heading">
@@ -1824,7 +1840,7 @@ conclusion_signals:
                               <span className="text-slate-900 dark:text-white capitalize">
                                 {skill.skill.replace(/_/g, ' ')}
                               </span>
-                              <span className="font-mono text-[#0B192C] dark:text-[#FF6500] text-sm">
+                              <span className="font-mono text-[#0B192C] dark:text-[#DC2626] text-sm">
                                 {skill.score}%
                               </span>
                             </div>
@@ -1833,7 +1849,7 @@ conclusion_signals:
                             <div className="mt-2 h-1.5 w-full rounded-full bg-slate-200 dark:bg-slate-700 overflow-hidden">
                               <div
                                 className={`h-full rounded-full transition-all duration-500 ${
-                                  skill.score >= 80 ? 'bg-emerald-500' : skill.score >= 60 ? 'bg-[#0B192C] dark:bg-[#FF6500]' : 'bg-rose-500'
+                                  skill.score >= 80 ? 'bg-emerald-500' : skill.score >= 60 ? 'bg-[#0B192C] dark:bg-[#DC2626]' : 'bg-rose-500'
                                 }`}
                                 style={{ width: `${Math.min(100, Math.max(0, skill.score))}%` }}
                               />
@@ -1958,7 +1974,7 @@ conclusion_signals:
                         <h4 className="text-xs font-black uppercase tracking-wider text-slate-500 dark:text-slate-400">
                           Complete Verbatim Dialogue Transcript ({reportSession.messages.length} exchanges)
                         </h4>
-                        <span className="text-[11px] text-[#FF6500] font-semibold">
+                        <span className="text-[11px] text-[#B91C1C] font-semibold">
                           Chronological Context
                         </span>
                       </div>
@@ -1968,12 +1984,12 @@ conclusion_signals:
                             key={m.seq || idx}
                             className={`p-3 rounded-xl border text-xs leading-relaxed ${
                               m.role === 'trainee'
-                                ? 'border-[#FF6500]/30 bg-[#FF6500]/5 dark:bg-[#FF6500]/10 text-slate-800 dark:text-slate-200 ml-4'
+                                ? 'border-[#B91C1C]/30 bg-[#B91C1C]/5 dark:bg-[#DC2626]/10 text-slate-800 dark:text-slate-200 ml-4'
                                 : 'border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#132B45] text-slate-700 dark:text-slate-300 mr-4'
                             }`}
                           >
                             <div className="flex items-center justify-between mb-1 text-[10px] font-bold uppercase tracking-wider">
-                              <span className={m.role === 'trainee' ? 'text-[#FF6500]' : 'text-slate-500 dark:text-slate-400'}>
+                              <span className={m.role === 'trainee' ? 'text-[#B91C1C]' : 'text-slate-500 dark:text-slate-400'}>
                                 {m.role === 'trainee' ? `${reportSession.trainee_name || 'Participant'}` : 'Counterpart'}
                               </span>
                               <span className="text-slate-400 font-mono">

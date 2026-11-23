@@ -52,7 +52,7 @@ export async function getDeviceFingerprint(): Promise<string> {
       ctx.font = '14px Arial';
       ctx.fillStyle = '#0B192C';
       ctx.fillRect(0, 0, 200, 50);
-      ctx.fillStyle = '#FF6500';
+      ctx.fillStyle = '#B91C1C';
       ctx.fillText('3H-SOLUTIONS-TRAINING-2026', 10, 10);
       components.push(canvas.toDataURL());
     }

@@ -37,7 +37,7 @@ const PageSkeleton: React.FC = () => (
   </div>
 );
 
-export type ViewMode = 'tracks' | 'scenarios' | 'chat' | 'evaluation' | 'progress' | 'admin';
+export type ViewMode = 'tracks' | 'scenarios' | 'chat' | 'evaluation' | 'progress' | 'admin' | 'home';
 
 const AppContent: React.FC = () => {
   const { user, isAuthenticated, loading } = useAuth();
@@ -68,7 +68,7 @@ const AppContent: React.FC = () => {
   };
 
   React.useEffect(() => {
-    const validViews: ViewMode[] = ['tracks', 'scenarios', 'chat', 'evaluation', 'progress', 'admin'];
+    const validViews: ViewMode[] = ['tracks', 'scenarios', 'chat', 'evaluation', 'progress', 'admin', 'home'];
     const hashView = window.location.hash.replace('#', '') as ViewMode;
     const defaultForRole: ViewMode = user?.role === 'group_admin' || user?.role === 'super_admin' ? 'admin' : 'scenarios';
     const targetView = hashView && validViews.includes(hashView) ? hashView : defaultForRole;
@@ -188,7 +188,7 @@ const AppContent: React.FC = () => {
             className="w-16 h-16 object-contain rounded-2xl overflow-hidden shadow-sm animate-pulse"
           />
           <div className="flex items-center space-x-3 text-sm font-semibold text-[#1E3E62] dark:text-slate-200">
-            <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#FF6500] border-t-transparent" />
+            <div className="h-5 w-5 animate-spin rounded-full border-2 border-[#B91C1C] border-t-transparent" />
             <span>Loading 3H Solutions Scenario Training...</span>
           </div>
         </div>
@@ -262,11 +262,15 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900 dark:bg-[#090D16] dark:from-[#090D16] dark:via-[#090D16] dark:to-[#090D16] dark:text-slate-100 flex flex-col font-sans selection:bg-[#FF6500] selection:text-white transition-colors duration-200">
+    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-white to-slate-100 text-slate-900 dark:bg-[#090D16] dark:from-[#090D16] dark:via-[#090D16] dark:to-[#090D16] dark:text-slate-100 flex flex-col font-sans selection:bg-[#B91C1C] selection:text-white transition-colors duration-200">
       <Navbar currentView={currentView} onNavigate={(v) => navigateTo(v as ViewMode)} />
 
       <main className="flex-1">
         <React.Suspense fallback={<PageSkeleton />}>
+          {currentView === 'home' && (
+            <HomePage onOpenSignIn={() => navigateTo('scenarios')} />
+          )}
+
           {(currentView === 'tracks' || currentView === 'scenarios') && (
             <ScenarioLibraryPage
               selectedTrack={selectedTrack}
@@ -355,8 +359,8 @@ const AppContent: React.FC = () => {
         {attemptLimitMessage && (
           <div role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center p-4">
             <div className="fixed inset-0 bg-slate-900/75 dark:bg-[#0B192C]/85 backdrop-blur-sm" onClick={() => setAttemptLimitMessage(null)} />
-            <div className="relative w-full max-w-md overflow-hidden rounded-2xl border-2 border-[#FF6500] bg-white dark:bg-[#112240] p-6 shadow-2xl z-10 text-center">
-              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FF6500]/15 text-[#FF6500] mb-4 border border-[#FF6500]/30">
+            <div className="relative w-full max-w-md overflow-hidden rounded-2xl border-2 border-[#B91C1C] bg-white dark:bg-[#112240] p-6 shadow-2xl z-10 text-center">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#B91C1C]/15 text-[#B91C1C] mb-4 border border-[#B91C1C]/30">
                 <span className="text-2xl">🔒</span>
               </div>
               <h3 className="text-xl font-black text-slate-900 dark:text-white font-heading">
@@ -371,7 +375,7 @@ const AppContent: React.FC = () => {
                     setAttemptLimitMessage(null);
                     navigateTo('scenarios');
                   }}
-                  className="w-full rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] py-2.5 text-sm font-bold shadow-md transition"
+                  className="w-full rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#DC2626] dark:hover:bg-[#BE2626] py-2.5 text-sm font-bold shadow-md transition"
                 >
                   Return to Scenarios
                 </button>

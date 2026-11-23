@@ -605,7 +605,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                 {personaName}
               </h2>
               <span className="text-xs text-slate-400">•</span>
-              <span className="text-[10px] sm:text-xs font-semibold text-[#FF6500] uppercase tracking-wider truncate max-w-[80px] sm:max-w-none">
+              <span className="text-[10px] sm:text-xs font-semibold text-[#B91C1C] uppercase tracking-wider truncate max-w-[80px] sm:max-w-none">
                 {personaRole}
               </span>
             </div>
@@ -667,13 +667,13 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
               title={autoVoice ? "Mute automatic counterpart voice" : "Turn ON automatic counterpart voice"}
               className={`flex items-center space-x-1 sm:space-x-1.5 rounded-xl border px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-bold transition shadow-sm ${
                 autoVoice
-                  ? 'border-[#FF6500]/40 bg-[#FF6500]/15 text-[#FF6500] dark:bg-[#FF6500]/20'
+                  ? 'border-[#B91C1C]/40 bg-[#B91C1C]/15 text-[#B91C1C] dark:bg-[#DC2626]/20'
                   : 'border-slate-300 bg-slate-100 text-slate-500 dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-400'
               }`}
             >
               {autoVoice ? (
                 <>
-                  <Volume2 className="h-3.5 w-3.5 text-[#FF6500] animate-pulse flex-shrink-0" />
+                  <Volume2 className="h-3.5 w-3.5 text-[#B91C1C] animate-pulse flex-shrink-0" />
                   <span className="hidden sm:inline">Voice: ON</span>
                 </>
               ) : (
@@ -686,7 +686,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
           )}
 
           <div className="flex items-center space-x-1 rounded-lg border border-slate-300 bg-slate-50 px-2 sm:px-3 py-1 font-mono text-[11px] sm:text-xs font-bold text-slate-700 shadow-sm dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-200">
-            <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#FF6500] flex-shrink-0" />
+            <Clock className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-[#B91C1C] flex-shrink-0" />
             <span>{formatTimer(elapsedSeconds)}</span>
           </div>
 
@@ -718,7 +718,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
             await voiceClient.playPendingSpeech();
             voiceClient.startAudioCapture(true);
           }}
-          className="cursor-pointer bg-gradient-to-r from-[#FF6500] via-orange-600 to-amber-600 text-white px-4 py-3.5 flex items-center justify-between shadow-lg z-30 transition hover:brightness-110 animate-pulse"
+          className="cursor-pointer bg-gradient-to-r from-[#B91C1C] via-orange-600 to-amber-600 text-white px-4 py-3.5 flex items-center justify-between shadow-lg z-30 transition hover:brightness-110 animate-pulse"
         >
           <div className="flex items-center space-x-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/20 backdrop-blur-sm flex-shrink-0">
@@ -735,7 +735,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
           </div>
           <button
             type="button"
-            className="flex items-center space-x-1.5 rounded-xl bg-white px-4 py-2 text-xs font-black text-[#FF6500] hover:bg-orange-50 shadow-md transition flex-shrink-0"
+            className="flex items-center space-x-1.5 rounded-xl bg-white px-4 py-2 text-xs font-black text-[#B91C1C] hover:bg-orange-50 shadow-md transition flex-shrink-0"
           >
             <span>▶ Connect Call Audio</span>
           </button>
@@ -756,7 +756,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#1E3E62] px-6 py-4 bg-slate-50 dark:bg-[#0B192C]">
               <div className="flex items-center space-x-2">
-                <BookOpen className="h-5 w-5 text-[#FF6500]" />
+                <BookOpen className="h-5 w-5 text-[#B91C1C]" />
                 <h3 className="text-base font-bold text-slate-900 dark:text-white font-heading">
                   Scenario Briefing & Objectives
                 </h3>
@@ -774,7 +774,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
             {/* Modal Scrollable Body */}
             <div className="overflow-y-auto p-6 space-y-5 text-sm">
               <div>
-                <span className="text-[11px] font-black uppercase tracking-wider text-[#FF6500]">
+                <span className="text-[11px] font-black uppercase tracking-wider text-[#B91C1C]">
                   Scenario Title
                 </span>
                 <h4 className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">
@@ -798,7 +798,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
               </div>
 
               <div>
-                <span className="text-[11px] font-black uppercase tracking-wider text-[#FF6500]">
+                <span className="text-[11px] font-black uppercase tracking-wider text-[#B91C1C]">
                   Context & Strategic Mission
                 </span>
                 <p className="mt-1 text-slate-700 dark:text-slate-200 text-sm leading-relaxed font-medium bg-slate-50 dark:bg-[#0B192C]/50 p-4 rounded-xl border border-slate-200 dark:border-[#1E3E62]">
@@ -843,7 +843,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
           <div className="relative w-full max-w-lg rounded-2xl border-2 border-amber-400 dark:border-amber-500 bg-white dark:bg-[#132B45] p-6 shadow-2xl z-10">
             <div className="flex items-center justify-between pb-3 border-b border-amber-200 dark:border-[#1E3E62]">
               <div className="flex items-center space-x-2">
-                <Lightbulb className="h-5 w-5 text-[#FF6500]" />
+                <Lightbulb className="h-5 w-5 text-[#B91C1C]" />
                 <h3 className="text-base font-bold text-slate-900 dark:text-white font-heading">
                   3H Tactical Coaching Clue
                 </h3>
@@ -874,15 +874,15 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
       {/* Completion Banner if closed */}
       {isSessionClosed && (
-        <div className="flex items-center justify-between border-b border-[#FF6500]/40 bg-[#0B192C] px-4 py-3 sm:px-6 sm:py-3.5 z-10 text-white flex-wrap gap-3 shadow-md">
+        <div className="flex items-center justify-between border-b border-[#B91C1C]/40 bg-[#0B192C] px-4 py-3 sm:px-6 sm:py-3.5 z-10 text-white flex-wrap gap-3 shadow-md">
           <div className="flex items-center space-x-2.5 text-xs sm:text-sm font-semibold">
-            <Sparkles className="h-4 w-4 text-[#FF6500] flex-shrink-0 animate-pulse" />
-            <span>Practice dialogue completed. Click <strong className="text-[#FF6500]">View Evaluation</strong> to review your score and debrief.</span>
+            <Sparkles className="h-4 w-4 text-[#B91C1C] flex-shrink-0 animate-pulse" />
+            <span>Practice dialogue completed. Click <strong className="text-[#B91C1C]">View Evaluation</strong> to review your score and debrief.</span>
           </div>
           <button
             id="view-evaluation-btn"
             onClick={() => onViewEvaluation(session.id)}
-            className="flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-4 py-2 text-xs font-bold shadow-md transition transform hover:scale-105"
+            className="flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#DC2626] dark:hover:bg-[#BE2626] px-4 py-2 text-xs font-bold shadow-md transition transform hover:scale-105"
           >
             <span>View Evaluation</span>
             <ArrowRight className="h-4 w-4" />
@@ -913,7 +913,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                   isStreaming
                     ? 'bg-amber-500 text-white shadow-amber-500/40 animate-pulse'
                     : isAssistantSpeaking
-                    ? 'bg-[#FF6500] text-white shadow-[#FF6500]/40 ring-4 ring-[#FF6500]/20 scale-105'
+                    ? 'bg-[#B91C1C] text-white shadow-[#B91C1C]/40 ring-4 ring-[#B91C1C]/20 scale-105'
                     : isMicMuted
                     ? 'bg-slate-700 text-rose-300 hover:bg-slate-600'
                     : isRecordingMic
@@ -943,7 +943,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                       isStreaming
                         ? 'bg-amber-400 animate-ping'
                         : isAssistantSpeaking
-                        ? 'bg-[#FF6500] animate-ping'
+                        ? 'bg-[#B91C1C] animate-ping'
                         : isMicMuted
                         ? 'bg-slate-400'
                         : isRecordingMic
@@ -983,7 +983,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                   className="flex items-center space-x-1 rounded-xl border border-amber-500/50 bg-amber-500/20 px-2.5 sm:px-3 py-2 text-xs font-bold text-amber-800 dark:text-amber-200 hover:bg-amber-500/30 transition shadow-sm"
                   title="Interrupt and speak immediately"
                 >
-                  <Hand className="h-3.5 w-3.5 flex-shrink-0 text-[#FF6500]" />
+                  <Hand className="h-3.5 w-3.5 flex-shrink-0 text-[#B91C1C]" />
                   <span>Interrupt</span>
                 </button>
               )}
@@ -1013,7 +1013,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                   }
                   setSession((prev) => ({ ...prev, mode: 'text' }));
                 }}
-                className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 hover:text-[#FF6500] dark:hover:text-[#FF6500] transition shadow-sm"
+                className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] px-3 py-2 text-xs font-bold text-slate-800 dark:text-slate-200 hover:text-[#B91C1C] dark:hover:text-[#B91C1C] transition shadow-sm"
                 title="Switch to text chat mode"
               >
                 <MessageSquare className="h-3.5 w-3.5 flex-shrink-0" />
@@ -1102,7 +1102,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                           {personaName} · {personaRole}
                         </span>
                         {currentlySpeakingSeq === m.seq && (
-                          <span className="flex items-center space-x-1 text-[#FF6500] font-bold normal-case text-[10px] bg-[#FF6500]/10 px-2 py-0.5 rounded-full border border-[#FF6500]/25">
+                          <span className="flex items-center space-x-1 text-[#B91C1C] font-bold normal-case text-[10px] bg-[#B91C1C]/10 px-2 py-0.5 rounded-full border border-[#B91C1C]/25">
                             <Volume2 className="h-3 w-3 animate-pulse" />
                             <span>Talking...</span>
                           </span>
@@ -1121,8 +1121,8 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                           title={currentlySpeakingSeq === m.seq ? 'Stop speaking' : 'Listen out loud'}
                           className={`p-1 rounded transition ${
                             currentlySpeakingSeq === m.seq
-                              ? 'bg-[#FF6500] text-white shadow-sm'
-                              : 'hover:bg-slate-200 dark:hover:bg-[#1E3E62] text-slate-500 hover:text-[#FF6500] dark:text-slate-400 dark:hover:text-[#FF6500]'
+                              ? 'bg-[#B91C1C] text-white shadow-sm'
+                              : 'hover:bg-slate-200 dark:hover:bg-[#1E3E62] text-slate-500 hover:text-[#B91C1C] dark:text-slate-400 dark:hover:text-[#B91C1C]'
                           }`}
                         >
                           {currentlySpeakingSeq === m.seq ? <VolumeX className="h-3.5 w-3.5" /> : <Volume2 className="h-3.5 w-3.5" />}
@@ -1150,18 +1150,18 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
               </span>
             </div>
             <div className="max-w-[85%] sm:max-w-[78%] rounded-2xl rounded-tl-sm border border-slate-300 bg-white p-4 shadow-sm dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-white font-medium min-w-0 break-words overflow-hidden">
-              <div className="text-[11px] font-bold text-[#FF6500] mb-1.5 uppercase tracking-wider">
+              <div className="text-[11px] font-bold text-[#B91C1C] mb-1.5 uppercase tracking-wider">
                 {personaName} · Responding...
               </div>
               <div className="whitespace-pre-line text-sm sm:text-base leading-relaxed text-slate-900 dark:text-white break-words [overflow-wrap:anywhere]">
                 {streamingReply || (
                   <span className="flex items-center space-x-1.5 py-1">
-                    <span className="h-2 w-2 rounded-full bg-[#0B192C] dark:bg-[#FF6500] animate-pulse" />
-                    <span className="h-2 w-2 rounded-full bg-[#0B192C] dark:bg-[#FF6500] animate-pulse [animation-delay:0.2s]" />
-                    <span className="h-2 w-2 rounded-full bg-[#0B192C] dark:bg-[#FF6500] animate-pulse [animation-delay:0.4s]" />
+                    <span className="h-2 w-2 rounded-full bg-[#0B192C] dark:bg-[#DC2626] animate-pulse" />
+                    <span className="h-2 w-2 rounded-full bg-[#0B192C] dark:bg-[#DC2626] animate-pulse [animation-delay:0.2s]" />
+                    <span className="h-2 w-2 rounded-full bg-[#0B192C] dark:bg-[#DC2626] animate-pulse [animation-delay:0.4s]" />
                   </span>
                 )}
-                <span className="inline-block h-4 w-1.5 bg-[#FF6500] ml-1 animate-pulse" />
+                <span className="inline-block h-4 w-1.5 bg-[#B91C1C] ml-1 animate-pulse" />
               </div>
             </div>
           </div>
@@ -1169,8 +1169,8 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
         {/* Interactive In-Stream Completion Card */}
         {isSessionClosed && (
-          <div className="my-6 rounded-2xl border-2 border-[#FF6500]/40 bg-gradient-to-r from-amber-500/10 via-[#FF6500]/10 to-amber-500/10 p-6 text-center shadow-lg dark:border-[#FF6500]/50 dark:bg-[#0B192C]">
-            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#FF6500]/20 text-[#FF6500] mb-3 border border-[#FF6500]/30 shadow-inner">
+          <div className="my-6 rounded-2xl border-2 border-[#B91C1C]/40 bg-gradient-to-r from-amber-500/10 via-[#B91C1C]/10 to-amber-500/10 p-6 text-center shadow-lg dark:border-[#DC2626]/50 dark:bg-[#0B192C]">
+            <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#B91C1C]/20 text-[#B91C1C] mb-3 border border-[#B91C1C]/30 shadow-inner">
               <Sparkles className="h-6 w-6" />
             </div>
             <h3 className="text-lg font-black text-slate-900 dark:text-white font-heading">
@@ -1184,7 +1184,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                 type="button"
                 id="inline-view-evaluation-btn"
                 onClick={() => onViewEvaluation(session.id)}
-                className="flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] px-6 py-2.5 text-xs font-bold shadow-lg transition transform hover:scale-105"
+                className="flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#DC2626] dark:hover:bg-[#BE2626] px-6 py-2.5 text-xs font-bold shadow-lg transition transform hover:scale-105"
               >
                 <span>View Performance Evaluation</span>
                 <ArrowRight className="h-4 w-4" />
@@ -1214,7 +1214,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
             }} 
             className="mx-auto max-w-4xl"
           >
-            <div className="relative rounded-2xl border border-slate-300 bg-slate-50 p-2.5 sm:p-3 transition focus-within:border-[#FF6500] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#FF6500]/25 shadow-sm dark:border-[#1E3E62] dark:bg-[#132B45]">
+            <div className="relative rounded-2xl border border-slate-300 bg-slate-50 p-2.5 sm:p-3 transition focus-within:border-[#B91C1C] focus-within:bg-white focus-within:ring-2 focus-within:ring-[#B91C1C]/25 shadow-sm dark:border-[#1E3E62] dark:bg-[#132B45]">
               <textarea
                 id="chat-message-input"
                 rows={session.mode === 'voice' ? 1 : 2}
@@ -1272,7 +1272,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                         : 'bg-slate-100 hover:bg-slate-200 text-slate-700 dark:bg-[#0B192C] dark:hover:bg-[#1E3E62] dark:text-slate-300 border-slate-300 dark:border-[#1E3E62]'
                     }`}
                   >
-                    <Mic className={`h-3.5 w-3.5 ${isDictating ? 'text-white animate-pulse' : 'text-[#0B192C] dark:text-[#FF6500]'}`} />
+                    <Mic className={`h-3.5 w-3.5 ${isDictating ? 'text-white animate-pulse' : 'text-[#0B192C] dark:text-[#DC2626]'}`} />
                     <span>{isDictating ? 'Listening...' : 'Speak'}</span>
                   </button>
 
@@ -1314,7 +1314,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
             className="fixed inset-0 bg-[#0B192C]/80 backdrop-blur-sm"
           />
           <div className="relative w-full max-w-md rounded-2xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-6 shadow-2xl z-10">
-            <div className="flex items-center space-x-3 text-[#FF6500]">
+            <div className="flex items-center space-x-3 text-[#B91C1C]">
               <AlertTriangle className="h-6 w-6" />
               <h3 id="conclude-dialog-title" className="text-lg font-bold text-slate-900 dark:text-white font-heading">
                 End Practice Session?

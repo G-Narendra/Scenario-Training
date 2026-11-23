@@ -74,7 +74,7 @@ export const LoginPage: React.FC = () => {
           aria-label="Toggle light/dark theme"
           className="flex items-center space-x-2 rounded-xl border border-slate-300 bg-white/90 px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm backdrop-blur-sm transition hover:bg-slate-100 dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-slate-200 dark:hover:bg-[#1E3E62]"
         >
-          {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-[#FF6500]" />}
+          {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-[#B91C1C]" />}
           <span className="hidden sm:inline">{theme === 'dark' ? 'Light Mode' : 'Dark Mode'}</span>
         </button>
       </div>
@@ -120,7 +120,7 @@ export const LoginPage: React.FC = () => {
                   placeholder="Enter Cohort Passcode"
                   value={passcode}
                   onChange={handlePasscodeChange}
-                  className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-4 font-mono text-base font-bold tracking-wider text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-[#FF6500] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6500]/30 dark:border-[#2D5B8D] dark:bg-[#0B192C] dark:text-white dark:placeholder-slate-500"
+                  className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-4 font-mono text-base font-bold tracking-wider text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-[#B91C1C] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#B91C1C]/30 dark:border-[#2D5B8D] dark:bg-[#0B192C] dark:text-white dark:placeholder-slate-500"
                   required
                 />
               </div>
@@ -144,7 +144,7 @@ export const LoginPage: React.FC = () => {
                   placeholder="Enter your name"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-[#FF6500] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#FF6500]/30 dark:border-[#2D5B8D] dark:bg-[#0B192C] dark:text-white dark:placeholder-slate-500"
+                  className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-[#B91C1C] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#B91C1C]/30 dark:border-[#2D5B8D] dark:bg-[#0B192C] dark:text-white dark:placeholder-slate-500"
                   required
                 />
               </div>
@@ -157,7 +157,7 @@ export const LoginPage: React.FC = () => {
               id="login-submit-btn"
               type="submit"
               disabled={isSubmitting}
-              className="mt-2 flex w-full items-center justify-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#FF6500] dark:hover:bg-[#E05A00] py-3.5 px-4 text-base font-bold shadow-md transition focus:outline-none focus:ring-2 focus:ring-[#0B192C] dark:focus:ring-[#FF6500] focus:ring-offset-2 disabled:opacity-50"
+              className="mt-2 flex w-full items-center justify-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#DC2626] dark:hover:bg-[#BE2626] py-3.5 px-4 text-base font-bold shadow-md transition focus:outline-none focus:ring-2 focus:ring-[#0B192C] dark:focus:ring-[#B91C1C] focus:ring-offset-2 disabled:opacity-50"
             >
               <span>{isSubmitting ? 'Verifying & Entering...' : 'Enter Training Platform'}</span>
               <ArrowRight className="h-5 w-5" />

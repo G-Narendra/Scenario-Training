@@ -13,8 +13,8 @@
   --border-subtle: #CBD5E1;
   --text-main: #0B192C;
   --text-muted: #475569;
-  --accent-primary: #FF6500;
-  --accent-hover: #E05A00;
+  --accent-primary: #B91C1C;
+  --accent-hover: #BE2626;
 }
 
 html.dark {
@@ -26,8 +26,8 @@ html.dark {
   --border-subtle: #2D5B8D;
   --text-main: #FFFFFF;
   --text-muted: #D1D5DB; /* 7:1 Contrast Minimum */
-  --accent-primary: #FF6500;
-  --accent-hover: #E05A00;
+  --accent-primary: #B91C1C;
+  --accent-hover: #BE2626;
 }
 
 body {
