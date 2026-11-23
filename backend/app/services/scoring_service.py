@@ -117,11 +117,12 @@ class ScoringService:
         trainee_messages: List[Dict[str, Any]],
     ) -> FeedbackReportSchema:
         """Generates a calibrated executive performance report when LLM generation is unavailable."""
-        first_quote = trainee_messages[0]["content"] if trainee_messages else "I understand."
-        first_seq = trainee_messages[0]["seq"] if trainee_messages else 2
-
         total_words = sum(len(m.get("content", "").split()) for m in trainee_messages)
+        is_empty = len(trainee_messages) == 0 or total_words == 0
         is_trivial = len(trainee_messages) <= 1 or total_words < 12
+
+        first_quote = trainee_messages[0]["content"] if trainee_messages else "[No dialogue submitted]"
+        first_seq = trainee_messages[0]["seq"] if trainee_messages else 1
 
         # Pick distinct moments across the conversation flow
         num_msgs = len(trainee_messages)
@@ -138,9 +139,9 @@ class ScoringService:
             m2 = trainee_messages[0]
             m3 = trainee_messages[0]
         else:
-            m1 = {"content": "I understand your perspective.", "seq": 2}
-            m2 = {"content": "Let's explore common ground.", "seq": 4}
-            m3 = {"content": "Here is what we can agree on next.", "seq": 6}
+            m1 = {"content": "[No dialogue submitted]", "seq": 1}
+            m2 = {"content": "[No dialogue submitted]", "seq": 1}
+            m3 = {"content": "[No dialogue submitted]", "seq": 1}
 
         # Ensure skills is never empty to prevent validation failure on FeedbackReportSchema
         if not skills:
@@ -177,7 +178,11 @@ class ScoringService:
             s_name = s.get("name", "Competency")
             s_rubric = s.get("rubric", {})
 
-            if is_trivial:
+            if is_empty:
+                score_val = 1
+                rubric_text = s_rubric.get("1", f"Incomplete: No demonstration of {s_name.lower()} (session terminated before dialogue).")
+                just_text = f"Session terminated before any participant dialogue was spoken or submitted."
+            elif is_trivial:
                 score_val = 1
                 rubric_text = s_rubric.get("1", f"Foundational: Minimal demonstration of {s_name.lower()} during preliminary exchange.")
                 just_text = f"Session concluded early ('{first_quote}') before demonstrating {s_name.lower()}."
@@ -217,75 +222,173 @@ class ScoringService:
                 )
             )
 
-        what_worked = [
-            WhatWorkedItem(
-                moment_seq=m1.get("seq", first_seq),
-                quote=m1.get("content", first_quote),
-                why_it_worked="Initiated the conversation with professional composure and maintained an open, non-combative posture.",
-            )
-        ]
-        what_didnt = [
-            WhatDidntItem(
-                moment_seq=m2.get("seq", first_seq),
-                quote=m2.get("content", first_quote),
-                why_it_missed="Yielded conversational initiative rather than using an open calibration question to uncover the operational root cause.",
-            )
-        ]
-        key_moments = [
-            KeyMomentItem(
-                moment_seq=m1.get("seq", first_seq),
-                quote=m1.get("content", first_quote),
-                what_happened="Opening approach and conversation framing.",
-                why_it_matters="Sets the tone and establishes whether you drive collaborative discovery or remain reactive.",
-                alternative_phrasing="I appreciate you walking me through this. What is the most critical outcome you need us to resolve today?",
-                reasoning="This works better because open framing invites mutual collaboration and lowers conversational defenses.",
-            ),
-            KeyMomentItem(
-                moment_seq=m2.get("seq", first_seq),
-                quote=m2.get("content", first_quote),
-                what_happened="Navigating counterpart pushback and operational concerns.",
-                why_it_matters="Determines whether friction escalates or turns into shared problem-solving.",
-                alternative_phrasing="Help me understand the operational constraints behind that requirement so we can address them directly.",
-                reasoning="This works better because acknowledging counterpart constraints creates psychological safety.",
-            ),
-            KeyMomentItem(
-                moment_seq=m3.get("seq", first_seq),
-                quote=m3.get("content", first_quote),
-                what_happened="Closing or transition toward agreed next steps.",
-                why_it_matters="Secures mutual accountability and establishes clear deliverables.",
-                alternative_phrasing="Let's agree on concrete next milestones and owners before we conclude.",
-                reasoning="This works better because explicit ownership prevents downstream misalignment.",
-            ),
-        ]
-
-        improvement_steps = [
-            ImprovementStepItem(
-                step="Ask open discovery questions early",
-                why="Reveals hidden constraints before positions harden",
-                practice_drill="Practice the 'TED' technique (Tell me, Explain to me, Describe to me) in your first 2 turns.",
-                linked_skill=skills[0]["key"] if skills else "discovery_questions",
-            ),
-            ImprovementStepItem(
-                step="Acknowledge counterpart objections before responding",
-                why="Validates emotional concerns and reduces resistance",
-                practice_drill="Reflect the emotional subtext back to the speaker before offering solutions.",
-                linked_skill=skills[1]["key"] if len(skills) > 1 else "objection_handling",
-            ),
-            ImprovementStepItem(
-                step="Secure explicit, calibrated next steps",
-                why="Ensures accountability and momentum",
-                practice_drill="Propose a specific date, agenda, and participant list at the end of the conversation.",
-                linked_skill=skills[2]["key"] if len(skills) > 2 else "closing_next_steps",
-            ),
-        ]
+        if is_empty:
+            what_worked = [
+                WhatWorkedItem(
+                    moment_seq=1,
+                    quote="[No dialogue submitted]",
+                    why_it_worked="Session was initialized, but concluded before any dialogue was entered. Re-launch the scenario and practice your opening statement.",
+                )
+            ]
+            what_didnt = [
+                WhatDidntItem(
+                    moment_seq=1,
+                    quote="[No dialogue submitted]",
+                    why_it_missed="Session terminated before active verbal or text participation. Engaging in dialogue is required to assess executive competencies.",
+                )
+            ]
+            key_moments = [
+                KeyMomentItem(
+                    moment_seq=1,
+                    quote="[No dialogue submitted]",
+                    what_happened="Session closed without participant dialogue.",
+                    why_it_matters="Executive presence requires active conversational engagement from turn 1.",
+                    alternative_phrasing="Deliver your opening statement directly upon entering the scenario.",
+                    reasoning="Speaking or typing your opening line establishes conversational initiative and begins deliberate practice.",
+                )
+            ]
+            improvement_steps = [
+                ImprovementStepItem(
+                    step="Deliver your opening statement upon entering the scenario",
+                    why="Allows the AI counterpart to react authentically to your conversational framing.",
+                    practice_drill="Launch the scenario and speak or type your opening greeting immediately.",
+                    linked_skill=skills[0]["key"] if skills else "communication",
+                )
+            ]
+        elif is_trivial:
+            what_worked = [
+                WhatWorkedItem(
+                    moment_seq=m1.get("seq", first_seq),
+                    quote=m1.get("content", first_quote),
+                    why_it_worked=f"Initiated contact with '{first_quote}', demonstrating an initial willingness to engage.",
+                )
+            ]
+            what_didnt = [
+                WhatDidntItem(
+                    moment_seq=m2.get("seq", first_seq),
+                    quote=m2.get("content", first_quote),
+                    why_it_missed=f"Concluded abruptly after '{first_quote}' without exploring the counterpart's perspective or setting an agenda.",
+                )
+            ]
+            key_moments = [
+                KeyMomentItem(
+                    moment_seq=m1.get("seq", first_seq),
+                    quote=m1.get("content", first_quote),
+                    what_happened="Brief opening exchange before early exit.",
+                    why_it_matters="Setting a collaborative agenda early dictates conversation control.",
+                    alternative_phrasing="I appreciate you walking me through this. What is the most critical outcome you need us to resolve today?",
+                    reasoning="Open framing invites mutual collaboration and lowers conversational defenses.",
+                ),
+                KeyMomentItem(
+                    moment_seq=m2.get("seq", first_seq),
+                    quote=m2.get("content", first_quote),
+                    what_happened="Navigating counterpart pushback and operational concerns.",
+                    why_it_matters="Determines whether friction escalates or turns into shared problem-solving.",
+                    alternative_phrasing="Help me understand the operational constraints behind that requirement so we can address them directly.",
+                    reasoning="Acknowledging counterpart constraints creates psychological safety.",
+                ),
+                KeyMomentItem(
+                    moment_seq=m3.get("seq", first_seq),
+                    quote=m3.get("content", first_quote),
+                    what_happened="Closing or transition toward agreed next steps.",
+                    why_it_matters="Secures mutual accountability and establishes clear deliverables.",
+                    alternative_phrasing="Let's agree on concrete next milestones and owners before we conclude.",
+                    reasoning="Explicit ownership prevents downstream misalignment.",
+                ),
+            ]
+            improvement_steps = [
+                ImprovementStepItem(
+                    step="Ask open discovery questions early",
+                    why="Reveals hidden constraints before positions harden",
+                    practice_drill="Practice the 'TED' technique (Tell me, Explain to me, Describe to me) in your first 2 turns.",
+                    linked_skill=skills[0]["key"] if skills else "discovery_questions",
+                ),
+                ImprovementStepItem(
+                    step="Acknowledge counterpart objections before responding",
+                    why="Validates emotional concerns and reduces resistance",
+                    practice_drill="Reflect the emotional subtext back to the speaker before offering solutions.",
+                    linked_skill=skills[1]["key"] if len(skills) > 1 else "objection_handling",
+                ),
+                ImprovementStepItem(
+                    step="Secure explicit, calibrated next steps",
+                    why="Ensures accountability and momentum",
+                    practice_drill="Propose a specific date, agenda, and participant list at the end of the conversation.",
+                    linked_skill=skills[2]["key"] if len(skills) > 2 else "closing_next_steps",
+                ),
+            ]
+        else:
+            what_worked = [
+                WhatWorkedItem(
+                    moment_seq=m1.get("seq", first_seq),
+                    quote=m1.get("content", first_quote),
+                    why_it_worked="Initiated the conversation with professional composure and maintained an open, non-combative posture.",
+                )
+            ]
+            what_didnt = [
+                WhatDidntItem(
+                    moment_seq=m2.get("seq", first_seq),
+                    quote=m2.get("content", first_quote),
+                    why_it_missed="Yielded conversational initiative rather than using an open calibration question to uncover the operational root cause.",
+                )
+            ]
+            key_moments = [
+                KeyMomentItem(
+                    moment_seq=m1.get("seq", first_seq),
+                    quote=m1.get("content", first_quote),
+                    what_happened="Opening approach and conversation framing.",
+                    why_it_matters="Sets the tone and establishes whether you drive collaborative discovery or remain reactive.",
+                    alternative_phrasing="I appreciate you walking me through this. What is the most critical outcome you need us to resolve today?",
+                    reasoning="This works better because open framing invites mutual collaboration and lowers conversational defenses.",
+                ),
+                KeyMomentItem(
+                    moment_seq=m2.get("seq", first_seq),
+                    quote=m2.get("content", first_quote),
+                    what_happened="Navigating counterpart pushback and operational concerns.",
+                    why_it_matters="Determines whether friction escalates or turns into shared problem-solving.",
+                    alternative_phrasing="Help me understand the operational constraints behind that requirement so we can address them directly.",
+                    reasoning="This works better because acknowledging counterpart constraints creates psychological safety.",
+                ),
+                KeyMomentItem(
+                    moment_seq=m3.get("seq", first_seq),
+                    quote=m3.get("content", first_quote),
+                    what_happened="Closing or transition toward agreed next steps.",
+                    why_it_matters="Secures mutual accountability and establishes clear deliverables.",
+                    alternative_phrasing="Let's agree on concrete next milestones and owners before we conclude.",
+                    reasoning="This works better because explicit ownership prevents downstream misalignment.",
+                ),
+            ]
+            improvement_steps = [
+                ImprovementStepItem(
+                    step="Ask open discovery questions early",
+                    why="Reveals hidden constraints before positions harden",
+                    practice_drill="Practice the 'TED' technique (Tell me, Explain to me, Describe to me) in your first 2 turns.",
+                    linked_skill=skills[0]["key"] if skills else "discovery_questions",
+                ),
+                ImprovementStepItem(
+                    step="Acknowledge counterpart objections before responding",
+                    why="Validates emotional concerns and reduces resistance",
+                    practice_drill="Reflect the emotional subtext back to the speaker before offering solutions.",
+                    linked_skill=skills[1]["key"] if len(skills) > 1 else "objection_handling",
+                ),
+                ImprovementStepItem(
+                    step="Secure explicit, calibrated next steps",
+                    why="Ensures accountability and momentum",
+                    practice_drill="Propose a specific date, agenda, and participant list at the end of the conversation.",
+                    linked_skill=skills[2]["key"] if len(skills) > 2 else "closing_next_steps",
+                ),
+            ]
 
         success_results = [
             SuccessCriteriaResultItem(
                 criterion=crit,
-                met=False if is_trivial else True,
-                evidence=f"Preliminary exchange ('{first_quote}') concluded early."
-                if is_trivial
-                else f"Demonstrated professional engagement across dialogue turns.",
+                met=False if (is_empty or is_trivial) else True,
+                evidence="Session concluded without participant dialogue."
+                if is_empty
+                else (
+                    f"Preliminary exchange ('{first_quote}') concluded early."
+                    if is_trivial
+                    else f"Demonstrated professional engagement across dialogue turns."
+                ),
             )
             for crit in scenario_data.get(
                 "success_criteria", ["Demonstrate constructive communication"]
@@ -293,15 +396,20 @@ class ScoringService:
         ]
         assessed_list = scenario_data.get("skills_assessed", [])
         overall_score_val = cls.compute_deterministic_overall_score(skill_scores, assessed_list)
-        if is_trivial:
-            overall_score_val = min(overall_score_val, 25)
+        if is_empty:
+            overall_score_val = 0
+        elif is_trivial:
+            overall_score_val = min(overall_score_val, 20)
+
+        if is_empty:
+            summary_text = "This practice session concluded early with no participant dialogue spoken or submitted. Practice engaging with deeper discovery questions to uncover your counterpart's underlying priorities."
+        elif is_trivial:
+            summary_text = f"The session concluded early after a brief exchange ('{first_quote}'). Practice engaging with deeper discovery questions to uncover your counterpart's underlying priorities."
+        else:
+            summary_text = "You maintained conversational momentum throughout this scenario, addressing objections and working through counterpart resistance. Focusing on structured discovery questions before presenting solutions will further elevate your executive presence."
 
         return FeedbackReportSchema(
-            overall_summary=(
-                f"The session concluded early with preliminary dialogue. Practice engaging with deeper discovery questions to uncover your counterpart's underlying priorities."
-                if is_trivial
-                else "You maintained conversational momentum throughout this scenario, addressing objections and working through counterpart resistance. Focusing on structured discovery questions before presenting solutions will further elevate your executive presence."
-            ),
+            overall_summary=summary_text,
             skill_scores=skill_scores,
             what_worked=what_worked,
             what_didnt=what_didnt,
@@ -430,23 +538,20 @@ class ScoringService:
             "skills_assessed": scenario.skills_assessed,
         }
 
-        # Check for short or minimal trainee interaction
+        # Check for truly empty session (no trainee speech or text input)
         total_words = sum(len(m.get("content", "").split()) for m in trainee_msgs)
-        is_trivial = len(trainee_msgs) <= 1 or total_words < 12 or all(
-            m.get("content", "").strip().lower() in ["sorry", "i am sorry", "im sorry", "my apologies", "ok", "hi", "hello", "i didn't get you", "i didnt get you"]
-            for m in trainee_msgs
-        )
+        is_empty = len(trainee_msgs) == 0 or total_words == 0
 
         report: Optional[FeedbackReportSchema] = None
         evaluation_llm_ms = 0
 
-        if is_trivial:
-            logger.info(f"Short or preliminary dialogue ({total_words} words). Generating instant calibrated evaluation.")
+        if is_empty:
+            logger.info("Empty session (0 trainee dialogue turns). Generating instant zero-score baseline.")
             t_llm0 = time.perf_counter()
             report = cls.generate_fallback_report(scenario_dict, skills_data, trainee_msgs)
             evaluation_llm_ms = max(1, int((time.perf_counter() - t_llm0) * 1000))
         else:
-            # 4. Generate Evaluator Prompt with fast single-pass execution & in-memory quote sanitization
+            # 4. Invoke AI Evaluator LLM with full context, rubrics, and verbatim transcript
             prompt_text = build_evaluator_prompt(scenario_dict, skills_data, transcript_data)
             t_llm0 = time.perf_counter()
             try:

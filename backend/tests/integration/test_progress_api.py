@@ -268,6 +268,7 @@ async def test_cohort_progress_and_multi_tenant_isolation():
         assert res.status_code == 200
         assert res.headers["content-type"].startswith("text/csv")
         csv_text = res.text
-        assert "User ID" in csv_text
+        assert "Participant Name" in csv_text
         assert "Scenario Title" in csv_text
         assert "Overall Score" in csv_text
+        assert "Key Strengths (Goods)" in csv_text

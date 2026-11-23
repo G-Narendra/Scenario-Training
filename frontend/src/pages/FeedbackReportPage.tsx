@@ -165,6 +165,38 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
 
   return (
     <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6 lg:px-8 print:p-0 print:max-w-none text-slate-900 dark:text-slate-100">
+      <style>{`
+        @page {
+          size: A4 portrait;
+          margin: 10mm 12mm;
+        }
+        @media print {
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 9pt !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            line-height: 1.35 !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          nav, header, footer, aside, button, .print\\:hidden, #floating-whatsapp-btn, #mode-switch-btn {
+            display: none !important;
+          }
+          .print-avoid-break {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .print-card {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+          }
+          .shadow-xl, .shadow-md, .shadow-sm {
+            box-shadow: none !important;
+          }
+        }
+      `}</style>
       {/* Top Navigation Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 border-b border-slate-300 dark:border-[#1E3E62] pb-5 print:hidden">
         <nav aria-label="Breadcrumb" className="flex items-center space-x-2 text-xs font-bold">
@@ -340,28 +372,119 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           </div>
         </div>
 
-        {/* Micro-Debrief (Top Strength + Key Adjustment - Always Visible) */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="rounded-2xl border-2 border-emerald-500/50 bg-emerald-50/90 dark:bg-emerald-950/40 p-5 shadow-sm">
-            <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
-              <CheckCircle2 className="h-4 w-4 text-emerald-500" />
-              <span>Key Strength</span>
+        {/* Summary Tier High-Density 1-Page Layout */}
+        {reportTier === 'summary' && (
+          <div className="mt-6 space-y-4 print:mt-3 print:space-y-2.5">
+            {/* Key Strengths (Goods) */}
+            <div className="rounded-2xl border border-emerald-500/40 bg-emerald-50/60 dark:bg-[#0B192C] p-4 sm:p-5 print:p-2.5 print:border-emerald-500/60 print:rounded-lg">
+              <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-emerald-800 dark:text-emerald-400">
+                <CheckCircle2 className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                <span>Key Strengths Demonstrated (Goods)</span>
+              </div>
+              <ul className="mt-2.5 space-y-1.5 text-xs text-slate-800 dark:text-slate-200">
+                {report.what_worked && report.what_worked.length > 0 ? (
+                  report.what_worked.map((item, idx) => (
+                    <li key={idx} className="flex items-start space-x-2 leading-relaxed">
+                      <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-600 dark:bg-emerald-400" />
+                      <span>
+                        {item.quote && item.quote !== '[No dialogue submitted]' && (
+                          <strong className="text-emerald-800 dark:text-emerald-300 font-semibold italic">"{item.quote}": </strong>
+                        )}
+                        <span>{item.why_it_worked}</span>
+                      </span>
+                    </li>
+                  ))
+                ) : (
+                  <li className="flex items-start space-x-2 leading-relaxed">
+                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-emerald-600" />
+                    <span>Maintained conversational composure and active listening.</span>
+                  </li>
+                )}
+              </ul>
             </div>
-            <p className="mt-2 text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-semibold">
-              {report.what_worked?.[0]?.why_it_worked || report.what_worked?.[0]?.quote || 'Maintained conversational composure and active listening.'}
-            </p>
-          </div>
 
-          <div className="rounded-2xl border-2 border-[#1E3E62] bg-blue-50/70 dark:bg-[#132B45]/70 p-5 shadow-sm">
-            <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#0B192C] dark:text-[#60A5FA]">
-              <Target className="h-4 w-4 text-[#1E3E62] dark:text-[#60A5FA]" />
-              <span>Priority Adjustment</span>
+            {/* Priority Areas for Adjustment (Bads / Gaps) */}
+            <div className="rounded-2xl border border-[#B91C1C]/40 bg-rose-50/60 dark:bg-[#0B192C] p-4 sm:p-5 print:p-2.5 print:border-[#B91C1C]/60 print:rounded-lg">
+              <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#B91C1C] dark:text-[#DC2626]">
+                <Target className="h-4 w-4 text-[#B91C1C]" />
+                <span>Priority Coaching Adjustments (Bads & Deflections)</span>
+              </div>
+              <ul className="mt-2.5 space-y-1.5 text-xs text-slate-800 dark:text-slate-200">
+                {report.what_didnt && report.what_didnt.length > 0 ? (
+                  report.what_didnt.map((item, idx) => (
+                    <li key={idx} className="flex items-start space-x-2 leading-relaxed">
+                      <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#B91C1C]" />
+                      <span>
+                        {item.quote && item.quote !== '[No dialogue submitted]' && (
+                          <strong className="text-rose-800 dark:text-rose-300 font-semibold italic">"{item.quote}": </strong>
+                        )}
+                        <span>{item.why_it_missed}</span>
+                      </span>
+                    </li>
+                  ))
+                ) : (
+                  <li className="flex items-start space-x-2 leading-relaxed">
+                    <span className="mt-1.5 h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[#B91C1C]" />
+                    <span>Clarify counterpart constraints before proposing commitments.</span>
+                  </li>
+                )}
+              </ul>
             </div>
-            <p className="mt-2 text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-semibold">
-              {report.key_moments?.[0]?.alternative_phrasing || report.what_didnt?.[0]?.why_it_missed || 'Clarify counterpart constraints before proposing commitments.'}
-            </p>
+
+            {/* Targeted Action Plan & Drills (Improvements) */}
+            <div className="rounded-2xl border border-slate-300 dark:border-[#1E3E62] bg-slate-50/70 dark:bg-[#0B192C] p-4 sm:p-5 print:p-2.5 print:border-slate-300 print:rounded-lg">
+              <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#0B192C] dark:text-white">
+                <TrendingUp className="h-4 w-4 text-[#B91C1C]" />
+                <span>Targeted Action Plan & Practice Drills (Improvements)</span>
+              </div>
+              <ol className="mt-2.5 space-y-1.5 text-xs text-slate-800 dark:text-slate-200">
+                {report.improvement_steps && report.improvement_steps.length > 0 ? (
+                  report.improvement_steps.map((step, idx) => (
+                    <li key={idx} className="flex items-start space-x-2 leading-relaxed">
+                      <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[#0B192C] text-[10px] font-bold text-white dark:bg-[#1E3E62]">
+                        {idx + 1}
+                      </span>
+                      <span>
+                        <strong className="text-slate-900 dark:text-white font-bold">{step.step}: </strong>
+                        <span>{step.practice_drill || step.why}</span>
+                      </span>
+                    </li>
+                  ))
+                ) : (
+                  <li className="flex items-start space-x-2 leading-relaxed">
+                    <span className="flex h-4 w-4 flex-shrink-0 items-center justify-center rounded-full bg-[#0B192C] text-[10px] font-bold text-white">1</span>
+                    <span>Practice structured discovery questions before presenting solutions.</span>
+                  </li>
+                )}
+              </ol>
+            </div>
           </div>
-        </div>
+        )}
+
+        {/* Detailed Dossier Micro-Debrief & Phrasing Insights */}
+        {reportTier === 'detailed' && (
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="rounded-2xl border-2 border-emerald-500/50 bg-emerald-50/90 dark:bg-emerald-950/40 p-5 shadow-sm">
+              <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-emerald-800 dark:text-emerald-300">
+                <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                <span>Key Strength</span>
+              </div>
+              <p className="mt-2 text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-semibold">
+                {report.what_worked?.[0]?.why_it_worked || report.what_worked?.[0]?.quote || 'Maintained conversational composure and active listening.'}
+              </p>
+            </div>
+
+            <div className="rounded-2xl border-2 border-[#1E3E62] bg-blue-50/70 dark:bg-[#132B45]/70 p-5 shadow-sm">
+              <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#0B192C] dark:text-[#60A5FA]">
+                <Target className="h-4 w-4 text-[#1E3E62] dark:text-[#60A5FA]" />
+                <span>Priority Adjustment</span>
+              </div>
+              <p className="mt-2 text-sm text-slate-800 dark:text-slate-100 leading-relaxed font-semibold">
+                {report.key_moments?.[0]?.alternative_phrasing || report.what_didnt?.[0]?.why_it_missed || 'Clarify counterpart constraints before proposing commitments.'}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Detailed Insights: Phrasing & Hidden Agenda (Detailed Dossier Only) */}
         {reportTier === 'detailed' && (
@@ -599,55 +722,57 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
     </>
   )}
 
-      {/* Action Plan */}
-      <div className="print-section mt-8 rounded-3xl border border-slate-200 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-8 shadow-xl ring-1 ring-slate-100 dark:ring-0 print:p-4 print:ring-0">
-        <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#B91C1C]">
-          <TrendingUp className="h-4 w-4" />
-          <span>Action Plan</span>
-        </div>
-        <h2 className="mt-2 text-2xl font-black text-slate-900 dark:text-white font-heading">
-          Recommended Next Steps
-        </h2>
-        <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
-          Deliberate practice exercises to apply in your next session.
-        </p>
+      {/* Action Plan (Detailed Dossier Only) */}
+      {reportTier === 'detailed' && (
+        <div className="print-section mt-8 rounded-3xl border border-slate-200 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] p-8 shadow-xl ring-1 ring-slate-100 dark:ring-0 print:p-4 print:ring-0">
+          <div className="flex items-center space-x-2 text-xs font-bold uppercase tracking-wider text-[#B91C1C]">
+            <TrendingUp className="h-4 w-4" />
+            <span>Action Plan</span>
+          </div>
+          <h2 className="mt-2 text-2xl font-black text-slate-900 dark:text-white font-heading">
+            Recommended Next Steps
+          </h2>
+          <p className="mt-1 text-xs text-slate-600 dark:text-slate-400 font-medium">
+            Deliberate practice exercises to apply in your next session.
+          </p>
 
-        <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-          {report.improvement_steps.map((step, idx) => (
-            <div
-              key={idx}
-              className="print-card print-avoid-break flex flex-col justify-between rounded-2xl border-2 border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-5 shadow-sm"
-            >
-              <div>
-                <div className="flex items-center justify-between">
-                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#B91C1C]/20 text-xs font-bold text-[#B91C1C]">
-                    {idx + 1}
-                  </span>
-                  <span className="rounded bg-slate-200 dark:bg-[#132B45] px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:text-slate-300 capitalize">
-                    {step.linked_skill.replace(/_/g, ' ')}
-                  </span>
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+            {report.improvement_steps.map((step, idx) => (
+              <div
+                key={idx}
+                className="print-card print-avoid-break flex flex-col justify-between rounded-2xl border-2 border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-5 shadow-sm"
+              >
+                <div>
+                  <div className="flex items-center justify-between">
+                    <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#B91C1C]/20 text-xs font-bold text-[#B91C1C]">
+                      {idx + 1}
+                    </span>
+                    <span className="rounded bg-slate-200 dark:bg-[#132B45] px-2 py-0.5 text-[10px] font-semibold text-slate-700 dark:text-slate-300 capitalize">
+                      {step.linked_skill.replace(/_/g, ' ')}
+                    </span>
+                  </div>
+
+                  <h3 className="mt-3 text-sm font-bold text-slate-900 dark:text-white">
+                    {step.step}
+                  </h3>
+                  <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
+                    {step.why}
+                  </p>
                 </div>
 
-                <h3 className="mt-3 text-sm font-bold text-slate-900 dark:text-white">
-                  {step.step}
-                </h3>
-                <p className="mt-2 text-xs text-slate-600 dark:text-slate-400 leading-relaxed font-medium">
-                  {step.why}
-                </p>
+                <div className="mt-4 border-t border-slate-200 dark:border-[#1E3E62] pt-3">
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#B91C1C]">
+                    Practice Drill:
+                  </span>
+                  <p className="mt-1 text-xs text-slate-800 dark:text-slate-200 font-semibold leading-relaxed">
+                    {step.practice_drill}
+                  </p>
+                </div>
               </div>
-
-              <div className="mt-4 border-t border-slate-200 dark:border-[#1E3E62] pt-3">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#B91C1C]">
-                  Practice Drill:
-                </span>
-                <p className="mt-1 text-xs text-slate-800 dark:text-slate-200 font-semibold leading-relaxed">
-                  {step.practice_drill}
-                </p>
-              </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Facilitator Archive Notice Card (Student Summary View) */}
       {reportTier === 'summary' && (

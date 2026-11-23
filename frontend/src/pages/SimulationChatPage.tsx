@@ -80,7 +80,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       const nav = (navigator.languages && navigator.languages[0]) || navigator.language;
       if (nav) return nav;
     }
-    return 'en-IN';
+    return 'en-US';
   });
 
   // Auto-Voice & Hands-free Dictation
@@ -620,23 +620,30 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
           <button
             id="mode-switch-btn"
             type="button"
-            onClick={() => {
+            onClick={async () => {
               const nextMode = session.mode === 'voice' ? 'text' : 'voice';
               if (nextMode === 'voice') {
                 setAutoVoice(true);
-                // Immediate audio unlock and speak last counterpart utterance
-                const lastCounterpart = [...messages].reverse().find((m) => m.role === 'counterpart');
-                if (lastCounterpart && voiceClient) {
-                  setCurrentlySpeakingSeq(lastCounterpart.seq);
-                  setIsAssistantSpeaking(true);
-                  voiceClient.speakText(lastCounterpart.content, personaName).catch(() => {});
+                setSession((prev) => ({ ...prev, mode: nextMode }));
+                if (voiceClient) {
+                  await voiceClient.ensureAudioContext().catch(() => {});
+                  const lastCounterpart = [...messages].reverse().find((m) => m.role === 'counterpart');
+                  if (lastCounterpart) {
+                    setCurrentlySpeakingSeq(lastCounterpart.seq);
+                    setIsAssistantSpeaking(true);
+                    await voiceClient.speakText(lastCounterpart.content, personaName).catch(() => {});
+                  }
+                  // Immediately start capturing voice with hardware noise suppression
+                  voiceClient.releaseTurnLock();
+                  await voiceClient.startAudioCapture(true).catch(() => {});
                 }
               } else if (voiceClient) {
                 voiceClient.stopSpeaking();
+                voiceClient.stopAudioCapture();
                 setIsAssistantSpeaking(false);
                 setCurrentlySpeakingSeq(null);
+                setSession((prev) => ({ ...prev, mode: nextMode }));
               }
-              setSession((prev) => ({ ...prev, mode: nextMode }));
             }}
             className={`flex items-center space-x-1 sm:space-x-1.5 rounded-xl border px-2 sm:px-3 py-1.5 text-[11px] sm:text-xs font-bold transition shadow-sm ${
               session.mode === 'voice'

@@ -96,8 +96,9 @@ export class VoiceClient {
       const nav = (navigator.languages && navigator.languages[0]) || navigator.language;
       if (nav) return nav;
     }
-    return 'en-IN';
+    return 'en-US';
   })();
+  private micMediaStream: MediaStream | null = null;
   private callbacks: VoiceClientCallbacks;
   private ttsAudioCache = new Map<string, AudioBuffer>();
   private networkErrorCount = 0;
@@ -469,6 +470,20 @@ export class VoiceClient {
       return;
     }
 
+    if (!this.micMediaStream && typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
+      try {
+        this.micMediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        });
+      } catch (streamErr) {
+        console.debug('Microphone noise-suppression media stream notice:', streamErr);
+      }
+    }
+
     try {
       this.isRecording = true;
       this.callbacks.onMicStatusChange?.(true, this.isMuted);
@@ -476,7 +491,7 @@ export class VoiceClient {
       const recog = new SpeechRecognitionClass();
       recog.continuous = true;
       recog.interimResults = true;
-      recog.lang = this.recognitionLanguage || 'en-IN';
+      recog.lang = this.recognitionLanguage || 'en-US';
       recog.maxAlternatives = 1;
 
       let hadFatalError = false;
@@ -1031,6 +1046,14 @@ export class VoiceClient {
     }
     this.stopAudioCapture();
     this.stopSpeaking();
+    if (this.micMediaStream) {
+      try {
+        this.micMediaStream.getTracks().forEach((t) => t.stop());
+      } catch (trackErr) {
+        console.debug('MediaStream track stop notice:', trackErr);
+      }
+      this.micMediaStream = null;
+    }
     if (this.ws) {
       try {
         this.ws.close();

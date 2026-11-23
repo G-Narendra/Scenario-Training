@@ -227,7 +227,8 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `cohort_${cohort.id}_scores.csv`;
+      const cohortClean = (cohort.name || '3H_Cohort').replace(/[^a-zA-Z0-9_-]/g, '_');
+      a.download = `${cohortClean}_facilitator_scores.csv`;
       document.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);

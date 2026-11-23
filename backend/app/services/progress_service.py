@@ -400,25 +400,25 @@ class ProgressService:
         users = (await db.execute(users_stmt)).scalars().all()
         users_by_id = {u.id: u for u in users}
 
+        headers = [
+            "Participant Name",
+            "Scenario Title",
+            "Track",
+            "Practice Mode",
+            "Overall Score (%)",
+            "Benchmark Status",
+            "Key Strengths (Goods)",
+            "Critical Gaps / Deflections (Bads)",
+            "Priority Coaching Adjustments (Improvements)",
+            "Duration",
+            "Date & Time",
+            "Session Status",
+        ]
+
         if not users:
             output = io.StringIO()
             writer = csv.writer(output)
-            writer.writerow(
-                [
-                    "User ID",
-                    "Display Name",
-                    "Session ID",
-                    "Scenario Title",
-                    "Track",
-                    "Mode",
-                    "Status",
-                    "Started At",
-                    "Ended At",
-                    "Duration (Seconds)",
-                    "Overall Score",
-                    "End Reason",
-                ]
-            )
+            writer.writerow(headers)
             return output.getvalue()
 
         sessions_stmt = (
@@ -434,22 +434,7 @@ class ProgressService:
 
         output = io.StringIO()
         writer = csv.writer(output)
-        writer.writerow(
-            [
-                "User ID",
-                "Display Name",
-                "Session ID",
-                "Scenario Title",
-                "Track",
-                "Mode",
-                "Status",
-                "Started At",
-                "Ended At",
-                "Duration (Seconds)",
-                "Overall Score",
-                "End Reason",
-            ]
-        )
+        writer.writerow(headers)
 
         for s in sessions:
             u = users_by_id.get(s.user_id)
@@ -461,25 +446,52 @@ class ProgressService:
             if s.ended_at and s.started_at:
                 dur = max(0, int((s.ended_at - s.started_at).total_seconds()))
 
+            dur_str = f"{dur // 60}m {dur % 60}s" if dur > 0 else f"{dur}s"
+            mode_str = "Voice Call" if s.mode == "voice" else "Written Dialogue"
+
             started_dt = _ensure_utc(s.started_at)
-            ended_dt = _ensure_utc(s.ended_at)
-            started_str = started_dt.isoformat() if started_dt else ""
-            ended_str = ended_dt.isoformat() if ended_dt else ""
+            date_str = started_dt.strftime("%Y-%m-%d %H:%M UTC") if started_dt else ""
+
+            if score != "" and score is not None:
+                numeric_score = int(score)
+                if numeric_score >= 85:
+                    status_tier = "Mastered (85-100%)"
+                elif numeric_score >= 70:
+                    status_tier = "Proficient (70-84%)"
+                elif numeric_score >= 50:
+                    status_tier = "Developing (50-69%)"
+                else:
+                    status_tier = "Needs Coaching (<50%)"
+            else:
+                status_tier = "Not Evaluated"
+
+            goods = ""
+            bads = ""
+            improvements = ""
+            if s.evaluation:
+                goods_list = [w.get("why_it_worked", "") or w.get("quote", "") for w in (s.evaluation.strengths or []) if w.get("why_it_worked") or w.get("quote")]
+                goods = "; ".join(goods_list)
+
+                bads_list = [w.get("why_it_missed", "") or w.get("quote", "") for w in (s.evaluation.weaknesses or []) if w.get("why_it_missed") or w.get("quote")]
+                bads = "; ".join(bads_list)
+
+                imp_list = [f"{imp.get('step', '')}: {imp.get('practice_drill') or imp.get('why', '')}" for imp in (s.evaluation.improvement_steps or []) if imp.get("step")]
+                improvements = "; ".join(imp_list)
 
             writer.writerow(
                 [
-                    s.user_id,
                     d_name,
-                    s.id,
                     sc_title,
                     trk,
-                    s.mode,
-                    s.status,
-                    started_str,
-                    ended_str,
-                    dur,
+                    mode_str,
                     score,
-                    s.end_reason or "",
+                    status_tier,
+                    goods,
+                    bads,
+                    improvements,
+                    dur_str,
+                    date_str,
+                    s.status,
                 ]
             )
 
