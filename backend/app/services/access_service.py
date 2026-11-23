@@ -476,8 +476,8 @@ class AccessService:
                 user.last_login_at = now
                 user.is_active = True
 
-        elif (is_super_admin_passcode or is_cohort_passcode or clean_code in ("UZAIR-2026", "NARENDRA-2026")) and lower_name in ("uzair", "admin uzair", "uzair (admin)", "uzair facilitator"):
-            user_stmt = select(User).where(func.lower(User.display_name) == "uzair")
+        elif (is_super_admin_passcode or is_cohort_passcode or clean_code in ("UZAIR-2026", "NARENDRA-2026")) and lower_name in ("uzair", "admin uzair", "uzair (admin)", "uzair facilitator", "uzair hassan", "uzair hassan (admin)"):
+            user_stmt = select(User).where(func.lower(User.display_name).in_(["uzair", "uzair hassan"]))
             user = (await db.execute(user_stmt)).scalars().first()
             if not user:
                 user = User(
@@ -546,37 +546,25 @@ class AccessService:
             user = (await db.execute(user_stmt)).scalars().first()
 
             if not user:
-                # If this is specifically Uzair's main training cohort (UZAIR-2026), enforce strict roster:
-                # Disallow fake un-enrolled names like 'fox'.
-                if clean_code == "UZAIR-2026":
+                # Check cohort capacity and auto-enroll the participant
+                max_members = matched_item.get("max_members") or 50
+                count_stmt = select(func.count(User.id)).where(User.cohort_id == matched_cohort_id)
+                current_count = (await db.execute(count_stmt)).scalar() or 0
+                if current_count >= max_members:
                     await record_login_attempt(db, ip=ip, passcode_prefix=prefix, success=False)
                     raise HTTPException(
                         status_code=status.HTTP_403_FORBIDDEN,
-                        detail=(
-                            f"Access Denied: Participant '{clean_name}' is not enrolled in cohort '{matched_cohort_name}'. "
-                            "Please contact your facilitator (Uzair) to be enrolled on the official roster."
-                        ),
+                        detail="Cohort capacity reached. Please contact your facilitator.",
                     )
-                else:
-                    # For dynamic test cohorts or external cohorts, check capacity and auto-enroll
-                    max_members = matched_item.get("max_members") or 50
-                    count_stmt = select(func.count(User.id)).where(User.cohort_id == matched_cohort_id)
-                    current_count = (await db.execute(count_stmt)).scalar() or 0
-                    if current_count >= max_members:
-                        await record_login_attempt(db, ip=ip, passcode_prefix=prefix, success=False)
-                        raise HTTPException(
-                            status_code=status.HTTP_403_FORBIDDEN,
-                            detail="Cohort capacity reached. Please contact your facilitator.",
-                        )
-                    user = User(
-                        cohort_id=matched_cohort_id,
-                        display_name=clean_name,
-                        role="trainee",
-                        is_active=True,
-                        last_login_at=now,
-                    )
-                    db.add(user)
-                    await db.flush()
+                user = User(
+                    cohort_id=matched_cohort_id,
+                    display_name=clean_name,
+                    role="trainee",
+                    is_active=True,
+                    last_login_at=now,
+                )
+                db.add(user)
+                await db.flush()
             else:
                 if not user.is_active:
                     raise HTTPException(

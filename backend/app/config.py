@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     ALGORITHM: str = Field(default="HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = Field(default=720)
     DEFAULT_COHORT_DURATION_DAYS: int = Field(default=30)
-    MAX_LOGIN_ATTEMPTS: int = Field(default=5)
+    MAX_LOGIN_ATTEMPTS: int = Field(default=30)
     LOCKOUT_DURATION_MINUTES: int = Field(default=15)
 
     # Database

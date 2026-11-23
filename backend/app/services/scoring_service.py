@@ -277,7 +277,7 @@ class ScoringService:
                     what_happened="Brief opening exchange before early exit.",
                     why_it_matters="Setting a collaborative agenda early dictates conversation control.",
                     alternative_phrasing="I appreciate you walking me through this. What is the most critical outcome you need us to resolve today?",
-                    reasoning="Open framing invites mutual collaboration and lowers conversational defenses.",
+                    reasoning="This works better because open framing invites mutual collaboration and lowers conversational defenses.",
                 ),
                 KeyMomentItem(
                     moment_seq=m2.get("seq", first_seq),
@@ -285,7 +285,7 @@ class ScoringService:
                     what_happened="Navigating counterpart pushback and operational concerns.",
                     why_it_matters="Determines whether friction escalates or turns into shared problem-solving.",
                     alternative_phrasing="Help me understand the operational constraints behind that requirement so we can address them directly.",
-                    reasoning="Acknowledging counterpart constraints creates psychological safety.",
+                    reasoning="This works better because acknowledging counterpart constraints creates psychological safety.",
                 ),
                 KeyMomentItem(
                     moment_seq=m3.get("seq", first_seq),
@@ -293,7 +293,7 @@ class ScoringService:
                     what_happened="Closing or transition toward agreed next steps.",
                     why_it_matters="Secures mutual accountability and establishes clear deliverables.",
                     alternative_phrasing="Let's agree on concrete next milestones and owners before we conclude.",
-                    reasoning="Explicit ownership prevents downstream misalignment.",
+                    reasoning="This works better because explicit ownership prevents downstream misalignment.",
                 ),
             ]
             improvement_steps = [

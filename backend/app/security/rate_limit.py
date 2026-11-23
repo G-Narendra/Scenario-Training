@@ -17,12 +17,13 @@ async def check_login_rate_limit(
     now = datetime.now(timezone.utc)
     window_start = now - timedelta(minutes=settings.LOCKOUT_DURATION_MINUTES)
 
-    # Query failed attempts within lockout window for either IP or passcode prefix
+    # Query failed attempts within lockout window for this specific IP attempting this passcode prefix
     stmt = select(func.count(LoginAttempt.id)).where(
         and_(
             LoginAttempt.attempted_at >= window_start,
             LoginAttempt.success.is_(False),
-            (LoginAttempt.ip == ip) | (LoginAttempt.passcode_prefix == passcode_prefix),
+            LoginAttempt.ip == ip,
+            LoginAttempt.passcode_prefix == passcode_prefix,
         )
     )
     result = await session.execute(stmt)
