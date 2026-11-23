@@ -62,7 +62,7 @@ def sync():
     shutil.copytree(
         os.path.join(root, "scripts"),
         target_scripts,
-        ignore=shutil.ignore_patterns("__pycache__", "*.pyc")
+        ignore=shutil.ignore_patterns("__pycache__", "*.pyc", "deploy_hf.py", "*deploy*", "*token*")
     )
 
     # 6. Update requirements.txt
