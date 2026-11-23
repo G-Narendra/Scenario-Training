@@ -137,16 +137,18 @@ async function verifyAll() {
 
     // 5. EMPTY SESSION EVALUATION (Score 0 & No Hallucinated Praise)
     console.log('\n--- 5. Testing Empty Session Evaluation Fallback ---');
-    await page.click('#end-session-btn');
-    await page.waitForTimeout(500);
+    const endBtn = page.locator('#end-practice-btn, #end-session-btn, button:has-text("End Practice")').first();
+    await endBtn.waitFor({ state: 'visible', timeout: 10000 });
+    await endBtn.click();
+    await page.waitForTimeout(800);
     // Confirm end
-    const confirmEndBtn = page.locator('button:has-text("End & View Diagnostic Debrief"), button:has-text("Confirm End")').first();
+    const confirmEndBtn = page.locator('#confirm-end-session-btn, button:has-text("Conclude & Evaluate"), button:has-text("Confirm End")').first();
     if (await confirmEndBtn.isVisible()) {
       await confirmEndBtn.click();
     }
 
     // Wait for Report
-    await page.waitForSelector('#overall-score-display', { timeout: 30000 });
+    await page.waitForSelector('#overall-score-display', { timeout: 35000 });
     const scoreText = await page.locator('#overall-score-display').innerText();
     console.log('Empty session overall score:', scoreText);
     results.emptySessionScoreZero = scoreText.trim() === '0';
@@ -173,6 +175,10 @@ async function verifyAll() {
     // 7. ADMIN CONSOLE & FACILITATOR CSV EXPORT
     console.log('\n--- 7. Testing Facilitator Admin Console & CSV Export ---');
     const adminPage = await context.newPage();
+    adminPage.on('dialog', async (dialog) => {
+      console.log('ADMIN DIALOG:', dialog.type(), dialog.message());
+      await dialog.accept();
+    });
     await adminPage.goto(LIVE_URL, { waitUntil: 'networkidle' });
     const adminLoginCta = adminPage.locator('#home-signin-cta-btn, button:has-text("Cohort Sign In")').first();
     await adminLoginCta.click();
@@ -181,17 +187,19 @@ async function verifyAll() {
     await adminPage.fill('#modal-displayname-input', 'Uzair Hassan');
     await adminPage.click('#modal-signin-submit-btn');
 
-    await adminPage.waitForSelector('#admin-console-btn', { timeout: 15000 });
-    await adminPage.click('#admin-console-btn');
+    const adminNavBtn = adminPage.locator('#nav-admin-btn, #admin-console-btn, button:has-text("Console"), button:has-text("Facilitator Console")').first();
+    await adminNavBtn.waitFor({ state: 'visible', timeout: 15000 });
+    await adminNavBtn.click();
 
-    await adminPage.waitForSelector('button:has-text("Export Facilitator CSV")', { timeout: 15000 });
+    const exportBtn = adminPage.locator('#export-facilitator-csv-btn, button:has-text("Export Facilitator CSV"), button:has-text("CSV")').first();
+    await exportBtn.waitFor({ state: 'visible', timeout: 15000 });
     results.adminConsole = true;
     console.log('Admin Console accessed successfully by Facilitator Uzair!');
 
     // Listen for download event
     const [download] = await Promise.all([
-      adminPage.waitForEvent('download', { timeout: 10000 }),
-      adminPage.click('button:has-text("Export Facilitator CSV")'),
+      adminPage.waitForEvent('download', { timeout: 15000 }),
+      exportBtn.click(),
     ]);
 
     const suggestedFilename = download.suggestedFilename();

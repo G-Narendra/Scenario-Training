@@ -877,13 +877,14 @@ conclusion_signals:
                   <span>Group Report (Print)</span>
                 </button>
                 <button
+                  id="export-facilitator-csv-btn"
                   type="button"
                   onClick={handleDownloadCsv}
                   className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-slate-50 dark:bg-[#0B192C] px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1E3E62] transition"
-                  title="Download Raw CSV Data"
+                  title="Export Facilitator Scores as CSV"
                 >
                   <Download className="h-3.5 w-3.5 text-slate-500" />
-                  <span>CSV</span>
+                  <span>Export Facilitator CSV</span>
                 </button>
               </div>
             </div>
