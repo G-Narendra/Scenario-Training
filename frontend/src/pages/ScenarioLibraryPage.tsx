@@ -506,7 +506,9 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
         /* ========================================================================= */
         <div className="mt-8 overflow-hidden rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] shadow-sm">
           <div className="divide-y divide-slate-200 dark:divide-[#1E3E62]">
-            {sortedScenarios.map((scen, idx) => (
+            {sortedScenarios.map((scen) => {
+              const globalIndex = scenarios.findIndex((x) => x.id === scen.id) + 1;
+              return (
               <div
                 key={scen.id}
                 id={`scenario-row-${scen.slug}`}
@@ -515,7 +517,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
               >
                 <div className="flex items-start sm:items-center space-x-3.5">
                   <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[#B91C1C] font-mono text-[10px] font-black text-white border border-[#B91C1C]/50 shadow-sm">
-                    #{String(idx + 1).padStart(2, '0')}
+                    #{String(globalIndex > 0 ? globalIndex : 1).padStart(2, '0')}
                   </span>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -548,7 +550,8 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                   <ArrowRight className="h-3.5 w-3.5" />
                 </button>
               </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       ) : (
@@ -556,7 +559,9 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
         /* SCENARIO CATALOG GRID                                                     */
         /* ========================================================================= */
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {sortedScenarios.map((scen, idx) => (
+          {sortedScenarios.map((scen) => {
+            const globalIndex = scenarios.findIndex((x) => x.id === scen.id) + 1;
+            return (
             <div
               key={scen.id}
               id={`scenario-card-${scen.slug}`}
@@ -568,7 +573,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#B91C1C] text-white font-black text-[10px] tracking-tight shadow-sm flex-shrink-0">
-                      #{String(idx + 1).padStart(2, '0')}
+                      #{String(globalIndex > 0 ? globalIndex : 1).padStart(2, '0')}
                     </span>
                     <span className="rounded-md bg-slate-100 dark:bg-[#0B192C] border border-slate-300 dark:border-[#1E3E62] px-2.5 py-0.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       {scen.topic.replace(/_/g, ' ')}
@@ -614,7 +619,8 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                 </span>
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
       )}
 

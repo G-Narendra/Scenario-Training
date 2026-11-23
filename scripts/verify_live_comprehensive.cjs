@@ -22,6 +22,12 @@ async function verifyAll() {
     permissions: ['microphone'],
   });
   const page = await context.newPage();
+  page.on('console', (msg) => console.log('BROWSER LOG:', msg.text()));
+  page.on('pageerror', (err) => console.log('BROWSER ERROR:', err.message));
+  page.on('dialog', async (dialog) => {
+    console.log('BROWSER DIALOG:', dialog.type(), dialog.message());
+    await dialog.accept();
+  });
 
   const results = {
     landingPage: false,
@@ -94,6 +100,7 @@ async function verifyAll() {
     const visibleCards = await cardLocator.count();
     console.log('Cards matching search "47":', visibleCards);
     const cardText = await cardLocator.first().innerText();
+    console.log('Card text snippet:', cardText.slice(0, 120).replace(/\n/g, ' '));
     results.searchByNumber = cardText.includes('#47') || cardText.includes('47');
     console.log('Scenario #47 found via number search:', results.searchByNumber);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, '03_search_scenario_47.png') });
@@ -106,10 +113,15 @@ async function verifyAll() {
     console.log('\n--- 4. Testing Simulation & Voice Switch ---');
     // Start Scenario 1
     const firstScenarioCard = page.locator('[id^="scenario-card-"], [id^="capability-card-"]').first();
+    console.log('Clicking first scenario card...');
     await firstScenarioCard.click();
-    const startBtn = page.locator('#start-practice-btn, #start-simulation-btn, button:has-text("Start Practice")').first();
+    await page.waitForTimeout(1000);
+
+    const startBtn = page.locator('[role="dialog"] #start-practice-btn, [role="dialog"] #start-simulation-btn, [role="dialog"] button:has-text("Start Practice")').first();
     await startBtn.waitFor({ state: 'visible', timeout: 10000 });
+    console.log('Clicking start practice button in briefing modal...');
     await startBtn.click();
+    console.log('Clicked start practice, waiting for #mode-switch-btn...');
 
     await page.waitForSelector('#mode-switch-btn', { timeout: 15000 });
     console.log('Simulation interface loaded!');
