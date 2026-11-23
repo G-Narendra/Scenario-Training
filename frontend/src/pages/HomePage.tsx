@@ -49,76 +49,82 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSignIn }) => {
 
   const sampleScenarios = [
     {
-      id: 'scen_01',
-      title: 'Creative Lead Pushback on Deadlines',
-      counterpart: 'Marcus Vance · Senior UX Architect',
-      pillar: 'Relational Leadership & Influence',
-      profile: 'operational',
-      difficulty: 1,
-      difficultyLevel: 'Normal',
-      duration: '5 min',
-      summary: 'Address sprint commitments with an overworked creative lead pushing back against process rigidity.',
-      clue: 'Acknowledge Q3 achievement before discussing process. Frame standup attendance as dependency protection, not surveillance.',
-    },
-    {
-      id: 'scen_02',
-      title: 'Defending Strategy in a Hostile Activist Boardroom',
-      counterpart: 'Victoria Sterling · Activist Investor',
-      pillar: 'Strategic & Market Leadership',
-      profile: 'executive',
-      difficulty: 3,
-      difficultyLevel: 'Crisis',
-      duration: '10 min',
-      summary: 'Defend your multi-year capital allocation and R&D strategy against aggressive margin cut demands.',
-      clue: 'Never validate premature margin cuts. Anchor in 3-year enterprise equity value and unit economic trajectory.',
-    },
-    {
-      id: 'scen_03',
-      title: 'Coaching an Underperformer Who Blames Tooling',
-      counterpart: 'David Chen · Lead Data Engineer',
-      pillar: 'Operational Excellence & Accountability',
-      profile: 'operational',
-      difficulty: 2,
-      difficultyLevel: 'Challenging',
-      duration: '7 min',
-      summary: 'Navigate defensive deflections and establish concrete milestone ownership without escalating conflict.',
-      clue: 'Separate systemic infrastructure debt from personal delivery cadence. Secure agreement on a 14-day recovery sprint.',
-    },
-    {
-      id: 'scen_04',
-      title: 'Executive Presence in Cross-Functional Crisis',
-      counterpart: 'Elena Rostova · VP of Regulatory Compliance',
-      pillar: 'Executive Presence & Resilience',
-      profile: 'executive',
-      difficulty: 3,
-      difficultyLevel: 'Crisis',
-      duration: '10 min',
-      summary: 'Lead cross-functional crisis committee following an urgent compliance disclosure under high ambiguity.',
-      clue: 'Demonstrate emotional stillness. Formulate 3 immediate containment lanes before assigning accountability.',
-    },
-    {
-      id: 'scen_05',
+      id: 'leadership-01-quiet-high-performer',
+      number: '01',
       title: 'Specific Recognition for a Quiet High Performer',
-      counterpart: 'Priya Sharma · Senior Algorithm Specialist',
+      counterpart: 'Liam Chen · Senior Backend Engineer',
       pillar: 'People Leadership & Culture',
       profile: 'operational',
       difficulty: 1,
       difficultyLevel: 'Normal',
-      duration: '5 min',
-      summary: 'Deliver meaningful, non-superficial recognition that motivates without overwhelming an introverted specialist.',
-      clue: 'Cite specific architectural contributions. Offer high-impact autonomy rather than loud public ceremonies.',
+      duration: '10 min',
+      summary: 'Deliver meaningful, non-superficial recognition anchored in SBI to an introverted engineer who avoids the spotlight.',
+      clue: 'Anchor praise in Situation-Behavior-Impact. Inquire about preferred recognition style rather than public fanfare.',
     },
     {
-      id: 'scen_06',
-      title: 'Navigating M&A Organizational Anxiety',
-      counterpart: 'Tariq Al-Mansoor · Regional Operations Director',
-      pillar: 'Cognitive Agility & Problem Solving',
+      id: 'leadership-02-late-team-member',
+      number: '02',
+      title: 'Addressing Chronic Punctuality & Meeting Lateness',
+      counterpart: 'Marcus Vance · Senior UX Architect',
+      pillar: 'Operational Excellence & Accountability',
+      profile: 'operational',
+      difficulty: 1,
+      difficultyLevel: 'Normal',
+      duration: '10 min',
+      summary: 'Address recurring standup delays with a high-output contributor without alienating creative energy.',
+      clue: 'Frame punctuality around team dependency protection and equity rather than arbitrary clock-watching.',
+    },
+    {
+      id: 'leadership-03-underperformer-blames-others',
+      number: '03',
+      title: 'Coaching an Underperformer Who Blames External Tooling',
+      counterpart: 'Kevin Miller · Lead Data Engineer',
+      pillar: 'Operational Excellence & Accountability',
+      profile: 'operational',
+      difficulty: 1,
+      difficultyLevel: 'Normal',
+      duration: '10 min',
+      summary: 'Navigate defensive deflections and establish concrete milestone ownership without escalating conflict.',
+      clue: 'Separate systemic infrastructure debt from personal delivery cadence. Secure agreement on a 14-day recovery sprint.',
+    },
+    {
+      id: 'leadership-07-managing-scope-creep-director',
+      number: '07',
+      title: 'Managing Scope Creep with a Demanding Peer Director',
+      counterpart: 'Rachel Green · Commercial Operations Director',
+      pillar: 'Relational Leadership & Influence',
       profile: 'executive',
       difficulty: 2,
       difficultyLevel: 'Challenging',
-      duration: '8 min',
-      summary: 'Address senior leadership fears regarding post-merger integration redundancies and cultural preservation.',
-      clue: 'Distinguish facts from rumors transparently. Outline governance integration committee involvement for senior leaders.',
+      duration: '12 min',
+      summary: 'Protect engineering capacity against late enterprise feature additions while maintaining cross-functional partnership.',
+      clue: 'Use the Iron Triangle trade-off model: scope, schedule, or budget must flex before accepting new scope.',
+    },
+    {
+      id: 'sales-20-poc-technical-failure-remediation',
+      number: '20',
+      title: 'Rescuing a Proof-of-Concept Technical Failure',
+      counterpart: 'Lisa Kane · VP of Engineering',
+      pillar: 'Strategic & Market Leadership',
+      profile: 'executive',
+      difficulty: 3,
+      difficultyLevel: 'Crisis',
+      duration: '15 min',
+      summary: 'Rebuild executive trust and secure a 10-day extension after critical latency spikes during a customer POC.',
+      clue: 'Lead with extreme ownership of the failure. Present an immediate containment plan before proposing the re-test cadence.',
+    },
+    {
+      id: 'leadership-22-hostile-activist-boardroom-defense',
+      number: '22',
+      title: 'Defending Strategy in a Hostile Activist Boardroom',
+      counterpart: 'Raymond Vance · Activist Board Director',
+      pillar: 'Strategic & Market Leadership',
+      profile: 'executive',
+      difficulty: 3,
+      difficultyLevel: 'Crisis',
+      duration: '15 min',
+      summary: 'Defend multi-year capital allocation and R&D strategy against aggressive margin cut and dividend demands.',
+      clue: 'Never validate premature margin cuts. Anchor in 3-year enterprise equity value and unit economic trajectory.',
     },
   ];
 
@@ -256,7 +262,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSignIn }) => {
               onClick={() => setMobileMenuOpen(false)}
               className="block rounded-lg px-3 py-2 text-sm font-semibold text-slate-800 dark:text-slate-200 hover:bg-slate-100 dark:hover:bg-[#132B45]"
             >
-              Practice Scenarios (25)
+              Practice Scenarios (60)
             </a>
             <a
               href="#facilitator"
@@ -415,23 +421,23 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSignIn }) => {
             {/* Metric 1 */}
             <div className="space-y-1">
               <div className="text-3xl sm:text-4xl font-black text-blue-950 dark:text-white font-heading">
-                25
+                60
               </div>
               <div className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
                 Executive Scenarios
               </div>
               <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                Head, Heart & Hands
+                Head, Heart & Hands (#01–#60)
               </div>
             </div>
 
             {/* Metric 2 */}
             <div className="space-y-1">
               <div className="text-3xl sm:text-4xl font-black text-blue-950 dark:text-white font-heading">
-                18
+                6
               </div>
               <div className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Curated Segments
+                Leadership Pillars
               </div>
               <div className="text-[11px] text-slate-500 dark:text-slate-400">
                 Boardroom to Operations
@@ -467,13 +473,13 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSignIn }) => {
             {/* Metric 5 */}
             <div className="col-span-2 lg:col-span-1 space-y-1">
               <div className="text-3xl sm:text-4xl font-black text-emerald-600 dark:text-emerald-400 font-heading">
-                1-Page
+                2
               </div>
               <div className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
-                Summary PDF
+                Executive Reports
               </div>
               <div className="text-[11px] text-slate-500 dark:text-slate-400">
-                + Full Report with Uzair
+                Individual 1-Pager + Group Day 2 Guide
               </div>
             </div>
           </div>
@@ -744,22 +750,27 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSignIn }) => {
             {filteredScenarios.map((scen) => (
               <div
                 key={scen.id}
-                className="flex flex-col justify-between rounded-3xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-6 shadow-md hover:shadow-lg transition group"
+                className="flex flex-col justify-between rounded-3xl border border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] p-6 shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-200 group"
               >
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <span
-                      className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${
-                        scen.difficultyLevel === 'Normal'
-                          ? 'bg-blue-100 text-blue-900 dark:bg-blue-950/60 dark:text-blue-200'
-                          : scen.difficultyLevel === 'Challenging'
-                          ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200'
-                          : 'bg-rose-100 text-rose-900 dark:bg-rose-950/60 dark:text-rose-200'
-                      }`}
-                    >
-                      Level {scen.difficulty}: {scen.difficultyLevel}
-                    </span>
-                    <span className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400">
+                    <div className="flex items-center space-x-2">
+                      <span className="rounded-lg bg-[#B91C1C] text-white font-mono text-[11px] font-black px-2 py-0.5 shadow-sm">
+                        #{scen.number}
+                      </span>
+                      <span
+                        className={`rounded-full px-2.5 py-0.5 text-[10px] font-black uppercase tracking-wider ${
+                          scen.difficultyLevel === 'Normal'
+                            ? 'bg-blue-100 text-blue-900 dark:bg-blue-950/60 dark:text-blue-200'
+                            : scen.difficultyLevel === 'Challenging'
+                            ? 'bg-amber-100 text-amber-900 dark:bg-amber-950/60 dark:text-amber-200'
+                            : 'bg-rose-100 text-rose-900 dark:bg-rose-950/60 dark:text-rose-200'
+                        }`}
+                      >
+                        Level {scen.difficulty}: {scen.difficultyLevel}
+                      </span>
+                    </div>
+                    <span className="flex items-center space-x-1 text-xs text-slate-500 dark:text-slate-400 font-medium">
                       <Clock className="h-3 w-3" />
                       <span>{scen.duration}</span>
                     </span>
@@ -1026,7 +1037,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSignIn }) => {
             <div className="flex flex-col items-center md:items-start space-y-2">
               <ThreeHSolutionsLogo size="md" variant="full" />
               <p className="text-xs text-slate-500 dark:text-slate-400">
-                Three H Solutions Group · Executive Scenario Training & Deliberate Practice Platform
+                3H Solutions Group · Executive Scenario Training & Deliberate Practice Platform
               </p>
             </div>
 
@@ -1060,7 +1071,7 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSignIn }) => {
 
           <div className="pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 dark:text-slate-400 gap-3 text-center sm:text-left">
             <div>
-              © {new Date().getFullYear()} Three H Solutions Group. All rights reserved. Dubai, United Arab Emirates.
+              © {new Date().getFullYear()} 3H Solutions Group. All rights reserved. Dubai, United Arab Emirates.
             </div>
             <div className="flex items-center space-x-2">
               <Lock className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />

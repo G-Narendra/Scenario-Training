@@ -258,7 +258,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
               Welcome to 3H Solutions Executive Scenario Training. Here you engage in realistic, AI-powered workplace leadership situations—practicing high-stakes conversations, handling objections, and refining executive presence via voice or text in a confidential environment.
             </p>
             <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold pt-1">
-              Curriculum includes <strong>25 core executive scenarios</strong> mapped to the 60 competencies of Uzair's 3H Leadership Framework.
+              Curriculum includes <strong>60 executive scenarios</strong> mapped to the 60 competencies of Uzair's 3H Leadership Framework.
             </div>
           </div>
 
@@ -266,7 +266,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
           <div className="flex flex-wrap lg:flex-col items-start lg:items-end gap-2 shrink-0">
             <span className="rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-sm flex items-center space-x-1.5">
               <span>🎯</span>
-              <span>25 Leadership Scenarios</span>
+              <span>60 Leadership Scenarios</span>
             </span>
             <span className="rounded-xl bg-[#0B192C] text-white dark:bg-[#1E3E62] px-3 py-1.5 text-xs font-bold shadow-sm flex items-center space-x-1.5">
               <span>🔒</span>
