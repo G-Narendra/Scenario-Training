@@ -1087,6 +1087,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSignIn }) => {
       <SignInModal
         isOpen={isSignInModalOpen}
         onClose={() => setIsSignInModalOpen(false)}
+        onSuccess={() => {
+          setIsSignInModalOpen(false);
+          if (onOpenSignIn) {
+            onOpenSignIn();
+          }
+        }}
       />
     </div>
   );

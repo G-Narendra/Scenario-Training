@@ -13,7 +13,10 @@ async function verifyAll() {
   console.log('=== STARTING COMPREHENSIVE LIVE VERIFICATION ===');
   console.log('Target URL:', LIVE_URL);
 
-  const browser = await chromium.launch({ headless: true });
+  const browser = await chromium.launch({
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+  });
   const context = await browser.newContext({
     viewport: { width: 1440, height: 900 },
     permissions: ['microphone'],
@@ -61,7 +64,7 @@ async function verifyAll() {
     }
     await page.waitForSelector('#modal-passcode-input', { timeout: 10000 });
     await page.fill('#modal-passcode-input', 'UZAIR-2026');
-    await page.fill('#modal-displayname-input', 'Executive Trainee');
+    await page.fill('#modal-displayname-input', 'Dev');
     await page.click('#modal-signin-submit-btn');
 
     await page.waitForSelector('#scenario-search-input', { timeout: 15000 });
@@ -146,19 +149,26 @@ async function verifyAll() {
 
     // 7. ADMIN CONSOLE & FACILITATOR CSV EXPORT
     console.log('\n--- 7. Testing Facilitator Admin Console & CSV Export ---');
-    // Return to library
-    await page.click('#nav-library-btn');
-    await page.waitForSelector('#admin-console-btn', { timeout: 10000 });
-    await page.click('#admin-console-btn');
+    const adminPage = await context.newPage();
+    await adminPage.goto(LIVE_URL, { waitUntil: 'networkidle' });
+    const adminLoginCta = adminPage.locator('#home-signin-cta-btn, button:has-text("Cohort Sign In")').first();
+    await adminLoginCta.click();
+    await adminPage.waitForSelector('#modal-passcode-input', { timeout: 10000 });
+    await adminPage.fill('#modal-passcode-input', 'UZAIR-2026');
+    await adminPage.fill('#modal-displayname-input', 'Uzair Hassan');
+    await adminPage.click('#modal-signin-submit-btn');
 
-    await page.waitForSelector('button:has-text("Export Facilitator CSV")', { timeout: 15000 });
+    await adminPage.waitForSelector('#admin-console-btn', { timeout: 15000 });
+    await adminPage.click('#admin-console-btn');
+
+    await adminPage.waitForSelector('button:has-text("Export Facilitator CSV")', { timeout: 15000 });
     results.adminConsole = true;
-    console.log('Admin Console accessed successfully!');
+    console.log('Admin Console accessed successfully by Facilitator Uzair!');
 
     // Listen for download event
     const [download] = await Promise.all([
-      page.waitForEvent('download', { timeout: 10000 }),
-      page.click('button:has-text("Export Facilitator CSV")'),
+      adminPage.waitForEvent('download', { timeout: 10000 }),
+      adminPage.click('button:has-text("Export Facilitator CSV")'),
     ]);
 
     const suggestedFilename = download.suggestedFilename();
@@ -192,7 +202,8 @@ async function verifyAll() {
     results.csvExportColumns = hasAllCols && omittedUnwanted;
     console.log('CSV contains all required coaching columns and omitted raw IDs:', results.csvExportColumns);
 
-    await page.screenshot({ path: path.join(SCREENSHOT_DIR, '06_admin_console_live.png') });
+    await adminPage.screenshot({ path: path.join(SCREENSHOT_DIR, '06_admin_console_live.png') });
+    await adminPage.close();
 
   } catch (err) {
     console.error('Verification error:', err);
