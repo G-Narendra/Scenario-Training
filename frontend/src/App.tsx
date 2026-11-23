@@ -70,10 +70,10 @@ const AppContent: React.FC = () => {
   React.useEffect(() => {
     const validViews: ViewMode[] = ['tracks', 'scenarios', 'chat', 'evaluation', 'progress', 'admin', 'home'];
     const hashView = window.location.hash.replace('#', '') as ViewMode;
-    const defaultForRole: ViewMode = user?.role === 'group_admin' || user?.role === 'super_admin' ? 'admin' : 'scenarios';
-    const targetView = hashView && validViews.includes(hashView) ? hashView : defaultForRole;
+    // If no explicit hash provided, landing page ('home') is the default view
+    const targetView = hashView && validViews.includes(hashView) ? hashView : 'home';
     setCurrentView(targetView);
-    if (isAuthenticated) {
+    if (isAuthenticated && targetView !== 'home') {
       window.history.replaceState({ view: targetView, selectedTrack }, '', '#' + targetView);
     }
 

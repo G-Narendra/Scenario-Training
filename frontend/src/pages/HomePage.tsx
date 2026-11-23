@@ -39,14 +39,12 @@ export const HomePage: React.FC<HomePageProps> = ({ onOpenSignIn }) => {
   const [openFaqIndex, setOpenFaqIndex] = useState<number | null>(0);
 
   React.useEffect(() => {
-    const checkHash = () => {
-      if (window.location.hash === '#login' || window.location.hash === '#signin') {
-        setIsSignInModalOpen(true);
-      }
-    };
-    checkHash();
-    window.addEventListener('hashchange', checkHash);
-    return () => window.removeEventListener('hashchange', checkHash);
+    // If arriving with a legacy #login or #signin hash, clean the URL so visitor sees the landing page cleanly
+    if (window.location.hash === '#login' || window.location.hash === '#signin') {
+      try {
+        window.history.replaceState(null, '', window.location.pathname);
+      } catch {}
+    }
   }, []);
 
   const sampleScenarios = [
