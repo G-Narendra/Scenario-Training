@@ -295,7 +295,8 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
           </div>
 
           <button
-            id="start-simulation-btn"
+            id="start-practice-btn"
+            data-testid="start-simulation-btn"
             onClick={async () => {
               if (isLimitReached) return;
               try {

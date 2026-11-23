@@ -67,10 +67,19 @@ async function verifyAll() {
     await page.fill('#modal-displayname-input', 'Dev');
     await page.click('#modal-signin-submit-btn');
 
-    await page.waitForSelector('#scenario-search-input', { timeout: 15000 });
+    // Wait for Scenario Library to load
+    const searchInput = page.locator('#scenario-search-input, input[placeholder*="Search"]').first();
+    await searchInput.waitFor({ state: 'visible', timeout: 20000 });
     results.traineeLogin = true;
     console.log('Trainee login successful into Scenario Library!');
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, '02_scenario_library.png') });
+
+    // Switch to Scenarios Grid View to see #01 to #60 cards
+    const scenariosTabBtn = page.locator('#view-mode-scenarios-btn, button:has-text("Interactive Simulations")').first();
+    if (await scenariosTabBtn.isVisible()) {
+      await scenariosTabBtn.click();
+      await page.waitForTimeout(1200);
+    }
 
     // 3. SCENARIO NUMBERING & SEARCH JUMP
     console.log('\n--- 3. Testing Scenario Numbering & Jump by Number ---');
@@ -79,26 +88,28 @@ async function verifyAll() {
     results.scenarioNumbering = numberBadges > 0;
 
     // Search by #47 or 47
-    await page.fill('#scenario-search-input', '47');
-    await page.waitForTimeout(800);
-    const visibleCards = await page.locator('[id^="scenario-card-"]').count();
+    await searchInput.fill('47');
+    await page.waitForTimeout(1200);
+    const cardLocator = page.locator('[id^="scenario-card-"], [id^="capability-card-"]');
+    const visibleCards = await cardLocator.count();
     console.log('Cards matching search "47":', visibleCards);
-    const cardText = await page.locator('[id^="scenario-card-"]').first().innerText();
+    const cardText = await cardLocator.first().innerText();
     results.searchByNumber = cardText.includes('#47') || cardText.includes('47');
     console.log('Scenario #47 found via number search:', results.searchByNumber);
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, '03_search_scenario_47.png') });
 
     // Clear search
-    await page.fill('#scenario-search-input', '');
-    await page.waitForTimeout(500);
+    await searchInput.fill('');
+    await page.waitForTimeout(1000);
 
     // 4. SIMULATION & VOICE SWITCH
     console.log('\n--- 4. Testing Simulation & Voice Switch ---');
     // Start Scenario 1
-    const firstScenarioCard = page.locator('[id^="scenario-card-"]').first();
+    const firstScenarioCard = page.locator('[id^="scenario-card-"], [id^="capability-card-"]').first();
     await firstScenarioCard.click();
-    await page.waitForSelector('#start-practice-btn', { timeout: 10000 });
-    await page.click('#start-practice-btn');
+    const startBtn = page.locator('#start-practice-btn, #start-simulation-btn, button:has-text("Start Practice")').first();
+    await startBtn.waitFor({ state: 'visible', timeout: 10000 });
+    await startBtn.click();
 
     await page.waitForSelector('#mode-switch-btn', { timeout: 15000 });
     console.log('Simulation interface loaded!');
