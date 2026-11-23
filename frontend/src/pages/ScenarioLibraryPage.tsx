@@ -234,6 +234,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
         <div className="relative w-full sm:w-72">
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
+            id="scenario-search-input"
             type="text"
             placeholder={viewMode === 'capabilities' ? 'Search capabilities or #number...' : 'Search scenarios, skills, or type #47...'}
             value={searchQuery}
