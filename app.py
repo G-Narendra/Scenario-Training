@@ -143,9 +143,21 @@ async def readiness_check():
         )
     return {"status": "ready", "database": db_status, "version": settings.APP_VERSION}
 
+@demo_app.get("/version", tags=["Ops"])
+async def version_info():
+    return {"version": settings.APP_VERSION, "environment": settings.ENVIRONMENT}
+
+class CachedStaticFiles(StaticFiles):
+    """Serve immutable hashed build assets with 1-year browser caching headers."""
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        if response.status_code == 200:
+            response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+        return response
+
 # 3. Mount static assets and SPA routes
 if os.path.exists(assets_dir):
-    demo_app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+    demo_app.mount("/assets", CachedStaticFiles(directory=assets_dir), name="assets")
 
 logo_file = os.path.join(resolved_dist_dir, "logo_3h_solutions.webp")
 if os.path.exists(logo_file):
@@ -160,6 +172,9 @@ if os.path.exists(logo_file):
 async def serve_app_spa(full_path: str = ""):
     if os.path.exists(index_file):
         resp = FileResponse(index_file, media_type="text/html")
+        resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+        resp.headers["Pragma"] = "no-cache"
+        resp.headers["Expires"] = "0"
         resp.headers["X-Content-Type-Options"] = "nosniff"
         resp.headers["X-Frame-Options"] = "SAMEORIGIN"
         resp.headers["X-XSS-Protection"] = "1; mode=block"
