@@ -128,6 +128,26 @@ async def debug_spa_info():
         "root_files": os.listdir(ROOT_DIR) if os.path.exists(ROOT_DIR) else [],
     }
 
+@demo_app.get("/api/debug-whisper", tags=["Ops"])
+async def debug_whisper_info():
+    import shutil
+    from backend.app.voice.whisper_engine import get_whisper_model, get_last_error
+    res = {
+        "ffmpeg": shutil.which("ffmpeg"),
+        "model_error": None,
+        "model_loaded": False,
+        "last_error": None,
+        "groq_key_set": bool(os.environ.get("GROQ_API_KEY")),
+        "hf_token_set": bool(os.environ.get("HF_TOKEN")),
+    }
+    try:
+        m = get_whisper_model()
+        res["model_loaded"] = m is not None
+        res["last_error"] = get_last_error()
+    except Exception as exc:
+        res["model_error"] = f"{type(exc).__name__}: {str(exc)}"
+    return res
+
 @demo_app.get("/ready", tags=["Ops"])
 @demo_app.get("/health/ready", tags=["Ops"])
 async def readiness_check():

@@ -9,11 +9,16 @@ logger = logging.getLogger(__name__)
 
 _whisper_model = None
 _model_lock = asyncio.Lock()
+_last_error = None
+
+
+def get_last_error() -> Optional[str]:
+    return _last_error
 
 
 def get_whisper_model():
     """Lazy-load the faster-whisper INT8 CPU model as a process-level singleton."""
-    global _whisper_model
+    global _whisper_model, _last_error
     if _whisper_model is None:
         try:
             from faster_whisper import WhisperModel
@@ -27,6 +32,7 @@ def get_whisper_model():
             )
             logger.info("faster-whisper model %s loaded successfully.", model_size)
         except Exception as exc:
+            _last_error = f"init error: {type(exc).__name__}: {str(exc)}"
             logger.error("Failed to initialize faster-whisper model: %s", exc)
             _whisper_model = None
     return _whisper_model
@@ -68,6 +74,8 @@ def _sync_transcribe(audio_bytes: bytes, filename: str = "audio.webm") -> str:
         logger.info("faster-whisper transcribed %d bytes -> '%s'", len(audio_bytes), text)
         return text
     except Exception as exc:
+        global _last_error
+        _last_error = f"transcribe error: {type(exc).__name__}: {str(exc)}"
         logger.error("Error during faster-whisper transcription: %s", exc)
         return ""
     finally:
