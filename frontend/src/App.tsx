@@ -207,6 +207,14 @@ const AppContent: React.FC = () => {
         unlock.play().catch((playErr) => {
           console.debug('Audio pre-warm play deferred:', playErr);
         });
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = (window as unknown as { __sharedAudioContext?: AudioContext }).__sharedAudioContext || new AudioCtx();
+          (window as unknown as { __sharedAudioContext?: AudioContext }).__sharedAudioContext = ctx;
+          if (ctx.state === 'suspended') {
+            ctx.resume().catch(() => {});
+          }
+        }
       } catch (audioErr) {
         console.debug('Audio constructor pre-warm notice:', audioErr);
       }

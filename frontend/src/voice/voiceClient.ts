@@ -450,8 +450,8 @@ export class VoiceClient {
         const audioBlob = new Blob(this.recordedChunks, { type: mimeType });
         this.recordedChunks = [];
 
-        // If audio blob is under 1200 bytes, ignore as tap/ambient pop
-        if (audioBlob.size < 1200) {
+        // If audio blob is under 600 bytes, ignore as tap/ambient pop
+        if (audioBlob.size < 600) {
           if (this.isContinuousCall && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
             setTimeout(() => this.startMediaRecorderCapture(), 200);
           }
@@ -476,8 +476,8 @@ export class VoiceClient {
 
   /**
    * FAANG-grade adaptive Voice Activity Detection:
-   * Uses time-domain RMS energy calibrated against ambient room acoustics.
-   * Allows 2.2s natural conversational pause before committing, with a 500ms speech gate.
+   * Uses dual time-domain RMS + vocal formant frequency band detection.
+   * Responsive 1.4s natural pause commit with 200ms speech gate.
    */
   private setupVAD(): void {
     if (!this.micMediaStream) return;
@@ -505,12 +505,13 @@ export class VoiceClient {
       this.vadAnalyser.fftSize = 512;
       this.vadSource.connect(this.vadAnalyser);
 
-      const buffer = new Uint8Array(this.vadAnalyser.frequencyBinCount);
+      const timeBuffer = new Uint8Array(this.vadAnalyser.fftSize);
+      const freqBuffer = new Uint8Array(this.vadAnalyser.frequencyBinCount);
       let speechActive = false;
       let totalSpeechMs = 0;
       let lastSpeechTime = Date.now();
       const startTime = Date.now();
-      let ambientNoiseEnergy = 0.012;
+      let ambientNoiseEnergy = 0.005;
       let calibrationFrames = 0;
 
       if (this.vadInterval) clearInterval(this.vadInterval);
@@ -521,35 +522,44 @@ export class VoiceClient {
         }
 
         if (!this.vadAnalyser) return;
-        this.vadAnalyser.getByteTimeDomainData(buffer);
+        this.vadAnalyser.getByteTimeDomainData(timeBuffer);
+        this.vadAnalyser.getByteFrequencyData(freqBuffer);
 
-        // Calculate time-domain normalized RMS energy
+        // 1. Calculate time-domain normalized RMS energy
         let sumSq = 0;
-        for (let i = 0; i < buffer.length; i++) {
-          const norm = (buffer[i] - 128) / 128;
+        for (let i = 0; i < timeBuffer.length; i++) {
+          const norm = (timeBuffer[i] - 128) / 128;
           sumSq += norm * norm;
         }
-        const rms = Math.sqrt(sumSq / buffer.length);
+        const rms = Math.sqrt(sumSq / timeBuffer.length);
+
+        // 2. Calculate vocal frequency band energy (human voice 300Hz-3400Hz, bins 2 to 45)
+        let vocalSum = 0;
+        const maxBin = Math.min(45, freqBuffer.length);
+        for (let i = 2; i < maxBin; i++) {
+          vocalSum += freqBuffer[i];
+        }
+        const vocalAvg = vocalSum / (maxBin - 2);
 
         // Calibrate ambient baseline during first 300ms (3 frames)
         if (calibrationFrames < 3) {
           calibrationFrames++;
-          ambientNoiseEnergy = Math.max(0.008, (ambientNoiseEnergy + rms) / 2);
+          ambientNoiseEnergy = Math.max(0.003, (ambientNoiseEnergy + rms) / 2);
           return;
         }
 
-        // Dynamic voice threshold
-        const voiceThreshold = Math.max(0.022, ambientNoiseEnergy * 2.2);
+        // Sensitive, human-tuned voice threshold across all hardware
+        const isVoiceDetected = rms > Math.max(0.006, ambientNoiseEnergy * 1.3) || vocalAvg > 12;
 
-        if (rms > voiceThreshold) {
+        if (isVoiceDetected) {
           lastSpeechTime = Date.now();
           totalSpeechMs += 100;
-          if (!speechActive && totalSpeechMs >= 300) {
+          if (!speechActive && totalSpeechMs >= 200) {
             speechActive = true;
-            this.callbacks.onTranscriptPartial?.('Listening to your response...');
+            this.callbacks.onTranscriptPartial?.('Listening to your response... (Voice detected)');
           }
-        } else if (speechActive && totalSpeechMs >= 500 && Date.now() - lastSpeechTime > 2200) {
-          // Trainee paused for 2.2 seconds after speaking -> commit turn!
+        } else if (speechActive && totalSpeechMs >= 400 && Date.now() - lastSpeechTime > 1400) {
+          // Trainee finished speaking and paused for 1.4 seconds -> commit turn!
           speechActive = false;
           if (this.vadInterval) {
             clearInterval(this.vadInterval);
@@ -861,9 +871,15 @@ export class VoiceClient {
 
     return new Promise<void>((resolve) => {
       let resolved = false;
+      let watchdogTimer: ReturnType<typeof setTimeout> | null = null;
+
       const onPlaybackComplete = () => {
         if (!resolved) {
           resolved = true;
+          if (watchdogTimer) {
+            clearTimeout(watchdogTimer);
+            watchdogTimer = null;
+          }
           this.pendingSpeech = null;
           if (this.currentAudioElement) {
             try {
@@ -888,6 +904,14 @@ export class VoiceClient {
         }
       };
 
+      // Maximum playback safety watchdog: ~2.0 words/sec + 5s buffer (minimum 6s)
+      const wordCount = clean.split(/\s+/).filter(Boolean).length;
+      const maxDurationMs = Math.max(6000, Math.ceil(wordCount / 2.0) * 1000 + 5000);
+      watchdogTimer = setTimeout(() => {
+        console.warn(`Audio playback watchdog triggered after ${maxDurationMs}ms, proceeding with turn...`);
+        onPlaybackComplete();
+      }, maxDurationMs);
+
       // Primary: Native HTML5 Audio stream from Neural Edge-TTS
       try {
         if (typeof Audio !== 'undefined') {
@@ -909,12 +933,17 @@ export class VoiceClient {
                 return;
               }
               if (err.name === 'NotAllowedError') {
-                // Autoplay blocked: store pending speech so first user click anywhere immediately plays it!
-                this.pendingSpeech = { text: clean, personaName };
-                this.isSpeaking = false;
-                this.callbacks.onAssistantSpeaking?.(false);
-                this.callbacks.onAutoplayBlocked?.();
-                resolve();
+                // Autoplay blocked on HTML5 Audio: attempt Web Audio fallback immediately!
+                this.playViaWebAudio(audioUrl, onPlaybackComplete).catch(() => {
+                  this.pendingSpeech = { text: clean, personaName };
+                  this.isSpeaking = false;
+                  this.callbacks.onAssistantSpeaking?.(false);
+                  this.callbacks.onAutoplayBlocked?.();
+                  if (this.isContinuousCall && !this.isMuted) {
+                    setTimeout(() => this.startAudioCapture().catch(() => {}), 200);
+                  }
+                  resolve();
+                });
               } else {
                 console.warn('HTML5 Audio playback notice:', err.name);
                 this.playViaWebAudio(audioUrl, onPlaybackComplete);

@@ -87,7 +87,8 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
   const [autoVoice, setAutoVoice] = useState(session.mode === 'voice');
   const [currentlySpeakingSeq, setCurrentlySpeakingSeq] = useState<number | null>(null);
   const [isDictating, setIsDictating] = useState(false);
-  const dictationRecRef = useRef<{ stop: () => void } | null>(null);
+  const dictationRecorderRef = useRef<MediaRecorder | null>(null);
+  const dictationChunksRef = useRef<Blob[]>([]);
 
   // Resolve Persona Name early with robust scenario fallbacks
   const rawScenario = (session as { scenario?: { persona?: { name?: string } } }).scenario;
@@ -167,6 +168,9 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       },
     });
     voiceClientRef.current.setPersona(personaName);
+    if (selectedVoiceLang) {
+      voiceClientRef.current.setRecognitionLanguage(selectedVoiceLang);
+    }
   }
 
   const voiceClient = voiceClientRef.current;
@@ -223,31 +227,41 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
   const hasSpokenOpeningRef = useRef(false);
 
-  // Auto-speak scenario opening line upon entering voice practice
+  // Auto-speak counterpart line upon entering voice practice
   useEffect(() => {
-    if (session.mode !== 'voice' || session.status !== 'active') return;
+    if (session.mode !== 'voice' || session.status !== 'active') {
+      hasSpokenOpeningRef.current = false;
+      return;
+    }
     if (hasSpokenOpeningRef.current) return;
 
-    const openingMsg = messages.find((m) => m.role === 'counterpart');
-    if (!openingMsg || !openingMsg.content) return;
+    const counterpartMsgs = messages.filter((m) => m.role === 'counterpart');
+    const msgToSpeak = counterpartMsgs.length > 0 ? counterpartMsgs[counterpartMsgs.length - 1] : null;
+    if (!msgToSpeak || !msgToSpeak.content) {
+      if (voiceClient) {
+        voiceClient.startAudioCapture().catch(() => {});
+      }
+      return;
+    }
 
     hasSpokenOpeningRef.current = true;
 
-    // Prefetch neural audio into memory cache for zero latency
-    voiceClient.prefetchAudio(openingMsg.content, personaName).catch(() => {});
+    if (voiceClient) {
+      voiceClient.prefetchAudio(msgToSpeak.content, personaName).catch(() => {});
+    }
 
-    // Speak scenario opening line
+    // Speak scenario opening line within 100ms
     const timer = setTimeout(async () => {
-      if (session.status === 'active') {
-        setCurrentlySpeakingSeq(openingMsg.seq);
+      if (session.status === 'active' && session.mode === 'voice' && voiceClient) {
+        setCurrentlySpeakingSeq(msgToSpeak.seq);
         setIsAssistantSpeaking(true);
         try {
-          await voiceClient.speakText(openingMsg.content, personaName);
+          await voiceClient.speakText(msgToSpeak.content, personaName);
         } catch (err) {
-          console.warn('Auto-speak opening line notice:', err);
-          voiceClient.releaseTurnLock();
+          console.warn('Auto-speak line notice:', err);
           setIsAssistantSpeaking(false);
           setCurrentlySpeakingSeq(null);
+          voiceClient.startAudioCapture(true).catch(() => {});
         }
       }
     }, 100);
@@ -390,13 +404,12 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     setIsStreaming(true);
     setStreamingReply('');
 
-    if (isDictating && dictationRecRef.current) {
+    if (isDictating && dictationRecorderRef.current && dictationRecorderRef.current.state === 'recording') {
       try {
-        dictationRecRef.current.stop();
+        dictationRecorderRef.current.stop();
       } catch (recErr) {
         console.debug('Dictation stop notice:', recErr);
       }
-      dictationRecRef.current = null;
       setIsDictating(false);
     }
 
@@ -473,82 +486,74 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
   const toggleDictation = () => {
     if (isDictating) {
-      if (dictationRecRef.current) {
+      if (dictationRecorderRef.current && dictationRecorderRef.current.state === 'recording') {
         try {
-          dictationRecRef.current.stop();
+          dictationRecorderRef.current.stop();
         } catch (recErr) {
           console.debug('Dictation stop notice:', recErr);
         }
-        dictationRecRef.current = null;
       }
       setIsDictating(false);
       return;
     }
 
-    interface SpeechAlternativeItem {
-      transcript: string;
-    }
-    interface SpeechResultItem {
-      [index: number]: SpeechAlternativeItem;
-    }
-    interface DictationSpeechEvent {
-      results: {
-        length: number;
-        [index: number]: SpeechResultItem;
-      };
-    }
-    interface DictationRecognition {
-      continuous: boolean;
-      interimResults: boolean;
-      lang: string;
-      onresult: ((event: DictationSpeechEvent) => void) | null;
-      onerror: (() => void) | null;
-      onend: (() => void) | null;
-      start: () => void;
-      stop: () => void;
-    }
-    type DictationConstructor = new () => DictationRecognition;
-
-    const windowWithSpeech = window as unknown as {
-      SpeechRecognition?: DictationConstructor;
-      webkitSpeechRecognition?: DictationConstructor;
-    };
-    const SpeechRec = windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
-
-    if (!SpeechRec) {
-      alert('Speech-to-text is not supported by your browser. Please use Chrome or Edge.');
+    if (typeof navigator === 'undefined' || !navigator.mediaDevices?.getUserMedia) {
+      alert('Microphone access is not supported in this browser.');
       return;
     }
 
-    try {
-      const rec = new SpeechRec();
-      rec.continuous = true;
-      rec.interimResults = true;
-      rec.lang = selectedVoiceLang || 'en-IN';
-
-      rec.onresult = (event: DictationSpeechEvent) => {
-        let transcript = '';
-        for (let i = 0; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript + ' ';
+    navigator.mediaDevices
+      .getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+        },
+      })
+      .then((stream) => {
+        let mimeType = 'audio/webm';
+        if (typeof MediaRecorder !== 'undefined') {
+          if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+            mimeType = 'audio/webm;codecs=opus';
+          } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+            mimeType = 'audio/mp4';
+          }
         }
-        setInputText(transcript.trim());
-      };
+        const recorder = new MediaRecorder(stream, { mimeType });
+        dictationChunksRef.current = [];
+        dictationRecorderRef.current = recorder;
 
-      rec.onerror = () => {
+        recorder.ondataavailable = (e) => {
+          if (e.data && e.data.size > 0) {
+            dictationChunksRef.current.push(e.data);
+          }
+        };
+
+        recorder.onstop = async () => {
+          stream.getTracks().forEach((t) => t.stop());
+          const chunks = dictationChunksRef.current;
+          dictationChunksRef.current = [];
+          if (chunks.length === 0) return;
+          const audioBlob = new Blob(chunks, { type: mimeType });
+          if (audioBlob.size < 600) return;
+
+          try {
+            const res = await api.transcribeAudio(audioBlob);
+            if (res && res.text) {
+              setInputText((prev) => (prev ? prev + ' ' + res.text.trim() : res.text.trim()));
+            }
+          } catch (err) {
+            console.warn('Dictation transcription error:', err);
+          }
+        };
+
+        recorder.start(250);
+        setIsDictating(true);
+      })
+      .catch((err) => {
+        console.warn('Microphone access for dictation denied:', err);
         setIsDictating(false);
-      };
-
-      rec.onend = () => {
-        setIsDictating(false);
-      };
-
-      rec.start();
-      dictationRecRef.current = rec;
-      setIsDictating(true);
-    } catch (err) {
-      console.warn('Speech recognition start error', err);
-      setIsDictating(false);
-    }
+      });
   };
 
   const handleInterrupt = () => {
@@ -624,19 +629,11 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
               const nextMode = session.mode === 'voice' ? 'text' : 'voice';
               if (nextMode === 'voice') {
                 setAutoVoice(true);
-                setSession((prev) => ({ ...prev, mode: nextMode }));
+                // Synchronously pre-unlock audio context on direct user gesture
                 if (voiceClient) {
                   await voiceClient.ensureAudioContext().catch(() => {});
-                  const lastCounterpart = [...messages].reverse().find((m) => m.role === 'counterpart');
-                  if (lastCounterpart) {
-                    setCurrentlySpeakingSeq(lastCounterpart.seq);
-                    setIsAssistantSpeaking(true);
-                    await voiceClient.speakText(lastCounterpart.content, personaName).catch(() => {});
-                  }
-                  // Immediately start capturing voice with hardware noise suppression
-                  voiceClient.releaseTurnLock();
-                  await voiceClient.startAudioCapture(true).catch(() => {});
                 }
+                setSession((prev) => ({ ...prev, mode: nextMode }));
               } else if (voiceClient) {
                 voiceClient.stopSpeaking();
                 voiceClient.stopAudioCapture();
@@ -983,8 +980,25 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
               </div>
             </div>
 
-            {/* Right: Streamlined Call Controls (Mute, Interrupt, Text, End) */}
+            {/* Right: Streamlined Call Controls (Send Response, Mute, Interrupt, Text, End) */}
             <div className="flex items-center space-x-1.5 sm:space-x-2 flex-shrink-0">
+              {isRecordingMic && !isAssistantSpeaking && (
+                <button
+                  id="voice-send-response-btn"
+                  type="button"
+                  onClick={() => {
+                    if (voiceClient) {
+                      voiceClient.forceCommit();
+                    }
+                  }}
+                  className="flex items-center space-x-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white px-3 sm:px-4 py-2 text-xs font-bold transition shadow-md shadow-emerald-600/30 ring-2 ring-emerald-400/40"
+                  title="Done speaking: send response immediately"
+                >
+                  <Send className="h-3.5 w-3.5 flex-shrink-0" />
+                  <span>Send Response</span>
+                </button>
+              )}
+
               {isAssistantSpeaking && (
                 <button
                   id="voice-interrupt-btn"
