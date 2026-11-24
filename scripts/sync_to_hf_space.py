@@ -84,31 +84,8 @@ def sync():
         f.write("\n".join(dst_lines) + "\n")
 
     # 7. Update app.py
-    print("-> Updating app.py with chat_router and /api/health...")
-    app_py_path = os.path.join(target, "app.py")
-    with open(app_py_path, "r", encoding="utf-8") as f:
-        content = f.read()
-
-    # Import chat_router if not present
-    if "chat_router" not in content:
-        content = content.replace(
-            "from backend.app.api.auth import router as auth_router",
-            "from backend.app.api.auth import router as auth_router\nfrom backend.app.api.chat import router as chat_router"
-        )
-        content = content.replace(
-            "demo_app.include_router(sessions_router)",
-            "demo_app.include_router(sessions_router)\ndemo_app.include_router(chat_router)"
-        )
-
-    # Add /api/health alias if not present
-    if "/api/health" not in content:
-        content = content.replace(
-            '@demo_app.get("/health", tags=["Ops"])',
-            '@demo_app.get("/health", tags=["Ops"])\n@demo_app.get("/api/health", tags=["Ops"])'
-        )
-
-    with open(app_py_path, "w", encoding="utf-8") as f:
-        f.write(content)
+    print("-> Syncing app.py...")
+    shutil.copy2(os.path.join(root, "app.py"), os.path.join(target, "app.py"))
 
     # 8. Ensure .env points to data/training.db
     env_path = os.path.join(target, ".env")
