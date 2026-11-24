@@ -214,10 +214,10 @@ async def serve_app_spa(full_path: str = ""):
         resp.headers["Pragma"] = "no-cache"
         resp.headers["Expires"] = "0"
         resp.headers["X-Content-Type-Options"] = "nosniff"
-        resp.headers["X-Frame-Options"] = "SAMEORIGIN"
         resp.headers["X-XSS-Protection"] = "1; mode=block"
+        resp.headers["Content-Security-Policy"] = "frame-ancestors 'self' https://huggingface.co https://*.hf.space https://*.vercel.app;"
         resp.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-        resp.headers["Permissions-Policy"] = "microphone=(self), camera=(), geolocation=()"
+        resp.headers["Permissions-Policy"] = "microphone=*, camera=(), geolocation=()"
         return resp
     # Emergency fallback if index.html is still packaging
     from fastapi.responses import HTMLResponse

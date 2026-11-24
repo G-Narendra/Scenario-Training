@@ -107,7 +107,6 @@ async def request_context_middleware(request: Request, call_next):
 
     # Security headers
     response.headers["X-Content-Type-Options"] = "nosniff"
-    response.headers["X-Frame-Options"] = "SAMEORIGIN"
     response.headers["X-XSS-Protection"] = "1; mode=block"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self' https: data: blob: 'unsafe-inline' 'unsafe-eval'; "
@@ -117,7 +116,7 @@ async def request_context_middleware(request: Request, call_next):
         "img-src 'self' data: https: blob:; frame-ancestors 'self' https://huggingface.co https://*.hf.space https://*.vercel.app;"
     )
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
-    response.headers["Permissions-Policy"] = "microphone=(self), camera=(), geolocation=()"
+    response.headers["Permissions-Policy"] = "microphone=*, camera=(), geolocation=()"
     return response
 
 
