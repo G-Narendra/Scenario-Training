@@ -47,14 +47,24 @@ def _sync_transcribe(audio_bytes: bytes, filename: str = "audio.webm") -> str:
             tmp.flush()
             temp_path = tmp.name
 
+        # vad_filter=False guarantees that short or soft utterances are never dropped by Silero VAD
         segments, _info = model.transcribe(
             temp_path,
             beam_size=1,
             language="en",
-            vad_filter=True,
-            vad_parameters=dict(min_silence_duration_ms=400),
+            vad_filter=False,
         )
         text = " ".join(seg.text for seg in segments).strip()
+
+        # If text is empty with language="en", retry with auto-detection to catch accents/dialects
+        if not text:
+            segments, _info = model.transcribe(
+                temp_path,
+                beam_size=1,
+                vad_filter=False,
+            )
+            text = " ".join(seg.text for seg in segments).strip()
+
         logger.info("faster-whisper transcribed %d bytes -> '%s'", len(audio_bytes), text)
         return text
     except Exception as exc:

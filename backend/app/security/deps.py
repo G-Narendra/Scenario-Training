@@ -80,6 +80,28 @@ async def get_current_user(
 
     # Fetch user
     user = await db.get(User, user_id)
+    if not user:
+        # Container restarted: auto-restore user record from verified cryptographically signed JWT claims
+        cohort_id = payload.get("cohort_id")
+        cohort = await db.get(Cohort, cohort_id) if cohort_id else None
+        if cohort and cohort.is_active:
+            user = User(
+                id=user_id,
+                email=f"trainee_{user_id[:8]}@3hsolutionsgroup.com",
+                display_name="Participant",
+                role=payload.get("role", "trainee"),
+                cohort_id=cohort.id,
+                is_active=True,
+            )
+            db.add(user)
+            try:
+                await db.commit()
+                await db.refresh(user)
+                logger.info(f"Auto-restored user {user_id} after container restart from valid token")
+            except Exception as restore_err:
+                await db.rollback()
+                logger.warning(f"Failed to auto-restore user after restart: {restore_err}")
+
     if not user or not user.is_active:
         _token_cache.pop(t_hash, None)
         raise auth_error

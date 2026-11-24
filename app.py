@@ -170,6 +170,13 @@ if os.path.exists(logo_file):
 @demo_app.get("/app/", include_in_schema=False)
 @demo_app.get("/app/{full_path:path}", include_in_schema=False)
 async def serve_app_spa(full_path: str = ""):
+    if full_path:
+        cand = os.path.join(resolved_dist_dir, full_path)
+        if os.path.isfile(cand):
+            resp = FileResponse(cand)
+            if full_path.startswith("assets/"):
+                resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+            return resp
     if os.path.exists(index_file):
         resp = FileResponse(index_file, media_type="text/html")
         resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"

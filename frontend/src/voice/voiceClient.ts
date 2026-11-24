@@ -601,14 +601,20 @@ export class VoiceClient {
         this.callbacks.onTranscriptFinal?.(transcribedText);
         this.commitTurn(transcribedText);
       } else {
-        this.callbacks.onTranscriptPartial?.('');
+        this.callbacks.onTranscriptPartial?.('No clear speech detected. Speak clearly into mic or type below.');
+        setTimeout(() => {
+          this.callbacks.onTranscriptPartial?.('');
+        }, 2500);
         if (this.isContinuousCall && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
           setTimeout(() => this.startMediaRecorderCapture(), 200);
         }
       }
     } catch (transcribeErr) {
       console.warn('Transcription service notice:', transcribeErr);
-      this.callbacks.onTranscriptPartial?.('');
+      this.callbacks.onTranscriptPartial?.('Transcription connection notice. Tap mic to retry or type below.');
+      setTimeout(() => {
+        this.callbacks.onTranscriptPartial?.('');
+      }, 2500);
       if (this.isContinuousCall && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
         setTimeout(() => this.startMediaRecorderCapture(), 300);
       }

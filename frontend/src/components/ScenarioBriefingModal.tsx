@@ -312,6 +312,16 @@ export const ScenarioBriefingModal: React.FC<ScenarioBriefingModalProps> = ({
                   ctx.resume().catch((resumeErr) => {
                     console.debug('AudioContext resume deferred:', resumeErr);
                   });
+                  // Play a 1ms silent buffer synchronously to unlock browser audio playback for this session
+                  try {
+                    const silentBuffer = ctx.createBuffer(1, 1, 24000);
+                    const source = ctx.createBufferSource();
+                    source.buffer = silentBuffer;
+                    source.connect(ctx.destination);
+                    source.start(0);
+                  } catch (silenceErr) {
+                    console.debug('Silent buffer unlock notice:', silenceErr);
+                  }
                 }
               } catch (audioErr) {
                 console.debug('AudioContext initialization notice:', audioErr);

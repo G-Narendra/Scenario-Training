@@ -205,6 +205,13 @@ if os.path.exists(frontend_dist):
     @app.get("/app/", include_in_schema=False)
     @app.get("/app/{full_path:path}", include_in_schema=False)
     async def serve_app_subpath(full_path: str = ""):
+        if full_path:
+            cand = os.path.join(frontend_dist, full_path)
+            if os.path.isfile(cand):
+                resp = FileResponse(cand)
+                if full_path.startswith("assets/"):
+                    resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+                return resp
         return FileResponse(index_file, media_type="text/html", headers=no_cache_headers)
 
     app.mount("/app", StaticFiles(directory=frontend_dist, html=True), name="app_spa")
