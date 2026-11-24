@@ -862,7 +862,7 @@ export class VoiceClient {
     this.isSpeaking = true;
     this.callbacks.onAssistantSpeaking?.(true);
 
-    return new Promise<void>((resolve) => {
+    return new Promise<void>(async (resolve) => {
       let resolved = false;
       let watchdogTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -874,15 +874,26 @@ export class VoiceClient {
             watchdogTimer = null;
           }
           this.pendingSpeech = null;
+          if (this.currentBufferSource) {
+            try {
+              this.currentBufferSource.stop();
+              this.currentBufferSource.disconnect();
+            } catch (bufErr) {
+              console.debug('BufferSource disconnect notice:', bufErr);
+            }
+            this.currentBufferSource = null;
+          }
           if (this.currentAudioElement) {
             try {
               this.currentAudioElement.pause();
+              if (this.currentAudioElement.parentNode) {
+                this.currentAudioElement.parentNode.removeChild(this.currentAudioElement);
+              }
             } catch (pauseErr) {
               console.debug('Playback complete audio pause notice:', pauseErr);
             }
             this.currentAudioElement = null;
           }
-          this.currentBufferSource = null;
           this.isSpeaking = false;
           this.isCommitting = false;
           this.latestUtterance = '';
@@ -897,54 +908,64 @@ export class VoiceClient {
         }
       };
 
-      // Maximum playback safety watchdog: ~2.0 words/sec + 5s buffer (minimum 6s)
-      const wordCount = clean.split(/\s+/).filter(Boolean).length;
-      const maxDurationMs = Math.max(6000, Math.ceil(wordCount / 2.0) * 1000 + 5000);
-      watchdogTimer = setTimeout(() => {
-        console.warn(`Audio playback watchdog triggered after ${maxDurationMs}ms, proceeding with turn...`);
-        onPlaybackComplete();
-      }, maxDurationMs);
+      // 1. Primary Engine: High-fidelity Web Audio Buffer Source
+      // Immune to Chromium's detached-DOM bug, handles instant playback from in-memory cache, accurate duration
+      try {
+        const ctx = await this.ensureAudioContext();
+        if (ctx.state === 'suspended') {
+          await ctx.resume().catch(() => {});
+        }
+        if (ctx.state === 'running') {
+          await this.playViaWebAudio(audioUrl, onPlaybackComplete);
+          return;
+        }
+      } catch (webAudioErr) {
+        console.warn('Web Audio primary attempt notice:', webAudioErr);
+      }
 
-      // Primary: Native HTML5 Audio stream from Neural Edge-TTS
+      // 2. Secondary Engine: Native HTML5 Audio (attached to DOM to guarantee ended event in Chromium)
       try {
         if (typeof Audio !== 'undefined') {
-          const audio = new Audio(audioUrl);
+          const audio = new Audio();
+          audio.src = audioUrl;
           audio.preload = 'auto';
+          audio.style.display = 'none';
+          document.body.appendChild(audio);
           this.currentAudioElement = audio;
+
+          // Safety watchdog for HTML5 Audio fallback
+          const wordCount = clean.split(/\s+/).filter(Boolean).length;
+          const maxDurationMs = Math.max(5000, Math.ceil(wordCount / 2.0) * 1000 + 3000);
+          watchdogTimer = setTimeout(() => {
+            console.warn(`HTML5 Audio fallback watchdog (${maxDurationMs}ms), proceeding with turn...`);
+            onPlaybackComplete();
+          }, maxDurationMs);
 
           audio.onended = () => onPlaybackComplete();
           audio.onerror = () => {
-            console.warn('HTML5 Audio playback error, falling back to Web Audio decoding...');
-            this.playViaWebAudio(audioUrl, onPlaybackComplete);
+            console.warn('HTML5 Audio playback error notice');
+            onPlaybackComplete();
           };
 
           const playPromise = audio.play();
           if (playPromise !== undefined) {
             playPromise.catch((err: Error) => {
-              if (err.name === 'AbortError') {
-                // Playback was aborted intentionally (e.g. user spoke or new turn started)
-                return;
-              }
+              if (err.name === 'AbortError') return;
               if (err.name === 'NotAllowedError') {
-                console.warn('HTML5 Audio autoplay blocked by browser policy. Attempting resumed Web Audio fallback...');
-                this.playViaWebAudio(audioUrl, onPlaybackComplete).catch((fallbackErr) => {
-                  console.warn('Web Audio fallback notice:', fallbackErr);
-                  this.pendingSpeech = { text: clean, personaName };
-                  this.isSpeaking = false;
-                  this.isCommitting = false;
-                  this.callbacks.onAssistantSpeaking?.(false);
-                  this.callbacks.onAutoplayBlocked?.();
-                  if (watchdogTimer) {
-                    clearTimeout(watchdogTimer);
-                    watchdogTimer = null;
-                  }
-                  resolve();
-                });
+                console.warn('HTML5 Audio autoplay blocked by browser policy. Storing pending speech for direct user tap.');
+                this.pendingSpeech = { text: clean, personaName };
+                this.isSpeaking = false;
+                this.isCommitting = false;
+                this.callbacks.onAssistantSpeaking?.(false);
+                this.callbacks.onAutoplayBlocked?.();
+                if (watchdogTimer) {
+                  clearTimeout(watchdogTimer);
+                  watchdogTimer = null;
+                }
+                resolve();
                 return;
-              } else {
-                console.warn('HTML5 Audio playback notice:', err.name);
-                this.playViaWebAudio(audioUrl, onPlaybackComplete);
               }
+              onPlaybackComplete();
             });
           }
           return;
@@ -953,8 +974,8 @@ export class VoiceClient {
         console.warn('HTML5 Audio init exception:', audioInitErr);
       }
 
-      // Secondary fallback: Web Audio Buffer Source
-      this.playViaWebAudio(audioUrl, onPlaybackComplete);
+      // 3. Fallback: complete playback lock so conversation is never stalled
+      onPlaybackComplete();
     });
   }
 
