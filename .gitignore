@@ -78,6 +78,7 @@ Thumbs.db
 coverage/
 playwright-report/
 test-results/
+*.pdf
 
 # Local Prompts & Temporary Junctions
 AGENTS.md

@@ -20,6 +20,7 @@ CRITICAL EVALUATION RULES:
 7. Hidden Motivation Reveal: Disclose what the counterpart was actually thinking and whether you managed to uncover or navigate it.
 8. Improvement Steps: Provide EXACTLY 3 concrete, actionable drills/steps.
 9. Output Format: Return ONLY a valid JSON object matching the requested schema. No markdown wraps, no extra commentary.
+10. UNPROFESSIONAL / PROFANE / OFF-TOPIC CONDUCT: If the participant used profanity, vulgarity, insults, hostile antagonism, gibberish, or completely off-topic remarks, ALL skill scores MUST be 1 out of 5, overall score MUST NOT exceed 10 (Score: 0 - 10), what_worked MUST explicitly state that no professional or constructive communication was demonstrated, and all success criteria MUST be marked met: false. Never reward inappropriate or abusive dialogue with passing or developing scores.
 """
 
 

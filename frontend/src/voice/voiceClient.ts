@@ -470,20 +470,6 @@ export class VoiceClient {
       return;
     }
 
-    if (!this.micMediaStream && typeof navigator !== 'undefined' && navigator.mediaDevices?.getUserMedia) {
-      try {
-        this.micMediaStream = await navigator.mediaDevices.getUserMedia({
-          audio: {
-            echoCancellation: true,
-            noiseSuppression: true,
-            autoGainControl: true,
-          },
-        });
-      } catch (streamErr) {
-        console.debug('Microphone noise-suppression media stream notice:', streamErr);
-      }
-    }
-
     try {
       this.isRecording = true;
       this.callbacks.onMicStatusChange?.(true, this.isMuted);
@@ -498,12 +484,15 @@ export class VoiceClient {
 
       recog.onstart = () => {
         this.consecutiveFastRestarts = 0;
-        this.networkErrorCount = 0;
         this.isRecording = true;
         this.callbacks.onMicStatusChange?.(true, this.isMuted);
       };
 
       recog.onresult = (event: ISpeechRecognitionEvent) => {
+        // Successful speech transmission: reset error counters
+        this.networkErrorCount = 0;
+        this.consecutiveFastRestarts = 0;
+
         // If muted, assistant is speaking, or currently committing turn, ignore incoming audio
         if (this.isMuted || this.isSpeaking || this.isCommitting) return;
 
@@ -593,7 +582,6 @@ export class VoiceClient {
           hadFatalError = true;
           this.networkErrorCount++;
           console.warn(`Speech recognition notice: network error (occurrence ${this.networkErrorCount})`);
-          // Critical: Never commit partial fragments on network error!
           this.latestUtterance = '';
           if (this.silenceTimer) clearTimeout(this.silenceTimer);
           if (this.hardCommitTimer) clearTimeout(this.hardCommitTimer);
@@ -602,10 +590,10 @@ export class VoiceClient {
             this.isRecording = false;
             this.callbacks.onMicStatusChange?.(false, this.isMuted);
             this.callbacks.onError?.(
-              'Browser speech recognition cloud connection interrupted. Tap "Tap to Speak" or type below.'
+              'Speech recognition network connection unavailable. Tap the mic button to retry or use the message input below.'
             );
           } else {
-            this.callbacks.onError?.('Speech recognition reconnecting...');
+            this.callbacks.onError?.('Re-establishing speech recognition...');
           }
         } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
           console.warn('Speech recognition notice:', event.error);
@@ -622,15 +610,15 @@ export class VoiceClient {
 
         // If stopped due to fatal error (network or not-allowed), do NOT auto-commit!
         if (hadFatalError) {
-          if (this.networkErrorCount === 1 && this.isContinuousCall && !this.isMuted) {
-            // One gentle restart attempt with backoff
+          if (this.networkErrorCount <= 1 && this.isContinuousCall && !this.isMuted) {
             if (this.restartTimeout) clearTimeout(this.restartTimeout);
             this.restartTimeout = setTimeout(() => {
               if (this.isRecording && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
                 this.startAudioCapture().catch(() => {});
               }
-            }, 1500);
+            }, 2000);
           } else {
+            this.isRecording = false;
             this.callbacks.onMicStatusChange?.(false, this.isMuted);
           }
           return;
@@ -953,7 +941,10 @@ export class VoiceClient {
           const playPromise = audio.play();
           if (playPromise !== undefined) {
             playPromise.catch((err: Error) => {
-              console.warn('HTML5 Audio playback notice:', err.name);
+              if (err.name === 'AbortError') {
+                // Playback was aborted intentionally (e.g. user spoke or new turn started)
+                return;
+              }
               if (err.name === 'NotAllowedError') {
                 // Autoplay blocked: store pending speech so first user click anywhere immediately plays it!
                 this.pendingSpeech = { text: clean, personaName };
@@ -962,6 +953,7 @@ export class VoiceClient {
                 this.callbacks.onAutoplayBlocked?.();
                 resolve();
               } else {
+                console.warn('HTML5 Audio playback notice:', err.name);
                 this.playViaWebAudio(audioUrl, onPlaybackComplete);
               }
             });

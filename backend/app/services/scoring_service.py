@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+import re
 import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List, Optional
@@ -109,6 +110,21 @@ class ScoringService:
 
         return errors
 
+    @staticmethod
+    def is_unprofessional_dialogue(trainee_messages: List[Dict[str, Any]]) -> bool:
+        """Detects profanity, offensive language, insults, or trolling non-constructive dialogue."""
+        if not trainee_messages:
+            return False
+        profanity_pattern = re.compile(
+            r"\b(shit|shitty|fuck|fucking|fucked|fucker|asshole|bitch|crap|idiot|stupid|bastard|dick|piss|damn|bullshit|stfu|dumbass)\b",
+            re.IGNORECASE,
+        )
+        for m in trainee_messages:
+            txt = (m.get("content") or "").strip()
+            if profanity_pattern.search(txt):
+                return True
+        return False
+
     @classmethod
     def generate_fallback_report(
         cls,
@@ -119,7 +135,8 @@ class ScoringService:
         """Generates a calibrated executive performance report when LLM generation is unavailable."""
         total_words = sum(len(m.get("content", "").split()) for m in trainee_messages)
         is_empty = len(trainee_messages) == 0 or total_words == 0
-        is_trivial = len(trainee_messages) <= 1 or total_words < 12
+        is_unprof = cls.is_unprofessional_dialogue(trainee_messages)
+        is_trivial = not is_unprof and (len(trainee_messages) <= 1 or total_words < 12)
 
         first_quote = trainee_messages[0]["content"] if trainee_messages else "[No dialogue submitted]"
         first_seq = trainee_messages[0]["seq"] if trainee_messages else 1
@@ -178,7 +195,11 @@ class ScoringService:
             s_name = s.get("name", "Competency")
             s_rubric = s.get("rubric", {})
 
-            if is_empty:
+            if is_unprof:
+                score_val = 1
+                rubric_text = s_rubric.get("1", f"Deficient: Unprofessional or non-constructive dialogue breached workplace standards.")
+                just_text = f"Dialogue contained unprofessional, offensive, or non-constructive language ('{first_quote}'), violating executive standards."
+            elif is_empty:
                 score_val = 1
                 rubric_text = s_rubric.get("1", f"Incomplete: No demonstration of {s_name.lower()} (session terminated before dialogue).")
                 just_text = f"Session terminated before any participant dialogue was spoken or submitted."
@@ -222,7 +243,52 @@ class ScoringService:
                 )
             )
 
-        if is_empty:
+        if is_unprof:
+            what_worked = [
+                WhatWorkedItem(
+                    moment_seq=first_seq,
+                    quote="[No constructive dialogue demonstrated]",
+                    why_it_worked="No constructive or professional communication was exhibited in this session. Re-launch the scenario and practice objective, professional dialogue.",
+                )
+            ]
+            what_didnt = [
+                WhatDidntItem(
+                    moment_seq=first_seq,
+                    quote=first_quote,
+                    why_it_missed="Using unprofessional, offensive, or non-constructive language instantly destroys executive trust and results in immediate scenario failure.",
+                )
+            ]
+            key_moments = [
+                KeyMomentItem(
+                    moment_seq=first_seq,
+                    quote=first_quote,
+                    what_happened="Inappropriate or non-constructive language used during dialogue.",
+                    why_it_matters="Professional decorum and executive presence are baseline prerequisites in leadership and enterprise engagements.",
+                    alternative_phrasing="Maintain professional composure and reframe concerns using structured business questions.",
+                    reasoning="This works better because executive presence requires maintaining composure regardless of situational friction.",
+                )
+            ]
+            improvement_steps = [
+                ImprovementStepItem(
+                    step="Adopt executive composure under friction",
+                    why="Emotional discipline is essential for high-stakes leadership",
+                    practice_drill="Practice the 'Pause and Reframe' technique before responding to challenging counterpart statements.",
+                    linked_skill=skills[0]["key"] if skills else "composure",
+                ),
+                ImprovementStepItem(
+                    step="Use objective, neutral business language",
+                    why="Eliminates hostility and anchors discussion on facts",
+                    practice_drill="Replace emotional reactions with calibrated problem-solving inquiries.",
+                    linked_skill=skills[1]["key"] if len(skills) > 1 else "communication",
+                ),
+                ImprovementStepItem(
+                    step="Re-enter the scenario with structured discovery",
+                    why="Deliberate practice requires authentic professional effort",
+                    practice_drill="Complete a full practice session focusing on counterpart constraints.",
+                    linked_skill=skills[2]["key"] if len(skills) > 2 else "discovery",
+                ),
+            ]
+        elif is_empty:
             what_worked = [
                 WhatWorkedItem(
                     moment_seq=1,
@@ -381,13 +447,17 @@ class ScoringService:
         success_results = [
             SuccessCriteriaResultItem(
                 criterion=crit,
-                met=False if (is_empty or is_trivial) else True,
-                evidence="Session concluded without participant dialogue."
-                if is_empty
+                met=False if (is_empty or is_trivial or is_unprof) else True,
+                evidence="Session breached professional communication standards."
+                if is_unprof
                 else (
-                    f"Preliminary exchange ('{first_quote}') concluded early."
-                    if is_trivial
-                    else f"Demonstrated professional engagement across dialogue turns."
+                    "Session concluded without participant dialogue."
+                    if is_empty
+                    else (
+                        f"Preliminary exchange ('{first_quote}') concluded early."
+                        if is_trivial
+                        else f"Demonstrated professional engagement across dialogue turns."
+                    )
                 ),
             )
             for crit in scenario_data.get(
@@ -396,12 +466,16 @@ class ScoringService:
         ]
         assessed_list = scenario_data.get("skills_assessed", [])
         overall_score_val = cls.compute_deterministic_overall_score(skill_scores, assessed_list)
-        if is_empty:
+        if is_unprof:
+            overall_score_val = 0
+        elif is_empty:
             overall_score_val = 0
         elif is_trivial:
             overall_score_val = min(overall_score_val, 20)
 
-        if is_empty:
+        if is_unprof:
+            summary_text = "The practice dialogue breached executive communication standards due to inappropriate, unprofessional, or non-constructive language. In high-stakes workplace leadership and enterprise sales, professional composure and constructive dialogue are non-negotiable prerequisites. Score: 0/100."
+        elif is_empty:
             summary_text = "This practice session concluded early with no participant dialogue spoken or submitted. Practice engaging with deeper discovery questions to uncover your counterpart's underlying priorities."
         elif is_trivial:
             summary_text = f"The session concluded early after a brief exchange ('{first_quote}'). Practice engaging with deeper discovery questions to uncover your counterpart's underlying priorities."
@@ -602,6 +676,31 @@ class ScoringService:
         )
         report.overall_score = overall_score
         post_processing_ms = max(1, int((time.perf_counter() - t_post0) * 1000))
+
+        # Strict Quality Gate: Force override if unprofessional / profane dialogue was used
+        if cls.is_unprofessional_dialogue(trainee_msgs):
+            overall_score = 0
+            report.overall_score = 0
+            report.overall_summary = (
+                "The practice dialogue breached executive communication standards due to inappropriate, "
+                "unprofessional, or non-constructive language. In high-stakes workplace leadership and "
+                "enterprise sales, professional composure and constructive dialogue are non-negotiable "
+                "prerequisites. Score: 0/100."
+            )
+            for s in report.skill_scores:
+                s.score = 1
+                s.rubric_level_reached = "Deficient: Breached professional workplace standards."
+                s.justification = "Dialogue contained unprofessional, offensive, or non-constructive language."
+            report.what_worked = [
+                WhatWorkedItem(
+                    moment_seq=trainee_msgs[0].get("seq", 1) if trainee_msgs else 1,
+                    quote="[No constructive dialogue demonstrated]",
+                    why_it_worked="No constructive or professional communication was exhibited in this session. Re-launch the scenario and practice objective, professional dialogue.",
+                )
+            ]
+            for sc in report.success_criteria_results:
+                sc.met = False
+                sc.evidence = "Session breached professional communication standards."
 
         # Check again if evaluation was committed by a concurrent worker
         existing_stmt = select(Evaluation).where(Evaluation.session_id == session_obj.id)

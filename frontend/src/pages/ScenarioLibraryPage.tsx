@@ -12,6 +12,18 @@ interface ScenarioLibraryPageProps {
   isStarting: boolean;
 }
 
+export function getScenarioNumber(scen: { slug?: string; title?: string }): number {
+  if (scen.slug) {
+    const leadMatch = scen.slug.match(/leadership-(\d+)/i);
+    if (leadMatch) return parseInt(leadMatch[1], 10);
+    const salesMatch = scen.slug.match(/sales-(\d+)/i);
+    if (salesMatch) return 30 + parseInt(salesMatch[1], 10);
+    const anyNumMatch = scen.slug.match(/(\d+)/);
+    if (anyNumMatch) return parseInt(anyNumMatch[1], 10);
+  }
+  return 999;
+}
+
 export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
   selectedTrack,
   onLaunchSimulation,
@@ -100,12 +112,6 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
     { key: 'Influence & Executive Presence', label: 'Influence & Executive Presence (10)' },
   ];
 
-  const difficultyOrder: Record<string, number> = {
-    Normal: 1,
-    Challenging: 2,
-    Crisis: 3,
-  };
-
   const filteredCapabilities = capabilities.filter((cap) => {
     if (trackFilter !== 'all') {
       const capTrack = (cap.matching_scenario_track || '').toLowerCase();
@@ -151,12 +157,6 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
   });
 
   const sortedCapabilities = [...filteredCapabilities].sort((a, b) => {
-    const aDiff = a.matching_scenario_difficulty ?? 1;
-    const aTier = a.matching_scenario_difficulty_level || (aDiff <= 1 ? 'Normal' : aDiff <= 3 ? 'Challenging' : 'Crisis');
-    const bDiff = b.matching_scenario_difficulty ?? 1;
-    const bTier = b.matching_scenario_difficulty_level || (bDiff <= 1 ? 'Normal' : bDiff <= 3 ? 'Challenging' : 'Crisis');
-    const diff = (difficultyOrder[aTier] || 2) - (difficultyOrder[bTier] || 2);
-    if (diff !== 0) return diff;
     return (a.number || 0) - (b.number || 0);
   });
 
@@ -186,23 +186,20 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
       const matchCapabilities = s.target_capabilities?.some((c) => c.toLowerCase().includes(rawQ) || c.toLowerCase().includes(q));
       // Number-based search: typing "47" or "#47" accurately matches scenario #47
       const numQuery = Number(q);
-      const matchNum = !isNaN(numQuery) && numQuery > 0 && (scenarios.findIndex((x) => x.id === s.id) + 1 === numQuery);
+      const scenNum = getScenarioNumber(s);
+      const matchNum = !isNaN(numQuery) && numQuery > 0 && scenNum === numQuery;
       if (!matchTitle && !matchTopic && !matchTags && !matchCapabilities && !matchNum) return false;
     }
     return true;
   });
 
+  // Sort strictly in numerical sequence 1 to last number (#01 to #60)
   const sortedScenarios = [...filteredScenarios].sort((a, b) => {
-    const aTier = sTier(a);
-    const bTier = sTier(b);
-    const diff = (difficultyOrder[aTier] || 2) - (difficultyOrder[bTier] || 2);
-    if (diff !== 0) return diff;
-    return a.difficulty - b.difficulty;
+    const aNum = getScenarioNumber(a);
+    const bNum = getScenarioNumber(b);
+    if (aNum !== bNum) return aNum - bNum;
+    return a.title.localeCompare(b.title);
   });
-
-  function sTier(s: ScenarioListItem) {
-    return s.difficulty_level || (s.difficulty <= 1 ? 'Normal' : s.difficulty <= 3 ? 'Challenging' : 'Crisis');
-  }
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
@@ -559,7 +556,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
         <div className="mt-8 overflow-hidden rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] shadow-sm">
           <div className="divide-y divide-slate-200 dark:divide-[#1E3E62]">
             {sortedScenarios.map((scen) => {
-              const globalIndex = scenarios.findIndex((x) => x.id === scen.id) + 1;
+              const scenNum = getScenarioNumber(scen);
               return (
               <div
                 key={scen.id}
@@ -569,7 +566,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
               >
                 <div className="flex items-start sm:items-center space-x-3.5">
                   <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-[#B91C1C] font-mono text-[10px] font-black text-white border border-[#B91C1C]/50 shadow-sm">
-                    #{String(globalIndex > 0 ? globalIndex : 1).padStart(2, '0')}
+                    #{String(scenNum > 0 && scenNum < 999 ? scenNum : 1).padStart(2, '0')}
                   </span>
                   <div>
                     <div className="flex flex-wrap items-center gap-2">
@@ -612,7 +609,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
         /* ========================================================================= */
         <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {sortedScenarios.map((scen) => {
-            const globalIndex = scenarios.findIndex((x) => x.id === scen.id) + 1;
+            const scenNum = getScenarioNumber(scen);
             return (
             <div
               key={scen.id}
@@ -625,7 +622,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#B91C1C] text-white font-black text-[10px] tracking-tight shadow-sm flex-shrink-0">
-                      #{String(globalIndex > 0 ? globalIndex : 1).padStart(2, '0')}
+                      #{String(scenNum > 0 && scenNum < 999 ? scenNum : 1).padStart(2, '0')}
                     </span>
                     <span className="rounded-md bg-slate-100 dark:bg-[#0B192C] border border-slate-300 dark:border-[#1E3E62] px-2.5 py-0.5 text-[11px] font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       {scen.topic.replace(/_/g, ' ')}

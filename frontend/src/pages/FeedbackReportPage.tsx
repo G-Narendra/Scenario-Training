@@ -107,7 +107,12 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
   }, [report]);
 
   const handlePrint = () => {
+    const originalTitle = document.title;
+    document.title = '';
     window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
   };
 
   if (loading) {
@@ -168,13 +173,13 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
       <style>{`
         @page {
           size: A4 portrait;
-          margin: 10mm 12mm;
+          margin: 0 !important;
         }
         @media print {
           html, body {
             margin: 0 !important;
             padding: 0 !important;
-            font-size: 9pt !important;
+            font-size: 8.5pt !important;
             background: #ffffff !important;
             color: #0f172a !important;
             line-height: 1.35 !important;
@@ -183,6 +188,10 @@ export const FeedbackReportPage: React.FC<FeedbackReportPageProps> = ({
           }
           nav, header, footer, aside, button, .print\\:hidden, #floating-whatsapp-btn, #mode-switch-btn {
             display: none !important;
+          }
+          .printable-report-container {
+            padding: 10mm 12mm !important;
+            box-sizing: border-box !important;
           }
           .print-avoid-break {
             page-break-inside: avoid !important;

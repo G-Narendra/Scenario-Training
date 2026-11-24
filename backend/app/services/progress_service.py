@@ -577,18 +577,18 @@ class ProgressService:
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>3H Solutions - Executive Performance Report - {p_name}</title>
+  <title> </title>
   <style>
-    @page {{ size: A4 portrait; margin: 10mm 12mm; }}
-    body {{
+    @page { size: A4 portrait; margin: 0; }
+    body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       color: #0f172a;
       background: #ffffff;
       margin: 0;
-      padding: 24px;
+      padding: 10mm 12mm;
       line-height: 1.4;
       font-size: 13px;
-    }}
+    }
     .header {{
       display: flex;
       justify-content: space-between;

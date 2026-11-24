@@ -273,6 +273,15 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
     }
   };
 
+  const handleCleanPrint = () => {
+    const originalTitle = document.title;
+    document.title = '';
+    window.print();
+    setTimeout(() => {
+      document.title = originalTitle;
+    }, 1000);
+  };
+
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cohort || !newMemberName.trim()) return;
@@ -504,6 +513,33 @@ conclusion_signals:
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8 text-slate-900 dark:text-slate-100">
+      <style>{`
+        @page {
+          size: A4 portrait;
+          margin: 0 !important;
+        }
+        @media print {
+          html, body {
+            margin: 0 !important;
+            padding: 0 !important;
+            background: #ffffff !important;
+            color: #0f172a !important;
+            font-size: 8.5pt !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+          nav, header, footer, aside, button, .print\\:hidden, #floating-whatsapp-btn, #mode-switch-btn {
+            display: none !important;
+          }
+          .print-avoid-break {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+          }
+          .shadow-xl, .shadow-md, .shadow-sm, .shadow-2xl {
+            box-shadow: none !important;
+          }
+        }
+      `}</style>
       {/* Toast Feedback */}
       {feedbackMsg && (
         <div
@@ -892,7 +928,7 @@ conclusion_signals:
               </div>
               <button
                 type="button"
-                onClick={() => window.print()}
+                onClick={handleCleanPrint}
                 className="self-start sm:self-auto flex items-center space-x-1.5 rounded-xl bg-[#B91C1C] hover:bg-[#991B1B] text-white px-3.5 py-1.5 text-xs font-bold transition shadow-sm"
                 title="Print or Save Group Report as PDF"
               >
@@ -980,7 +1016,7 @@ conclusion_signals:
               <div className="flex flex-wrap items-center gap-2">
                 <button
                   type="button"
-                  onClick={() => window.print()}
+                  onClick={handleCleanPrint}
                   className="flex items-center space-x-1.5 rounded-xl bg-[#B91C1C] hover:bg-[#991B1B] text-white px-3.5 py-1.5 text-xs font-bold transition shadow-sm"
                   title="Group Report — Print or Save full cohort as PDF (Day 2 facilitation guide)"
                 >
@@ -1775,10 +1811,10 @@ conclusion_signals:
         <div
           role="dialog"
           aria-modal="true"
-          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto"
+          className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/80 backdrop-blur-sm animate-in fade-in duration-150 overflow-y-auto print:p-0 print:bg-white print:static print:overflow-visible"
         >
           <div
-            className="fixed inset-0"
+            className="fixed inset-0 print:hidden"
             onClick={() => {
               setReportSessionId(null);
               setReportData(null);
@@ -1786,9 +1822,9 @@ conclusion_signals:
             }}
           />
 
-          <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] shadow-2xl z-10 overflow-hidden text-slate-900 dark:text-white">
+          <div className="relative w-full max-w-4xl max-h-[92vh] flex flex-col rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#0B192C] shadow-2xl z-10 overflow-hidden text-slate-900 dark:text-white print:border-none print:shadow-none print:max-h-none print:overflow-visible print:max-w-none print:w-full print:p-0">
             {/* Modal Top Action Bar */}
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#1E3E62] px-6 py-4 bg-slate-50 dark:bg-[#132B45] flex-shrink-0">
+            <div className="flex items-center justify-between border-b border-slate-200 dark:border-[#1E3E62] px-6 py-4 bg-slate-50 dark:bg-[#132B45] flex-shrink-0 print:hidden">
               <div className="flex items-center space-x-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#B91C1C]/15 text-[#B91C1C] border border-[#B91C1C]/30 font-bold text-sm">
                   3H
@@ -1806,7 +1842,7 @@ conclusion_signals:
               <div className="flex items-center space-x-2">
                 <button
                   type="button"
-                  onClick={() => window.print()}
+                  onClick={handleCleanPrint}
                   className="flex items-center space-x-1.5 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-3.5 py-2 text-xs font-bold transition shadow-sm"
                   title="Export Official 1-Page Dossier as PDF"
                 >
@@ -2149,7 +2185,7 @@ conclusion_signals:
             </div>
 
             {/* Modal Bottom Close Bar */}
-            <div className="border-t border-slate-200 dark:border-[#1E3E62] px-6 py-3 bg-slate-50 dark:bg-[#132B45] flex items-center justify-between flex-shrink-0">
+            <div className="border-t border-slate-200 dark:border-[#1E3E62] px-6 py-3 bg-slate-50 dark:bg-[#132B45] flex items-center justify-between flex-shrink-0 print:hidden">
               <span className="text-xs text-slate-500 dark:text-slate-400">
                 Official deliberate practice debrief record for facilitator review
               </span>

@@ -172,7 +172,7 @@ class ScenarioService:
         if difficulty:
             stmt = stmt.where(Scenario.difficulty == difficulty)
 
-        stmt = stmt.order_by(Scenario.difficulty.asc(), Scenario.title.asc())
+        stmt = stmt.order_by(Scenario.slug.asc(), Scenario.title.asc())
         results = (await db.execute(stmt)).all()
 
         items = []
