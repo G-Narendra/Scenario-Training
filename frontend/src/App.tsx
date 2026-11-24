@@ -195,16 +195,17 @@ const AppContent: React.FC = () => {
       restore();
     }
 
-    const handlePopState = (e: PopStateEvent) => {
-      if (e.state && e.state.view) {
-        setCurrentView(e.state.view);
+    const handleRouteSync = (e?: Event) => {
+      const state = e && 'state' in e ? (e as PopStateEvent).state : null;
+      if (state && state.view) {
+        setCurrentView(state.view);
         try {
           window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
         } catch (scrollErr) {
           window.scrollTo(0, 0);
         }
-        if (e.state.selectedTrack) {
-          setSelectedTrack(e.state.selectedTrack);
+        if (state.selectedTrack) {
+          setSelectedTrack(state.selectedTrack);
         }
       } else {
         const h = window.location.hash.replace('#', '') as ViewMode;
@@ -216,9 +217,11 @@ const AppContent: React.FC = () => {
       }
     };
 
-    window.addEventListener('popstate', handlePopState);
+    window.addEventListener('popstate', handleRouteSync);
+    window.addEventListener('hashchange', handleRouteSync);
     return () => {
-      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('popstate', handleRouteSync);
+      window.removeEventListener('hashchange', handleRouteSync);
       window.removeEventListener('online', handleOnline);
       window.removeEventListener('offline', handleOffline);
     };
