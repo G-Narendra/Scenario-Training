@@ -46,6 +46,30 @@ export const Footer: React.FC = () => {
             {/* Quick Links & Help Channels */}
             <div className="flex flex-wrap items-center justify-center gap-4 text-xs font-semibold">
               <a
+                href="#status"
+                title="System Operational Status"
+                className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300 hover:text-[#B91C1C] dark:hover:text-[#B91C1C] transition"
+              >
+                <span>System Status</span>
+              </a>
+
+              <a
+                href="#privacy"
+                title="Privacy & Audio Governance"
+                className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300 hover:text-[#B91C1C] dark:hover:text-[#B91C1C] transition"
+              >
+                <span>Privacy</span>
+              </a>
+
+              <a
+                href="#terms"
+                title="Terms of Executive Simulation"
+                className="flex items-center space-x-1.5 text-slate-600 dark:text-slate-300 hover:text-[#B91C1C] dark:hover:text-[#B91C1C] transition"
+              >
+                <span>Terms</span>
+              </a>
+
+              <a
                 href="https://www.3hsolutionsgroup.com/"
                 target="_blank"
                 rel="noopener noreferrer"

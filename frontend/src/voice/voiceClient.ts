@@ -549,7 +549,7 @@ export class VoiceClient {
         }
 
         // Sensitive, human-tuned voice threshold across all hardware
-        const isVoiceDetected = rms > Math.max(0.006, ambientNoiseEnergy * 1.3) || vocalAvg > 12;
+        const isVoiceDetected = rms > Math.max(0.005, ambientNoiseEnergy * 1.2) || vocalAvg > 10;
 
         if (isVoiceDetected) {
           lastSpeechTime = Date.now();
@@ -558,8 +558,8 @@ export class VoiceClient {
             speechActive = true;
             this.callbacks.onTranscriptPartial?.('Listening to your response... (Voice detected)');
           }
-        } else if (speechActive && totalSpeechMs >= 400 && Date.now() - lastSpeechTime > 1400) {
-          // Trainee finished speaking and paused for 1.4 seconds -> commit turn!
+        } else if (speechActive && totalSpeechMs >= 300 && Date.now() - lastSpeechTime > 1200) {
+          // Trainee finished speaking and paused for 1.2 seconds -> commit turn!
           speechActive = false;
           if (this.vadInterval) {
             clearInterval(this.vadInterval);
@@ -568,8 +568,9 @@ export class VoiceClient {
           if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
             this.mediaRecorder.stop();
           }
-        } else if (Date.now() - startTime > 25000) {
-          // 25-second maximum utterance guard
+        } else if (Date.now() - startTime > 7000) {
+          // Responsive 7-second automatic slice guard (avoids 25s dead silence if VAD is muted or AudioContext suspended)
+          speechActive = false;
           if (this.vadInterval) {
             clearInterval(this.vadInterval);
             this.vadInterval = null;

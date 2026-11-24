@@ -175,6 +175,21 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
   const voiceClient = voiceClientRef.current;
 
+  // In Voice Mode, pressing Enter anywhere outside text inputs commits the voice response immediately
+  useEffect(() => {
+    const handleVoiceKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Enter' && session.mode === 'voice' && isRecordingMic && !isAssistantSpeaking) {
+        const activeTag = document.activeElement?.tagName?.toLowerCase();
+        if (activeTag !== 'textarea' && activeTag !== 'input') {
+          e.preventDefault();
+          voiceClient?.forceCommit();
+        }
+      }
+    };
+    window.addEventListener('keydown', handleVoiceKeyDown);
+    return () => window.removeEventListener('keydown', handleVoiceKeyDown);
+  }, [session.mode, isRecordingMic, isAssistantSpeaking, voiceClient]);
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Load Scenario Specification (Persona, Brief)

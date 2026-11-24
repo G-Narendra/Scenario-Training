@@ -24,6 +24,21 @@ const ProgressPage = React.lazy(() =>
 const AdminConsolePage = React.lazy(() =>
   import('./pages/AdminConsolePage').then((m) => ({ default: m.AdminConsolePage }))
 );
+const OfflinePage = React.lazy(() =>
+  import('./pages/OfflinePage').then((m) => ({ default: m.OfflinePage }))
+);
+const NotFoundPage = React.lazy(() =>
+  import('./pages/NotFoundPage').then((m) => ({ default: m.NotFoundPage }))
+);
+const SystemStatusPage = React.lazy(() =>
+  import('./pages/SystemStatusPage').then((m) => ({ default: m.SystemStatusPage }))
+);
+const PrivacyPolicyPage = React.lazy(() =>
+  import('./pages/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
+);
+const TermsOfServicePage = React.lazy(() =>
+  import('./pages/TermsOfServicePage').then((m) => ({ default: m.TermsOfServicePage }))
+);
 
 const PageSkeleton: React.FC = () => (
   <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10 animate-pulse space-y-6">
@@ -37,11 +52,24 @@ const PageSkeleton: React.FC = () => (
   </div>
 );
 
-export type ViewMode = 'tracks' | 'scenarios' | 'chat' | 'evaluation' | 'progress' | 'admin' | 'home';
+export type ViewMode =
+  | 'tracks'
+  | 'scenarios'
+  | 'chat'
+  | 'evaluation'
+  | 'progress'
+  | 'admin'
+  | 'home'
+  | 'offline'
+  | '404'
+  | 'status'
+  | 'privacy'
+  | 'terms';
 
 const AppContent: React.FC = () => {
   const { user, isAuthenticated, loading } = useAuth();
   const [currentView, setCurrentView] = useState<ViewMode>('scenarios');
+  const [isOffline, setIsOffline] = useState(typeof navigator !== 'undefined' ? !navigator.onLine : false);
   const [selectedTrack, setSelectedTrack] = useState<string>('all');
   const [activeSession, setActiveSession] = useState<SimulationSession | null>(null);
   const [evalSessionId, setEvalSessionId] = useState<string | null>(null);
@@ -68,12 +96,37 @@ const AppContent: React.FC = () => {
   };
 
   React.useEffect(() => {
-    const validViews: ViewMode[] = ['tracks', 'scenarios', 'chat', 'evaluation', 'progress', 'admin', 'home'];
-    const hashView = window.location.hash.replace('#', '') as ViewMode;
-    // If no explicit hash provided, landing page ('home') is the default view
-    const targetView = hashView && validViews.includes(hashView) ? hashView : 'home';
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
+
+    const validViews: ViewMode[] = [
+      'tracks',
+      'scenarios',
+      'chat',
+      'evaluation',
+      'progress',
+      'admin',
+      'home',
+      'offline',
+      '404',
+      'status',
+      'privacy',
+      'terms',
+    ];
+    const rawHash = window.location.hash.replace('#', '');
+    let targetView: ViewMode = 'home';
+    if (!rawHash) {
+      targetView = 'home';
+    } else if (validViews.includes(rawHash as ViewMode)) {
+      targetView = rawHash as ViewMode;
+    } else {
+      // Unrecognized hash route -> 404 Page Not Found
+      targetView = '404';
+    }
     setCurrentView(targetView);
-    if (isAuthenticated && targetView !== 'home') {
+    if (isAuthenticated && targetView !== 'home' && targetView !== '404' && targetView !== 'offline') {
       window.history.replaceState({ view: targetView, selectedTrack }, '', '#' + targetView);
     }
 
@@ -164,7 +217,11 @@ const AppContent: React.FC = () => {
     };
 
     window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
+    return () => {
+      window.removeEventListener('popstate', handlePopState);
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
   }, []);
 
   React.useEffect(() => {
@@ -360,6 +417,43 @@ const AppContent: React.FC = () => {
 
           {currentView === 'admin' && (user?.role === 'group_admin' || user?.role === 'super_admin') && (
             <AdminConsolePage onViewEvaluation={handleViewEvaluation} />
+          )}
+
+          {(isOffline || currentView === 'offline') && (
+            <OfflinePage
+              onRetryConnection={() => {
+                setIsOffline(false);
+                navigateTo(isAuthenticated ? 'scenarios' : 'home');
+              }}
+              onNavigateHome={() => {
+                setIsOffline(false);
+                navigateTo('home');
+              }}
+            />
+          )}
+
+          {!isOffline && currentView === '404' && (
+            <NotFoundPage
+              onNavigate={(v) => navigateTo(v as ViewMode)}
+            />
+          )}
+
+          {!isOffline && currentView === 'status' && (
+            <SystemStatusPage
+              onBack={() => navigateTo(isAuthenticated ? 'scenarios' : 'home')}
+            />
+          )}
+
+          {!isOffline && currentView === 'privacy' && (
+            <PrivacyPolicyPage
+              onBack={() => navigateTo('home')}
+            />
+          )}
+
+          {!isOffline && currentView === 'terms' && (
+            <TermsOfServicePage
+              onBack={() => navigateTo('home')}
+            />
           )}
         </React.Suspense>
 
