@@ -250,10 +250,11 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
     }
     if (hasSpokenOpeningRef.current) return;
 
+    // Pick the opening counterpart message (seq === 1)
     const counterpartMsgs = messages.filter((m) => m.role === 'counterpart');
-    const msgToSpeak = counterpartMsgs.length > 0 ? counterpartMsgs[counterpartMsgs.length - 1] : null;
+    const msgToSpeak = counterpartMsgs.find((m) => m.seq === 1) || (counterpartMsgs.length > 0 ? counterpartMsgs[0] : null);
     if (!msgToSpeak || !msgToSpeak.content) {
-      if (voiceClient) {
+      if (voiceClient && !isRecordingMic && !isAssistantSpeaking) {
         voiceClient.startAudioCapture().catch(() => {});
       }
       return;
@@ -261,11 +262,12 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
 
     hasSpokenOpeningRef.current = true;
 
+    // Immediately pre-fetch the opening audio so it is downloaded and decoded during the 2-second pause
     if (voiceClient) {
       voiceClient.prefetchAudio(msgToSpeak.content, personaName).catch(() => {});
     }
 
-    // Speak scenario opening line within 100ms
+    // Direct 2-second natural conversational delay upon initiating conversation before counterpart speaks
     const timer = setTimeout(async () => {
       if (session.status === 'active' && session.mode === 'voice' && voiceClient) {
         setCurrentlySpeakingSeq(msgToSpeak.seq);
@@ -273,13 +275,13 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         try {
           await voiceClient.speakText(msgToSpeak.content, personaName);
         } catch (err) {
-          console.warn('Auto-speak line notice:', err);
+          console.warn('Auto-speak opening line notice:', err);
           setIsAssistantSpeaking(false);
           setCurrentlySpeakingSeq(null);
           voiceClient.startAudioCapture(true).catch(() => {});
         }
       }
-    }, 100);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [session.mode, session.status, messages, personaName, voiceClient]);

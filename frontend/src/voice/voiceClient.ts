@@ -312,15 +312,6 @@ export class VoiceClient {
         this.callbacks.onSessionReady?.('Counterpart', 'Voice Practice');
       }
     }
-
-    // Arm microphone capture if continuous call is active, unmuted, and assistant not speaking
-    if (this.isContinuousCall && !this.isMuted && !this.isSpeaking) {
-      setTimeout(() => {
-        if (!this.isSpeaking && !this.isRecording) {
-          this.startAudioCapture().catch((e) => console.warn('Mic auto-arm notice:', e));
-        }
-      }, 300);
-    }
   }
 
   private handleServerMessage(msg: VoiceServerMessage): void {
@@ -330,11 +321,6 @@ export class VoiceClient {
           this.setPersona(msg.persona_name);
         }
         this.callbacks.onSessionReady?.(msg.persona_name || this.sessionPersonaName || '', msg.scenario_title || '');
-        if (this.isContinuousCall && !this.isRecording && !this.isMuted) {
-          setTimeout(() => {
-            this.startAudioCapture().catch(() => {});
-          }, 300);
-        }
         break;
       case 'transcript.partial':
         this.callbacks.onTranscriptPartial?.(msg.text || '');
@@ -940,17 +926,20 @@ export class VoiceClient {
                 return;
               }
               if (err.name === 'NotAllowedError') {
-                console.warn('HTML5 Audio autoplay blocked by browser policy. Storing pending speech for direct user tap.');
-                this.pendingSpeech = { text: clean, personaName };
-                this.isSpeaking = false;
-                this.isCommitting = false;
-                this.callbacks.onAssistantSpeaking?.(false);
-                this.callbacks.onAutoplayBlocked?.();
-                if (watchdogTimer) {
-                  clearTimeout(watchdogTimer);
-                  watchdogTimer = null;
-                }
-                resolve();
+                console.warn('HTML5 Audio autoplay blocked by browser policy. Attempting resumed Web Audio fallback...');
+                this.playViaWebAudio(audioUrl, onPlaybackComplete).catch((fallbackErr) => {
+                  console.warn('Web Audio fallback notice:', fallbackErr);
+                  this.pendingSpeech = { text: clean, personaName };
+                  this.isSpeaking = false;
+                  this.isCommitting = false;
+                  this.callbacks.onAssistantSpeaking?.(false);
+                  this.callbacks.onAutoplayBlocked?.();
+                  if (watchdogTimer) {
+                    clearTimeout(watchdogTimer);
+                    watchdogTimer = null;
+                  }
+                  resolve();
+                });
                 return;
               } else {
                 console.warn('HTML5 Audio playback notice:', err.name);
@@ -970,8 +959,15 @@ export class VoiceClient {
   }
 
   private async playViaWebAudio(audioUrl: string, onComplete: () => void): Promise<void> {
+    const ctx = await this.ensureAudioContext();
+    if (ctx.state === 'suspended') {
+      await ctx.resume().catch(() => {});
+    }
+    if (ctx.state === 'suspended') {
+      throw new Error('AudioContext suspended by browser autoplay policy');
+    }
+
     try {
-      const ctx = await this.ensureAudioContext();
       let audioBuffer = this.ttsAudioCache.get(audioUrl);
 
       if (!audioBuffer) {
