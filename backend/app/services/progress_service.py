@@ -579,8 +579,8 @@ class ProgressService:
   <meta charset="UTF-8">
   <title> </title>
   <style>
-    @page { size: A4 portrait; margin: 0; }
-    body {
+    @page {{ size: A4 portrait; margin: 0; }}
+    body {{
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       color: #0f172a;
       background: #ffffff;
@@ -588,7 +588,7 @@ class ProgressService:
       padding: 10mm 12mm;
       line-height: 1.4;
       font-size: 13px;
-    }
+    }}
     .header {{
       display: flex;
       justify-content: space-between;

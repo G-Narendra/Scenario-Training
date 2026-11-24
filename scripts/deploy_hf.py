@@ -50,7 +50,7 @@ def main():
         print("No changes to commit to HF Space.")
     else:
         print("Committing changes...")
-        run(["git", "commit", "-m", "feat: update landing page metrics and real scenario previews"], cwd=CLONE_DIR)
+        run(["git", "commit", "-m", "fix: voice mic lock, 1-60 sequential numbering, 0-score bad dialogue gate, clean PDF"], cwd=CLONE_DIR)
         print("Pushing to HF Space main...")
         run(["git", "push", "origin", "main"], cwd=CLONE_DIR)
         print("Push succeeded!")
