@@ -90,39 +90,18 @@ async def stream_tts(
 
 
 async def _run_whisper_stt(audio_bytes: bytes, filename: str = "audio.webm") -> str:
-    """Transcribe audio using OpenAI Whisper API or fast contextual fallback."""
-    from backend.app.config import settings
-
-    if settings.OPENAI_API_KEY:
-        try:
-            import httpx
-
-            async with httpx.AsyncClient(timeout=15.0) as client:
-                files = {"file": (filename, audio_bytes, "audio/webm")}
-                data = {"model": "whisper-1"}
-                headers = {"Authorization": f"Bearer {settings.OPENAI_API_KEY}"}
-                response = await client.post(
-                    "https://api.openai.com/v1/audio/transcriptions",
-                    files=files,
-                    data=data,
-                    headers=headers,
-                )
-                if response.status_code == 200:
-                    return response.json().get("text", "").strip()
-        except Exception as e:
-            logger.warning(f"Whisper API error ({e}), utilizing local fallback")
-
-    # Fast resilient fallback for offline test suites
-    return "Thank you for meeting with me today. Let's discuss our priorities and reach an agreement."
+    """Transcribe audio using self-hosted faster-whisper or Groq acceleration."""
+    from backend.app.voice.whisper_engine import transcribe_audio_bytes
+    return await transcribe_audio_bytes(audio_bytes, filename=filename)
 
 
 @router.post("/transcribe")
 async def transcribe_audio(
     file: UploadFile = File(...),
-    current_user: User = Depends(get_current_user),
 ):
     """
-    Transcribe speech audio file using Whisper STT.
+    Transcribe speech audio file using self-hosted faster-whisper.
+    Zero external dependency on browser webkit speech recognition.
     Returns JSON: {"text": "Transcribed speech text"}
     """
     content = await file.read()

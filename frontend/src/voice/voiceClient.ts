@@ -1,3 +1,5 @@
+import { api } from '../api/client';
+
 export interface VoiceClientCallbacks {
   onSessionReady?: (personaName: string, scenarioTitle: string) => void;
   onTranscriptPartial?: (text: string) => void;
@@ -105,6 +107,11 @@ export class VoiceClient {
   private consecutiveFastRestarts = 0;
   private lastStartTimestamp = 0;
   private pendingSpeech: { text: string; personaName: string } | null = null;
+  private mediaRecorder: MediaRecorder | null = null;
+  private recordedChunks: Blob[] = [];
+  public useWhisperBackend = true;
+  private vadInterval: ReturnType<typeof setInterval> | null = null;
+  private isTranscribing = false;
 
   constructor(callbacks: VoiceClientCallbacks = {}) {
     this.callbacks = callbacks;
@@ -463,10 +470,8 @@ export class VoiceClient {
     const SpeechRecognitionClass =
       windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
 
-    if (!SpeechRecognitionClass) {
-      this.callbacks.onError?.(
-        'Speech recognition requires Google Chrome, Microsoft Edge, or a Web Speech API browser.'
-      );
+    if (this.useWhisperBackend || !SpeechRecognitionClass) {
+      await this.startMediaRecorderCapture();
       return;
     }
 
@@ -581,20 +586,17 @@ export class VoiceClient {
         } else if (event.error === 'network') {
           hadFatalError = true;
           this.networkErrorCount++;
-          console.warn(`Speech recognition notice: network error (occurrence ${this.networkErrorCount})`);
-          this.latestUtterance = '';
-          if (this.silenceTimer) clearTimeout(this.silenceTimer);
-          if (this.hardCommitTimer) clearTimeout(this.hardCommitTimer);
-
-          if (this.networkErrorCount >= 2) {
-            this.isRecording = false;
-            this.callbacks.onMicStatusChange?.(false, this.isMuted);
-            this.callbacks.onError?.(
-              'Speech recognition network connection unavailable. Tap the mic button to retry or use the message input below.'
-            );
-          } else {
-            this.callbacks.onError?.('Re-establishing speech recognition...');
+          console.warn('Speech recognition network error from Google cloud. Seamlessly engaging self-hosted Whisper Audio Engine...');
+          this.useWhisperBackend = true;
+          this.callbacks.onError?.('');
+          try {
+            recog.abort();
+          } catch {
+            // ignore abort
           }
+          this.recognition = null;
+          this.startMediaRecorderCapture().catch(() => {});
+          return;
         } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
           console.warn('Speech recognition notice:', event.error);
         }
@@ -660,6 +662,168 @@ export class VoiceClient {
     }
   }
 
+  async startMediaRecorderCapture(): Promise<void> {
+    if (this.isMuted || this.isSpeaking || this.isCommitting || this.isTranscribing) return;
+
+    try {
+      this.callbacks.onError?.('');
+
+      if (!this.micMediaStream || !this.micMediaStream.active) {
+        this.micMediaStream = await navigator.mediaDevices.getUserMedia({
+          audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+          },
+        });
+      }
+
+      this.recordedChunks = [];
+      let mimeType = 'audio/webm';
+      if (typeof MediaRecorder !== 'undefined') {
+        if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          mimeType = 'audio/webm;codecs=opus';
+        } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+          mimeType = 'audio/webm';
+        } else if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          mimeType = 'audio/mp4';
+        }
+      }
+
+      const recorder = new MediaRecorder(this.micMediaStream, { mimeType });
+      this.mediaRecorder = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data && event.data.size > 0) {
+          this.recordedChunks.push(event.data);
+        }
+      };
+
+      recorder.onstop = async () => {
+        if (this.vadInterval) {
+          clearInterval(this.vadInterval);
+          this.vadInterval = null;
+        }
+
+        if (this.recordedChunks.length === 0 || this.isCommitting || this.isSpeaking) return;
+        const audioBlob = new Blob(this.recordedChunks, { type: mimeType });
+        this.recordedChunks = [];
+
+        // If audio blob is under 800 bytes, ignore as tap/silence
+        if (audioBlob.size < 800) {
+          if (this.isContinuousCall && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
+            setTimeout(() => this.startMediaRecorderCapture(), 200);
+          }
+          return;
+        }
+
+        await this.transcribeAndCommit(audioBlob);
+      };
+
+      recorder.start(200);
+      this.isRecording = true;
+      this.callbacks.onMicStatusChange?.(true, this.isMuted);
+
+      this.setupVAD();
+    } catch (err: unknown) {
+      console.warn('MediaRecorder mic capture notice:', err);
+      this.isRecording = false;
+      this.callbacks.onMicStatusChange?.(false, this.isMuted);
+      this.callbacks.onError?.('Microphone access denied or unavailable in browser.');
+    }
+  }
+
+  private setupVAD(): void {
+    if (!this.micMediaStream) return;
+    try {
+      if (!this.audioContext || this.audioContext.state === 'closed') {
+        const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        this.audioContext = new AudioCtx();
+      }
+      if (this.audioContext.state === 'suspended') {
+        this.audioContext.resume().catch(() => {});
+      }
+
+      const source = this.audioContext.createMediaStreamSource(this.micMediaStream);
+      const analyser = this.audioContext.createAnalyser();
+      analyser.fftSize = 256;
+      source.connect(analyser);
+
+      const buffer = new Uint8Array(analyser.frequencyBinCount);
+      let speechActive = false;
+      let lastSpeechTime = Date.now();
+      const startTime = Date.now();
+
+      if (this.vadInterval) clearInterval(this.vadInterval);
+
+      this.vadInterval = setInterval(() => {
+        if (!this.isRecording || this.isMuted || this.isSpeaking || this.isCommitting || this.isTranscribing) {
+          return;
+        }
+
+        analyser.getByteFrequencyData(buffer);
+        let sum = 0;
+        for (let i = 0; i < buffer.length; i++) sum += buffer[i];
+        const avg = sum / buffer.length;
+
+        // VAD threshold: voice activity detected
+        if (avg > 15) {
+          if (!speechActive) {
+            speechActive = true;
+            this.callbacks.onTranscriptPartial?.('Listening to you...');
+          }
+          lastSpeechTime = Date.now();
+        } else if (speechActive && Date.now() - lastSpeechTime > 1200) {
+          // 1.2s silence after speech -> commit turn!
+          speechActive = false;
+          if (this.vadInterval) {
+            clearInterval(this.vadInterval);
+            this.vadInterval = null;
+          }
+          if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+            this.mediaRecorder.stop();
+          }
+        } else if (!speechActive && Date.now() - startTime > 30000) {
+          // 30s chunk max
+          if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+            this.mediaRecorder.stop();
+          }
+        }
+      }, 100);
+    } catch (vadErr) {
+      console.debug('VAD setup notice:', vadErr);
+    }
+  }
+
+  private async transcribeAndCommit(audioBlob: Blob): Promise<void> {
+    if (this.isCommitting || this.isSpeaking) return;
+    this.isTranscribing = true;
+    this.callbacks.onTranscriptPartial?.('Transcribing with Whisper...');
+
+    try {
+      const result = await api.transcribeAudio(audioBlob);
+      const transcribedText = (result.text || '').trim();
+
+      if (transcribedText && transcribedText.length > 1) {
+        this.callbacks.onTranscriptFinal?.(transcribedText);
+        this.commitTurn(transcribedText);
+      } else {
+        this.callbacks.onTranscriptPartial?.('');
+        if (this.isContinuousCall && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
+          setTimeout(() => this.startMediaRecorderCapture(), 200);
+        }
+      }
+    } catch (transcribeErr) {
+      console.warn('Transcription service notice:', transcribeErr);
+      this.callbacks.onTranscriptPartial?.('');
+      if (this.isContinuousCall && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
+        setTimeout(() => this.startMediaRecorderCapture(), 300);
+      }
+    } finally {
+      this.isTranscribing = false;
+    }
+  }
+
   stopAudioCapture(): void {
     if (this.silenceTimer) {
       clearTimeout(this.silenceTimer);
@@ -673,9 +837,22 @@ export class VoiceClient {
       clearTimeout(this.restartTimeout);
       this.restartTimeout = null;
     }
+    if (this.vadInterval) {
+      clearInterval(this.vadInterval);
+      this.vadInterval = null;
+    }
 
     this.isRecording = false;
     this.callbacks.onMicStatusChange?.(false, this.isMuted);
+
+    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
+      try {
+        this.mediaRecorder.stop();
+      } catch (recErr) {
+        console.debug('MediaRecorder stop notice:', recErr);
+      }
+      this.mediaRecorder = null;
+    }
 
     if (this.recognition) {
       try {
@@ -799,6 +976,14 @@ export class VoiceClient {
    * Manual override: User taps "Done Speaking • Send Now" to send turn with 0ms delay.
    */
   forceCommitTurn(): void {
+    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
+      try {
+        this.mediaRecorder.stop();
+      } catch (err) {
+        console.debug('MediaRecorder force commit notice:', err);
+      }
+      return;
+    }
     if (this.latestUtterance.trim()) {
       this.commitTurn(this.latestUtterance);
     }

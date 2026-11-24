@@ -274,6 +274,22 @@ export const api = {
     return response.blob();
   },
 
+  async transcribeAudio(audioBlob: Blob): Promise<{ text: string }> {
+    const formData = new FormData();
+    formData.append('file', audioBlob, 'mic_recording.webm');
+    const response = await fetch(`${API_BASE}/voice/transcribe`, {
+      method: 'POST',
+      headers: {
+        ...getAuthHeader(),
+      },
+      body: formData,
+    });
+    if (!response.ok) {
+      throw new ApiError('Failed to transcribe audio', response.status);
+    }
+    return response.json();
+  },
+
   // Admin Cohorts
   async listAdminCohorts(): Promise<AdminCohort[]> {
     return request<AdminCohort[]>('/admin/cohorts');
