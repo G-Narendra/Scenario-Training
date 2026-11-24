@@ -25,55 +25,11 @@ export interface VoiceServerMessage {
   message?: string;
 }
 
-interface ISpeechAlternative {
-  transcript: string;
-  confidence?: number;
-}
-
-interface ISpeechResult {
-  isFinal?: boolean;
-  length: number;
-  [index: number]: ISpeechAlternative;
-}
-
-interface ISpeechResultList {
-  length: number;
-  [index: number]: ISpeechResult;
-}
-
-interface ISpeechRecognitionEvent {
-  results: ISpeechResultList;
-  resultIndex?: number;
-}
-
-interface ISpeechRecognitionErrorEvent {
-  error: string;
-  message?: string;
-}
-
-interface ISpeechRecognition {
-  continuous: boolean;
-  interimResults: boolean;
-  lang: string;
-  maxAlternatives?: number;
-  onstart?: (() => void) | null;
-  onresult: ((event: ISpeechRecognitionEvent) => void) | null;
-  onerror: ((event: ISpeechRecognitionErrorEvent) => void) | null;
-  onend: (() => void) | null;
-  onspeechend: (() => void) | null;
-  start: () => void;
-  stop: () => void;
-  abort: () => void;
-}
-
-type SpeechRecognitionConstructor = new () => ISpeechRecognition;
-
 export class VoiceClient {
   private ws: WebSocket | null = null;
   private audioContext: AudioContext | null = null;
   private currentBufferSource: AudioBufferSourceNode | null = null;
   private currentAudioElement: HTMLAudioElement | null = null;
-  private recognition: ISpeechRecognition | null = null;
   private latestUtterance = '';
   private isCommitting = false;
   public isConnected = false;
@@ -103,14 +59,13 @@ export class VoiceClient {
   private micMediaStream: MediaStream | null = null;
   private callbacks: VoiceClientCallbacks;
   private ttsAudioCache = new Map<string, AudioBuffer>();
-  private networkErrorCount = 0;
-  private consecutiveFastRestarts = 0;
-  private lastStartTimestamp = 0;
   private pendingSpeech: { text: string; personaName: string } | null = null;
   private mediaRecorder: MediaRecorder | null = null;
   private recordedChunks: Blob[] = [];
   public useWhisperBackend = true;
   private vadInterval: ReturnType<typeof setInterval> | null = null;
+  private vadSource: MediaStreamAudioSourceNode | null = null;
+  private vadAnalyser: AnalyserNode | null = null;
   private isTranscribing = false;
 
   constructor(callbacks: VoiceClientCallbacks = {}) {
@@ -139,13 +94,6 @@ export class VoiceClient {
         localStorage.setItem('scenariolab_voice_lang', lang);
       } catch (err) {
         console.debug('Failed to save preferred voice language:', err);
-      }
-    }
-    if (this.recognition) {
-      try {
-        this.recognition.lang = lang;
-      } catch (err) {
-        console.debug('Failed to set speech recognition language:', err);
       }
     }
   }
@@ -416,8 +364,8 @@ export class VoiceClient {
   }
 
   /**
-   * Start listening to the trainee's microphone via Web Speech API.
-   * Completely avoids opening conflicting getUserMedia streams.
+   * Start listening to the trainee's microphone via pure native MediaRecorder + Whisper backend.
+   * Eliminates Google Chrome Web Speech API network errors and browser dependency.
    */
   async startAudioCapture(forceUnlock = false): Promise<void> {
     if (this.isMuted) return;
@@ -425,8 +373,6 @@ export class VoiceClient {
     if (forceUnlock) {
       this.isSpeaking = false;
       this.isCommitting = false;
-      this.networkErrorCount = 0;
-      this.consecutiveFastRestarts = 0;
     }
 
     // Critical: Do NOT interrupt assistant speech when mic capture arms automatically!
@@ -434,240 +380,35 @@ export class VoiceClient {
       return;
     }
 
-    // Guard against instant crash loops (e.g. invalid permission throwing in < 200ms)
-    const now = Date.now();
-    if (now - this.lastStartTimestamp < 200) {
-      this.consecutiveFastRestarts++;
-      if (this.consecutiveFastRestarts > 5) {
-        console.warn('Speech recognition aborted too rapidly, backing off.');
-        this.isRecording = false;
-        this.callbacks.onMicStatusChange?.(false, this.isMuted);
-        return;
-      }
-    } else {
-      this.consecutiveFastRestarts = 0;
-    }
-    this.lastStartTimestamp = now;
+    await this.startMediaRecorderCapture();
+  }
 
-    // Fully tear down any previous recognition instance before constructing a fresh one
-    if (this.recognition) {
+  /**
+   * Immediate manual commit: called when trainee taps the microphone button to send response
+   * without waiting for automatic silence detection.
+   */
+  public forceCommit(): void {
+    if (this.vadInterval) {
+      clearInterval(this.vadInterval);
+      this.vadInterval = null;
+    }
+    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
       try {
-        this.recognition.onend = null;
-        this.recognition.onerror = null;
-        this.recognition.onresult = null;
-        this.recognition.onspeechend = null;
-        this.recognition.abort();
-      } catch (abortErr) {
-        console.debug('Speech recognition teardown notice:', abortErr);
+        this.mediaRecorder.stop();
+      } catch (err) {
+        console.debug('Force commit stop notice:', err);
       }
-      this.recognition = null;
-    }
-
-    const windowWithSpeech = window as unknown as {
-      SpeechRecognition?: SpeechRecognitionConstructor;
-      webkitSpeechRecognition?: SpeechRecognitionConstructor;
-    };
-    const SpeechRecognitionClass =
-      windowWithSpeech.SpeechRecognition || windowWithSpeech.webkitSpeechRecognition;
-
-    if (this.useWhisperBackend || !SpeechRecognitionClass) {
-      await this.startMediaRecorderCapture();
-      return;
-    }
-
-    try {
-      this.isRecording = true;
-      this.callbacks.onMicStatusChange?.(true, this.isMuted);
-
-      const recog = new SpeechRecognitionClass();
-      recog.continuous = true;
-      recog.interimResults = true;
-      recog.lang = this.recognitionLanguage || 'en-US';
-      recog.maxAlternatives = 1;
-
-      let hadFatalError = false;
-
-      recog.onstart = () => {
-        this.consecutiveFastRestarts = 0;
-        this.isRecording = true;
-        this.callbacks.onMicStatusChange?.(true, this.isMuted);
-      };
-
-      recog.onresult = (event: ISpeechRecognitionEvent) => {
-        // Successful speech transmission: reset error counters
-        this.networkErrorCount = 0;
-        this.consecutiveFastRestarts = 0;
-
-        // If muted, assistant is speaking, or currently committing turn, ignore incoming audio
-        if (this.isMuted || this.isSpeaking || this.isCommitting) return;
-
-        let finalTranscript = '';
-        let interimTranscript = '';
-
-        for (let i = 0; i < event.results.length; i++) {
-          const res = event.results[i];
-          const segment = (res[0]?.transcript || '').trim();
-          if (!segment) continue;
-
-          if (res.isFinal) {
-            // Deduplicate segments
-            if (!finalTranscript) {
-              finalTranscript = segment;
-            } else if (!finalTranscript.toLowerCase().endsWith(segment.toLowerCase())) {
-              finalTranscript += ' ' + segment;
-            }
-          } else {
-            interimTranscript = segment;
-          }
-        }
-
-        const combined = (finalTranscript ? finalTranscript + (interimTranscript ? ' ' + interimTranscript : '') : interimTranscript).trim();
-        const cleaned = this.dedupConsecutiveWords(combined);
-
-        if (cleaned) {
-          this.latestUtterance = cleaned;
-          this.callbacks.onTranscriptPartial?.(cleaned);
-
-          // 10-second safety deadline for very long uninterrupted speech
-          if (!this.hardCommitTimer) {
-            this.hardCommitTimer = setTimeout(() => {
-              this.hardCommitTimer = null;
-              if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
-                const words = this.latestUtterance.trim().split(/\s+/).filter(Boolean);
-                if (words.length >= 2 || this.latestUtterance.trim().length >= 8) {
-                  this.commitTurn(this.latestUtterance);
-                }
-              }
-            }, 10000);
-          }
-
-          // Natural silence detection timer (1200ms allows natural conversational pacing)
-          if (this.silenceTimer) {
-            clearTimeout(this.silenceTimer);
-            this.silenceTimer = null;
-          }
-
-          const lastResult = event.results[event.results.length - 1];
-          const isFinal = lastResult?.isFinal;
-          const delayMs = isFinal ? 1200 : 1600;
-
-          this.silenceTimer = setTimeout(() => {
-            if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
-              const words = this.latestUtterance.trim().split(/\s+/).filter(Boolean);
-              if (words.length >= 2 || this.latestUtterance.trim().length >= 8) {
-                this.commitTurn(this.latestUtterance);
-              }
-            }
-          }, delayMs);
-        }
-      };
-
-      // Built-in speech cessation detection: fires when vocal sound ends
-      recog.onspeechend = () => {
-        if (this.isMuted || this.isSpeaking || this.isCommitting) return;
-        const words = (this.latestUtterance || '').trim().split(/\s+/).filter(Boolean);
-        if (words.length >= 2 || (this.latestUtterance || '').trim().length >= 8) {
-          if (this.silenceTimer) clearTimeout(this.silenceTimer);
-          // Wait 1000ms after speech cessation before committing
-          this.silenceTimer = setTimeout(() => {
-            if (this.latestUtterance && !this.isSpeaking && !this.isCommitting) {
-              this.commitTurn(this.latestUtterance);
-            }
-          }, 1000);
-        }
-      };
-
-      recog.onerror = (event: ISpeechRecognitionErrorEvent) => {
-        if (event.error === 'not-allowed') {
-          hadFatalError = true;
-          this.isRecording = false;
-          this.callbacks.onError?.('Microphone permission denied. Please allow microphone in your browser address bar.');
-          this.callbacks.onMicStatusChange?.(false, this.isMuted);
-        } else if (event.error === 'network') {
-          hadFatalError = true;
-          this.networkErrorCount++;
-          console.warn('Speech recognition network error from Google cloud. Seamlessly engaging self-hosted Whisper Audio Engine...');
-          this.useWhisperBackend = true;
-          this.callbacks.onError?.('');
-          try {
-            recog.abort();
-          } catch {
-            // ignore abort
-          }
-          this.recognition = null;
-          this.startMediaRecorderCapture().catch(() => {});
-          return;
-        } else if (event.error !== 'no-speech' && event.error !== 'aborted') {
-          console.warn('Speech recognition notice:', event.error);
-        }
-      };
-
-      recog.onend = () => {
-        this.recognition = null;
-
-        if (this.isSpeaking || this.isCommitting) {
-          this.callbacks.onMicStatusChange?.(false, this.isMuted);
-          return;
-        }
-
-        // If stopped due to fatal error (network or not-allowed), do NOT auto-commit!
-        if (hadFatalError) {
-          if (this.networkErrorCount <= 1 && this.isContinuousCall && !this.isMuted) {
-            if (this.restartTimeout) clearTimeout(this.restartTimeout);
-            this.restartTimeout = setTimeout(() => {
-              if (this.isRecording && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
-                this.startAudioCapture().catch(() => {});
-              }
-            }, 2000);
-          } else {
-            this.isRecording = false;
-            this.callbacks.onMicStatusChange?.(false, this.isMuted);
-          }
-          return;
-        }
-
-        // Reset network error count on successful session
-        this.networkErrorCount = 0;
-
-        // If user finished an utterance, commit it
-        const trimmed = (this.latestUtterance || '').trim();
-        const words = trimmed.split(/\s+/).filter(Boolean);
-        if (words.length >= 2 && trimmed.length >= 5) {
-          if (this.silenceTimer) clearTimeout(this.silenceTimer);
-          if (this.hardCommitTimer) clearTimeout(this.hardCommitTimer);
-          this.commitTurn(trimmed);
-          return;
-        }
-
-        // Keep microphone listening if call is active and unmuted
-        if (this.isRecording && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
-          if (this.restartTimeout) clearTimeout(this.restartTimeout);
-          this.restartTimeout = setTimeout(() => {
-            if (this.isRecording && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
-              this.startAudioCapture().catch(() => {});
-            }
-          }, 350);
-        } else {
-          this.callbacks.onMicStatusChange?.(false, this.isMuted);
-        }
-      };
-
-      recog.start();
-      this.recognition = recog;
-    } catch (err: unknown) {
-      console.warn('Speech recognition initialization error:', err);
-      this.isRecording = false;
-      this.callbacks.onMicStatusChange?.(false, this.isMuted);
-      this.callbacks.onError?.('Microphone initialization failed. Please click Unmute or Tap to Speak.');
     }
   }
 
+  /**
+   * Native audio capture via MediaRecorder with hardware echo cancellation and noise suppression.
+   */
   async startMediaRecorderCapture(): Promise<void> {
     if (this.isMuted || this.isSpeaking || this.isCommitting || this.isTranscribing) return;
+    if (this.mediaRecorder && this.mediaRecorder.state === 'recording') return;
 
     try {
-      this.callbacks.onError?.('');
-
       if (!this.micMediaStream || !this.micMediaStream.active) {
         this.micMediaStream = await navigator.mediaDevices.getUserMedia({
           audio: {
@@ -709,8 +450,8 @@ export class VoiceClient {
         const audioBlob = new Blob(this.recordedChunks, { type: mimeType });
         this.recordedChunks = [];
 
-        // If audio blob is under 800 bytes, ignore as tap/silence
-        if (audioBlob.size < 800) {
+        // If audio blob is under 1200 bytes, ignore as tap/ambient pop
+        if (audioBlob.size < 1200) {
           if (this.isContinuousCall && !this.isMuted && !this.isSpeaking && !this.isCommitting) {
             setTimeout(() => this.startMediaRecorderCapture(), 200);
           }
@@ -729,10 +470,15 @@ export class VoiceClient {
       console.warn('MediaRecorder mic capture notice:', err);
       this.isRecording = false;
       this.callbacks.onMicStatusChange?.(false, this.isMuted);
-      this.callbacks.onError?.('Microphone access denied or unavailable in browser.');
+      this.callbacks.onError?.('Microphone access denied or unavailable. Please enable microphone permissions in your browser.');
     }
   }
 
+  /**
+   * FAANG-grade adaptive Voice Activity Detection:
+   * Uses time-domain RMS energy calibrated against ambient room acoustics.
+   * Allows 2.2s natural conversational pause before committing, with a 500ms speech gate.
+   */
   private setupVAD(): void {
     if (!this.micMediaStream) return;
     try {
@@ -744,15 +490,28 @@ export class VoiceClient {
         this.audioContext.resume().catch(() => {});
       }
 
-      const source = this.audioContext.createMediaStreamSource(this.micMediaStream);
-      const analyser = this.audioContext.createAnalyser();
-      analyser.fftSize = 256;
-      source.connect(analyser);
+      // Safely disconnect previous nodes
+      if (this.vadSource) {
+        try { this.vadSource.disconnect(); } catch {}
+        this.vadSource = null;
+      }
+      if (this.vadAnalyser) {
+        try { this.vadAnalyser.disconnect(); } catch {}
+        this.vadAnalyser = null;
+      }
 
-      const buffer = new Uint8Array(analyser.frequencyBinCount);
+      this.vadSource = this.audioContext.createMediaStreamSource(this.micMediaStream);
+      this.vadAnalyser = this.audioContext.createAnalyser();
+      this.vadAnalyser.fftSize = 512;
+      this.vadSource.connect(this.vadAnalyser);
+
+      const buffer = new Uint8Array(this.vadAnalyser.frequencyBinCount);
       let speechActive = false;
+      let totalSpeechMs = 0;
       let lastSpeechTime = Date.now();
       const startTime = Date.now();
+      let ambientNoiseEnergy = 0.012;
+      let calibrationFrames = 0;
 
       if (this.vadInterval) clearInterval(this.vadInterval);
 
@@ -761,20 +520,36 @@ export class VoiceClient {
           return;
         }
 
-        analyser.getByteFrequencyData(buffer);
-        let sum = 0;
-        for (let i = 0; i < buffer.length; i++) sum += buffer[i];
-        const avg = sum / buffer.length;
+        if (!this.vadAnalyser) return;
+        this.vadAnalyser.getByteTimeDomainData(buffer);
 
-        // VAD threshold: voice activity detected
-        if (avg > 15) {
-          if (!speechActive) {
-            speechActive = true;
-            this.callbacks.onTranscriptPartial?.('Listening to you...');
-          }
+        // Calculate time-domain normalized RMS energy
+        let sumSq = 0;
+        for (let i = 0; i < buffer.length; i++) {
+          const norm = (buffer[i] - 128) / 128;
+          sumSq += norm * norm;
+        }
+        const rms = Math.sqrt(sumSq / buffer.length);
+
+        // Calibrate ambient baseline during first 300ms (3 frames)
+        if (calibrationFrames < 3) {
+          calibrationFrames++;
+          ambientNoiseEnergy = Math.max(0.008, (ambientNoiseEnergy + rms) / 2);
+          return;
+        }
+
+        // Dynamic voice threshold
+        const voiceThreshold = Math.max(0.022, ambientNoiseEnergy * 2.2);
+
+        if (rms > voiceThreshold) {
           lastSpeechTime = Date.now();
-        } else if (speechActive && Date.now() - lastSpeechTime > 1200) {
-          // 1.2s silence after speech -> commit turn!
+          totalSpeechMs += 100;
+          if (!speechActive && totalSpeechMs >= 300) {
+            speechActive = true;
+            this.callbacks.onTranscriptPartial?.('Listening to your response...');
+          }
+        } else if (speechActive && totalSpeechMs >= 500 && Date.now() - lastSpeechTime > 2200) {
+          // Trainee paused for 2.2 seconds after speaking -> commit turn!
           speechActive = false;
           if (this.vadInterval) {
             clearInterval(this.vadInterval);
@@ -783,8 +558,12 @@ export class VoiceClient {
           if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
             this.mediaRecorder.stop();
           }
-        } else if (!speechActive && Date.now() - startTime > 30000) {
-          // 30s chunk max
+        } else if (Date.now() - startTime > 25000) {
+          // 25-second maximum utterance guard
+          if (this.vadInterval) {
+            clearInterval(this.vadInterval);
+            this.vadInterval = null;
+          }
           if (this.mediaRecorder && this.mediaRecorder.state === 'recording') {
             this.mediaRecorder.stop();
           }
@@ -795,14 +574,17 @@ export class VoiceClient {
     }
   }
 
+  /**
+   * Transcribe recorded audio with self-hosted faster-whisper and send to dialogue engine.
+   */
   private async transcribeAndCommit(audioBlob: Blob): Promise<void> {
     if (this.isCommitting || this.isSpeaking) return;
     this.isTranscribing = true;
-    this.callbacks.onTranscriptPartial?.('Transcribing with Whisper...');
+    this.callbacks.onTranscriptPartial?.('Processing your response...');
 
     try {
       const result = await api.transcribeAudio(audioBlob);
-      const transcribedText = (result.text || '').trim();
+      const transcribedText = this.dedupConsecutiveWords((result.text || '').trim());
 
       if (transcribedText && transcribedText.length > 1) {
         this.callbacks.onTranscriptFinal?.(transcribedText);
@@ -842,6 +624,15 @@ export class VoiceClient {
       this.vadInterval = null;
     }
 
+    if (this.vadSource) {
+      try { this.vadSource.disconnect(); } catch {}
+      this.vadSource = null;
+    }
+    if (this.vadAnalyser) {
+      try { this.vadAnalyser.disconnect(); } catch {}
+      this.vadAnalyser = null;
+    }
+
     this.isRecording = false;
     this.callbacks.onMicStatusChange?.(false, this.isMuted);
 
@@ -852,19 +643,6 @@ export class VoiceClient {
         console.debug('MediaRecorder stop notice:', recErr);
       }
       this.mediaRecorder = null;
-    }
-
-    if (this.recognition) {
-      try {
-        this.recognition.onend = null;
-        this.recognition.onerror = null;
-        this.recognition.onresult = null;
-        this.recognition.onspeechend = null;
-        this.recognition.abort();
-      } catch (abortErr) {
-        console.debug('Recognition stop abort notice:', abortErr);
-      }
-      this.recognition = null;
     }
   }
 

@@ -151,12 +151,12 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
         setVoiceLatencyMs(latency);
       },
       onError: (err) => {
-        console.warn('Voice notice:', err);
-        const lower = (err || '').toLowerCase();
-        if (lower.includes('mic') || lower.includes('permission') || lower.includes('not-allowed')) {
-          setVoiceError(err);
-        } else {
-          setVoiceError(null);
+        if (err && err.trim()) {
+          console.warn('Voice notice:', err);
+          const lower = err.toLowerCase();
+          if (lower.includes('mic') || lower.includes('permission') || lower.includes('not-allowed')) {
+            setVoiceError(err);
+          }
         }
       },
       onSessionEnded: () => {
@@ -909,13 +909,16 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
                 onClick={() => {
                   if (isMicMuted) {
                     toggleMicMute();
-                  } else if (!isRecordingMic && !isAssistantSpeaking) {
+                  } else if (isRecordingMic && !isAssistantSpeaking) {
+                    // Tap to finish and send immediate voice response without waiting for pause
+                    voiceClient?.forceCommit();
+                  } else if (!isAssistantSpeaking) {
                     voiceClient?.startAudioCapture(true);
                   } else {
                     toggleMicMute();
                   }
                 }}
-                title={isMicMuted ? 'Click to Unmute' : isRecordingMic ? 'Listening to you (Click to Mute)' : 'Tap to Speak'}
+                title={isMicMuted ? 'Click to Unmute' : isRecordingMic ? 'Listening to you (Click to Send Response)' : 'Tap to Speak'}
                 className={`relative flex h-11 w-11 sm:h-12 sm:w-12 flex-shrink-0 items-center justify-center rounded-2xl transition-all duration-300 shadow-md ${
                   isStreaming
                     ? 'bg-amber-500 text-white shadow-amber-500/40 animate-pulse'

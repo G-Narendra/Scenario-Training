@@ -124,7 +124,8 @@ export const ThreeHSolutionsLogo: React.FC<ThreeHSolutionsLogoProps> = ({
         target="_blank"
         rel="noopener noreferrer"
         title="Visit 3H Solutions official corporate website (www.3hsolutionsgroup.com)"
-        className="inline-block transition hover:opacity-90 cursor-pointer"
+        aria-label="3H Solutions Group corporate website"
+        className="inline-flex items-center justify-center min-w-[44px] min-h-[44px] transition hover:opacity-90 cursor-pointer"
       >
         {logoContent}
       </a>

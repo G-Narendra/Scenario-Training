@@ -181,16 +181,31 @@ frontend_dist = os.path.join(
 )
 if os.path.exists(frontend_dist):
     from fastapi.responses import FileResponse
+
+    class CachedStaticFiles(StaticFiles):
+        """Serve immutable hashed build assets with 1-year browser caching headers."""
+        async def get_response(self, path: str, scope):
+            response = await super().get_response(path, scope)
+            if response.status_code == 200:
+                response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+            return response
+
     assets_dir = os.path.join(frontend_dist, "assets")
     if os.path.exists(assets_dir):
-        app.mount("/assets", StaticFiles(directory=assets_dir), name="assets")
+        app.mount("/assets", CachedStaticFiles(directory=assets_dir), name="assets")
+
     index_file = os.path.join(frontend_dist, "index.html")
+    no_cache_headers = {
+        "Cache-Control": "no-cache, no-store, must-revalidate, max-age=0",
+        "Pragma": "no-cache",
+        "Expires": "0",
+    }
 
     @app.get("/app", include_in_schema=False)
     @app.get("/app/", include_in_schema=False)
     @app.get("/app/{full_path:path}", include_in_schema=False)
     async def serve_app_subpath(full_path: str = ""):
-        return FileResponse(index_file, media_type="text/html")
+        return FileResponse(index_file, media_type="text/html", headers=no_cache_headers)
 
     app.mount("/app", StaticFiles(directory=frontend_dist, html=True), name="app_spa")
 

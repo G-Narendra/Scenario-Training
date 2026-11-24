@@ -369,6 +369,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Profile:</span>
             <select
               id="scenario-track-filter"
+              aria-label="Filter scenarios by leadership profile"
               value={trackFilter}
               onChange={(e) => setTrackFilter(e.target.value)}
               className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-2"
@@ -387,6 +388,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
               <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Pillar:</span>
               <select
                 id="capability-pillar-filter"
+                aria-label="Filter scenarios by capability pillar"
                 value={selectedPillar}
                 onChange={(e) => setSelectedPillar(e.target.value)}
                 className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-2 max-w-[180px] sm:max-w-none truncate"
@@ -405,6 +407,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
             <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Difficulty:</span>
             <select
               id="catalog-difficulty-filter"
+              aria-label="Filter scenarios by difficulty level"
               value={difficultyFilter}
               onChange={(e) => setDifficultyFilter(e.target.value)}
               className="bg-transparent text-xs font-bold text-slate-900 dark:text-white focus:outline-none cursor-pointer pr-2"
@@ -497,7 +500,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
 
                   {/* Mapped Practice Scenario Preview */}
                   <div className="mt-3.5 rounded-xl border border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C] p-3 text-xs">
-                    <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                    <div className="text-[10px] font-bold text-slate-600 dark:text-slate-400 uppercase tracking-wider">
                       Practice Scenario
                     </div>
                     <div className="font-bold text-slate-900 dark:text-white mt-1 text-sm line-clamp-1">
@@ -508,7 +511,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
 
                 {/* Direct Action Button */}
                 <div className="mt-4 border-t border-slate-100 dark:border-[#1E3E62] pt-3 flex items-center justify-between">
-                  <span className="text-[11px] text-slate-400 font-medium">Deliberate Practice</span>
+                  <span className="text-[11px] text-slate-600 dark:text-slate-400 font-medium">Deliberate Practice</span>
                   <button
                     id={`practice-btn-${cap.key || cap.number}`}
                     onClick={() => {
