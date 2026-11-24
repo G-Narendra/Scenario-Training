@@ -240,6 +240,31 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
     }
   };
 
+  const [isExportingArchive, setIsExportingArchive] = useState(false);
+
+  const handleDownloadArchiveZip = async () => {
+    if (!cohort?.id) return;
+    setIsExportingArchive(true);
+    try {
+      const blob = await api.exportCohortArchiveZip(cohort.id);
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      const cohortClean = (cohort.name || '3H_Cohort').replace(/[^a-zA-Z0-9_-]/g, '_');
+      a.download = `${cohortClean}_100_reports_archive.zip`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      showFeedback('Complete 100-report cohort archive downloaded successfully to desktop (ZIP)');
+    } catch (err) {
+      console.error('Archive download failed', err);
+      showFeedback('Failed to download complete archive. Please try again.', 'error');
+    } finally {
+      setIsExportingArchive(false);
+    }
+  };
+
   const handleAddMember = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!cohort || !newMemberName.trim()) return;
@@ -697,6 +722,84 @@ conclusion_signals:
       {/* ======================================================== */}
       {!loading && activeTab === 'roster' && (
         <div className="mt-8 space-y-8">
+          {/* 100-Report Archival Safeguard Alert Banner */}
+          <div className={`rounded-2xl border-2 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+            completedSessions.length >= 100
+              ? 'border-amber-400 bg-amber-50/90 dark:border-amber-500/40 dark:bg-amber-950/30'
+              : 'border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45]'
+          }`}>
+            <div className="flex items-start sm:items-center space-x-3.5">
+              <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-xl bg-[#0B192C] text-white dark:bg-[#1E3E62] shadow-sm">
+                <Download className="h-5 w-5 text-[#B91C1C]" />
+              </div>
+              <div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-xs font-black uppercase tracking-wider text-slate-900 dark:text-white">
+                    Workshop Storage & Archival Safeguard
+                  </span>
+                  <span id="storage-counter-display" className="rounded-full bg-slate-200 dark:bg-[#0B192C] px-2.5 py-0.5 text-[11px] font-bold text-slate-800 dark:text-slate-200">
+                    {completedSessions.length} / 100 Reports Stored
+                  </span>
+                </div>
+                <p className="mt-1 text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                  {completedSessions.length >= 100
+                    ? 'Your cohort has reached 100 reports. Download the complete master archive (all 1-page reports + CSV) directly to your desktop for permanent offline storage.'
+                    : 'Reports are safely held in database. You can download the complete ZIP archive (standalone 1-page reports + master facilitator CSV) directly to your desktop at any time.'}
+                </p>
+              </div>
+            </div>
+
+            <button
+              id="export-archive-banner-btn"
+              type="button"
+              onClick={handleDownloadArchiveZip}
+              disabled={isExportingArchive}
+              className="flex-shrink-0 flex items-center space-x-2 rounded-xl bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] border border-transparent dark:border-[#2D5B8D] px-4 py-2.5 text-xs font-bold transition shadow-sm disabled:opacity-50"
+            >
+              <Download className="h-4 w-4 text-[#B91C1C]" />
+              <span>{isExportingArchive ? 'Generating Archive...' : 'Download All Reports to Desktop (ZIP)'}</span>
+            </button>
+          </div>
+
+          {/* Executive 3-Report Architecture Matrix (Directly clarifying Uzair's 3-Report Methodology) */}
+          <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-5 shadow-sm">
+            <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-[#B91C1C] mb-3">
+              <BookOpen className="h-4 w-4" />
+              <span>3H Solutions Executive 3-Report Architecture</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C]">
+                <div className="font-bold text-slate-900 dark:text-white flex items-center space-x-1.5">
+                  <span className="text-[#B91C1C] font-mono">01</span>
+                  <span>Participant 1-Page Snapshot</span>
+                </div>
+                <p className="mt-1.5 text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Immediate debrief provided to the trainee after practice. Features Diagnostic Score (0–100), 1 Key Strength, and 1 Priority Adjustment drill.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C]">
+                <div className="font-bold text-slate-900 dark:text-white flex items-center space-x-1.5">
+                  <span className="text-[#B91C1C] font-mono">02</span>
+                  <span>Facilitator Individual Dossier</span>
+                </div>
+                <p className="mt-1.5 text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Detailed 1-on-1 coaching report per participant with solutions for weak areas, Run 1 vs Run 2 deltas, verbatim quotes, and radar spider graph.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl border border-slate-200 dark:border-[#1E3E62] bg-slate-50 dark:bg-[#0B192C]">
+                <div className="font-bold text-slate-900 dark:text-white flex items-center space-x-1.5">
+                  <span className="text-[#B91C1C] font-mono">03</span>
+                  <span>Cohort Group Report (Day 2 Guide)</span>
+                </div>
+                <p className="mt-1.5 text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Cohort-wide aggregation averaging scores across all 6 pillars, surfacing recurring failure patterns, and generating the Day 2 facilitation agenda.
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* Quick Enroll Trainee Card */}
           <div className="rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-white dark:bg-[#132B45] p-6 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -885,6 +988,17 @@ conclusion_signals:
                 >
                   <Download className="h-3.5 w-3.5 text-slate-500" />
                   <span>Export Facilitator CSV</span>
+                </button>
+                <button
+                  id="export-archive-zip-btn"
+                  type="button"
+                  onClick={handleDownloadArchiveZip}
+                  disabled={isExportingArchive}
+                  className="flex items-center space-x-1.5 rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-slate-50 dark:bg-[#0B192C] px-3 py-1.5 text-xs font-bold text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-[#1E3E62] transition disabled:opacity-50"
+                  title="Download Complete 100-Report Cohort Archive (ZIP) directly to desktop"
+                >
+                  <Download className="h-3.5 w-3.5 text-[#B91C1C]" />
+                  <span>{isExportingArchive ? 'Zipping...' : 'Download ZIP (All Reports)'}</span>
                 </button>
               </div>
             </div>

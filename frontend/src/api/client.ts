@@ -262,6 +262,18 @@ export const api = {
     return response.blob();
   },
 
+  async exportCohortArchiveZip(cohortId: string): Promise<Blob> {
+    const response = await fetch(`${API_BASE}/admin/cohorts/${cohortId}/export-archive.zip`, {
+      headers: {
+        ...getAuthHeader(),
+      },
+    });
+    if (!response.ok) {
+      throw new ApiError('Failed to export complete cohort archive', response.status);
+    }
+    return response.blob();
+  },
+
   // Admin Cohorts
   async listAdminCohorts(): Promise<AdminCohort[]> {
     return request<AdminCohort[]>('/admin/cohorts');

@@ -259,7 +259,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
               Welcome to 3H Solutions Executive Scenario Training. Here you engage in realistic, AI-powered workplace leadership situations—practicing high-stakes conversations, handling objections, and refining executive presence via voice or text in a confidential environment.
             </p>
             <div className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold pt-1">
-              Curriculum includes <strong>60 executive scenarios</strong> mapped to the 60 competencies of Uzair's 3H Leadership Framework.
+              Curriculum includes <strong>60 executive scenarios</strong> across <strong>Executive Leadership (30)</strong> and <strong>Enterprise Sales Mastery (30)</strong> mapped to Uzair's 3H Framework.
             </div>
           </div>
 
@@ -267,7 +267,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
           <div className="flex flex-wrap lg:flex-col items-start lg:items-end gap-2 shrink-0">
             <span className="rounded-xl border border-slate-300 dark:border-[#2D5B8D] bg-white dark:bg-[#132B45] px-3 py-1.5 text-xs font-bold text-slate-800 dark:text-slate-200 shadow-sm flex items-center space-x-1.5">
               <span>🎯</span>
-              <span>60 Leadership Scenarios</span>
+              <span>60 Scenarios (30 Leadership + 30 Sales)</span>
             </span>
             <span className="rounded-xl bg-[#0B192C] text-white dark:bg-[#1E3E62] px-3 py-1.5 text-xs font-bold shadow-sm flex items-center space-x-1.5">
               <span>🔒</span>
@@ -277,6 +277,58 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
               <span>⚡</span>
               <span>3 Levels: Normal • Challenging • Crisis</span>
             </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Primary Curriculum Track Selector Tabs (Executive Leadership vs Enterprise Sales vs Master Library) */}
+      <div className="mt-5 p-2 rounded-2xl border-2 border-slate-300 dark:border-[#1E3E62] bg-slate-100/80 dark:bg-[#0B192C]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="flex items-center space-x-2 text-xs font-black uppercase tracking-wider text-slate-600 dark:text-slate-300 px-2">
+            <span>Curriculum Track:</span>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              id="track-tab-all"
+              type="button"
+              onClick={() => setTrackFilter('all')}
+              className={`flex items-center space-x-2 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold transition ${
+                trackFilter === 'all'
+                  ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-md'
+                  : 'text-slate-700 hover:bg-white dark:text-slate-300 dark:hover:bg-[#132B45]'
+              }`}
+            >
+              <Sparkles className="h-4 w-4 text-[#B91C1C]" />
+              <span>Master Library (All 60)</span>
+            </button>
+
+            <button
+              id="track-tab-leadership"
+              type="button"
+              onClick={() => setTrackFilter('leadership')}
+              className={`flex items-center space-x-2 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold transition ${
+                trackFilter === 'leadership'
+                  ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-md'
+                  : 'text-slate-700 hover:bg-white dark:text-slate-300 dark:hover:bg-[#132B45]'
+              }`}
+            >
+              <span>🎯</span>
+              <span>Executive Leadership (30)</span>
+            </button>
+
+            <button
+              id="track-tab-sales"
+              type="button"
+              onClick={() => setTrackFilter('sales')}
+              className={`flex items-center space-x-2 rounded-xl px-3.5 py-2 text-xs sm:text-sm font-bold transition ${
+                trackFilter === 'sales'
+                  ? 'bg-[#0B192C] text-white dark:bg-[#1E3E62] dark:border dark:border-[#2D5B8D] shadow-md'
+                  : 'text-slate-700 hover:bg-white dark:text-slate-300 dark:hover:bg-[#132B45]'
+              }`}
+            >
+              <span>💼</span>
+              <span>Enterprise Sales Mastery (30)</span>
+            </button>
           </div>
         </div>
       </div>

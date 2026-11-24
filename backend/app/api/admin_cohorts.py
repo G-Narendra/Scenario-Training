@@ -260,6 +260,37 @@ async def export_cohort_csv(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
 
+@router.get("/{id}/export-archive.zip")
+async def export_cohort_archive_zip(
+    id: str,
+    current_admin: User = Depends(require_group_admin),
+    db: AsyncSession = Depends(get_db),
+):
+    """Export complete 100-report cohort archive with all individual participant reports and master CSV as a ZIP file."""
+    is_global_admin = bool(
+        current_admin.role == "super_admin"
+        or (current_admin.display_name and "uzair" in current_admin.display_name.lower())
+    )
+    if not is_global_admin and current_admin.cohort_id and current_admin.cohort_id != id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Forbidden: You cannot export data for another cohort",
+        )
+
+    try:
+        zip_data = await ProgressService.export_cohort_archive_zip(db=db, cohort_id=id)
+        stmt = select(Cohort).where(Cohort.id == id)
+        cohort = (await db.execute(stmt)).scalar_one_or_none()
+        cohort_clean = (cohort.name if cohort else "3H_Cohort").replace(" ", "_")
+        return Response(
+            content=zip_data,
+            media_type="application/zip",
+            headers={"Content-Disposition": f'attachment; filename="{cohort_clean}_100_reports_archive.zip"'},
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+
 @router.get("/{id}/members", response_model=List[CohortMemberResponse])
 async def list_cohort_members(
     id: str,

@@ -272,3 +272,20 @@ async def test_cohort_progress_and_multi_tenant_isolation():
         assert "Scenario Title" in csv_text
         assert "Overall Score" in csv_text
         assert "Key Strengths (Goods)" in csv_text
+
+        # 7. Admin A can export Cohort A ZIP Archive -> 200 OK
+        res = await client.get(
+            f"/api/admin/cohorts/{cohort_a.id}/export-archive.zip",
+            headers={"Authorization": f"Bearer {token_admin_a}"},
+        )
+        assert res.status_code == 200
+        assert res.headers["content-type"].startswith("application/zip")
+        assert len(res.content) > 0
+
+        # Verify ZIP contains master CSV and archive summary JSON
+        import zipfile
+        import io
+        zf = zipfile.ZipFile(io.BytesIO(res.content))
+        names = zf.namelist()
+        assert any(n.endswith("_facilitator_scores.csv") for n in names)
+        assert "archive_summary.json" in names

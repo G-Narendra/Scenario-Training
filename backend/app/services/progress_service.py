@@ -496,3 +496,312 @@ class ProgressService:
             )
 
         return output.getvalue()
+
+    @classmethod
+    def _generate_standalone_report_html(
+        cls,
+        participant_name: str,
+        scenario_title: str,
+        track_name: str,
+        mode_str: str,
+        score: Any,
+        evaluation: Any,
+        session: Any,
+    ) -> str:
+        """Generate high-density, printable 1-page HTML standalone debrief report."""
+        import html
+
+        p_name = html.escape(participant_name)
+        s_title = html.escape(scenario_title)
+        t_name = html.escape(track_name)
+        m_str = html.escape(mode_str)
+        num_score = int(score) if score is not None and score != "" else 0
+
+        if num_score >= 85:
+            tier_label = "Mastered (85-100%)"
+            tier_color = "#047857"
+            tier_bg = "#ecfdf5"
+        elif num_score >= 70:
+            tier_label = "Proficient (70-84%)"
+            tier_color = "#1d4ed8"
+            tier_bg = "#eff6ff"
+        elif num_score >= 50:
+            tier_label = "Developing (50-69%)"
+            tier_color = "#b45309"
+            tier_bg = "#fffbeb"
+        else:
+            tier_label = "Needs Coaching (<50%)"
+            tier_color = "#b91c1c"
+            tier_bg = "#fef2f2"
+
+        summary_text = html.escape(evaluation.overall_summary) if evaluation and evaluation.overall_summary else (
+            "This practice session concluded early with preliminary dialogue. Practice engaging with deeper discovery questions to uncover your counterpart's underlying priorities."
+            if num_score == 0
+            else "Executive practice session concluded. Review prioritized coaching adjustments and practice drills below."
+        )
+
+        strengths_html = ""
+        if evaluation and evaluation.strengths:
+            for item in evaluation.strengths:
+                q = html.escape(item.get("quote", "") or "")
+                w = html.escape(item.get("why_it_worked", "") or "")
+                quote_part = f'<strong style="color: #065f46; font-style: italic;">"{q}": </strong>' if q and q != "[No dialogue submitted]" else ""
+                strengths_html += f'<li style="margin-bottom: 6px; line-height: 1.5;">{quote_part}<span>{w}</span></li>'
+        else:
+            strengths_html = '<li style="margin-bottom: 6px; line-height: 1.5;">Maintained conversational composure and active listening.</li>'
+
+        weaknesses_html = ""
+        if evaluation and evaluation.weaknesses:
+            for item in evaluation.weaknesses:
+                q = html.escape(item.get("quote", "") or "")
+                w = html.escape(item.get("why_it_missed", "") or "")
+                quote_part = f'<strong style="color: #991b1b; font-style: italic;">"{q}": </strong>' if q and q != "[No dialogue submitted]" else ""
+                weaknesses_html += f'<li style="margin-bottom: 6px; line-height: 1.5;">{quote_part}<span>{w}</span></li>'
+        else:
+            weaknesses_html = '<li style="margin-bottom: 6px; line-height: 1.5;">Clarify counterpart constraints before proposing commitments.</li>'
+
+        improvements_html = ""
+        if evaluation and evaluation.improvement_steps:
+            for idx, item in enumerate(evaluation.improvement_steps):
+                step = html.escape(item.get("step", "") or "")
+                drill = html.escape(item.get("practice_drill", "") or item.get("why", "") or "")
+                improvements_html += f'<li style="margin-bottom: 6px; line-height: 1.5;"><strong>{step}: </strong><span>{drill}</span></li>'
+        else:
+            improvements_html = '<li style="margin-bottom: 6px; line-height: 1.5;">Execute a 14-day discovery drill focusing on objection reframing.</li>'
+
+        started_dt = _ensure_utc(session.started_at) if session and session.started_at else None
+        date_str = started_dt.strftime("%Y-%m-%d %H:%M UTC") if started_dt else "Recent Session"
+
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>3H Solutions - Executive Performance Report - {p_name}</title>
+  <style>
+    @page {{ size: A4 portrait; margin: 10mm 12mm; }}
+    body {{
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      color: #0f172a;
+      background: #ffffff;
+      margin: 0;
+      padding: 24px;
+      line-height: 1.4;
+      font-size: 13px;
+    }}
+    .header {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 2px solid #b91c1c;
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }}
+    .brand {{
+      font-size: 18px;
+      font-weight: 900;
+      color: #0b192c;
+      letter-spacing: -0.5px;
+    }}
+    .brand span {{ color: #b91c1c; }}
+    .badge {{
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      border-radius: 6px;
+      background: #f1f5f9;
+      color: #334155;
+    }}
+    .meta-grid {{
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px;
+      margin-bottom: 16px;
+    }}
+    .meta-item {{ font-size: 11px; }}
+    .meta-label {{ color: #64748b; font-weight: 700; text-transform: uppercase; font-size: 9px; margin-bottom: 2px; }}
+    .meta-value {{ font-weight: 700; color: #0f172a; font-size: 12px; }}
+    .score-card {{
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      background: #fdfdfd;
+    }}
+    .score-gauge {{
+      text-align: right;
+    }}
+    .score-number {{
+      font-size: 32px;
+      font-weight: 900;
+      color: {tier_color};
+    }}
+    .section {{
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 12px 14px;
+      margin-bottom: 12px;
+    }}
+    .section-title {{
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+    }}
+    .section-strengths {{ border-color: #a7f3d0; background: #f0fdf4; }}
+    .section-strengths .section-title {{ color: #047857; }}
+    .section-weaknesses {{ border-color: #fecaca; background: #fff1f2; }}
+    .section-weaknesses .section-title {{ color: #b91c1c; }}
+    .section-improvements {{ border-color: #cbd5e1; background: #f8fafc; }}
+    .section-improvements .section-title {{ color: #0b192c; }}
+    ul, ol {{ margin: 0; padding-left: 18px; }}
+    .footer {{
+      margin-top: 18px;
+      border-top: 1px solid #e2e8f0;
+      padding-top: 10px;
+      font-size: 10px;
+      color: #64748b;
+      display: flex;
+      justify-content: space-between;
+    }}
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="brand">3H <span>SOLUTIONS GROUP</span></div>
+    <div class="badge">Executive Performance Debrief · 1-Page Summary</div>
+  </div>
+
+  <div class="meta-grid">
+    <div class="meta-item">
+      <div class="meta-label">Participant</div>
+      <div class="meta-value">{p_name}</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Scenario Title</div>
+      <div class="meta-value">{s_title}</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Curriculum Track</div>
+      <div class="meta-value">{t_name}</div>
+    </div>
+    <div class="meta-item">
+      <div class="meta-label">Practice Mode & Date</div>
+      <div class="meta-value">{m_str} · {date_str}</div>
+    </div>
+  </div>
+
+  <div class="score-card">
+    <div style="max-width: 70%;">
+      <div style="font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;">Executive Diagnostic Summary</div>
+      <div style="font-size: 12px; margin-top: 4px; color: #334155; line-height: 1.4;">{summary_text}</div>
+    </div>
+    <div class="score-gauge">
+      <div class="score-number">{num_score}<span style="font-size: 14px; color: #64748b;">/100</span></div>
+      <div style="font-size: 10px; font-weight: 700; color: {tier_color}; background: {tier_bg}; padding: 2px 8px; border-radius: 9999px; display: inline-block;">{tier_label}</div>
+    </div>
+  </div>
+
+  <div class="section section-strengths">
+    <div class="section-title">Key Strengths Demonstrated (Goods)</div>
+    <ul>{strengths_html}</ul>
+  </div>
+
+  <div class="section section-weaknesses">
+    <div class="section-title">Priority Coaching Adjustments (Bads & Deflections)</div>
+    <ul>{weaknesses_html}</ul>
+  </div>
+
+  <div class="section section-improvements">
+    <div class="section-title">Targeted Action Plan & Practice Drills (Improvements)</div>
+    <ol>{improvements_html}</ol>
+  </div>
+
+  <div class="footer">
+    <div>Confidential Executive Coaching Assessment · Uzair Hassan · 3H Solutions Group</div>
+    <div>Dubai, United Arab Emirates · Enterprise Grade Architecture</div>
+  </div>
+</body>
+</html>"""
+
+    @classmethod
+    async def export_cohort_archive_zip(cls, db: AsyncSession, cohort_id: str) -> bytes:
+        """Export all session results, evaluations, and standalone individual reports as a ZIP archive."""
+        import json
+        import re
+        import zipfile
+
+        cohort = await db.get(Cohort, cohort_id)
+        cohort_name = cohort.name if cohort else "3H_Cohort"
+
+        # 1. Master CSV
+        csv_data = await cls.export_cohort_csv(db=db, cohort_id=cohort_id)
+
+        # 2. Fetch users and sessions
+        users_stmt = select(User).where(User.cohort_id == cohort_id)
+        users = (await db.execute(users_stmt)).scalars().all()
+        users_by_id = {u.id: u for u in users}
+
+        sessions_stmt = (
+            select(SimulationSession)
+            .where(SimulationSession.user_id.in_(list(users_by_id.keys())))
+            .options(
+                selectinload(SimulationSession.scenario).selectinload(Scenario.track),
+                selectinload(SimulationSession.evaluation),
+            )
+            .order_by(SimulationSession.started_at.desc())
+        )
+        sessions = (await db.execute(sessions_stmt)).scalars().all()
+
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, mode="w", compression=zipfile.ZIP_DEFLATED) as zf:
+            cohort_clean = re.sub(r"[^a-zA-Z0-9_-]", "_", cohort_name)
+            zf.writestr(f"{cohort_clean}_facilitator_scores.csv", csv_data)
+
+            scores = [s.evaluation.overall_score for s in sessions if s.evaluation and s.evaluation.overall_score is not None]
+            avg_score = round(sum(scores) / len(scores), 1) if scores else 0.0
+
+            summary_info = {
+                "cohort_id": cohort_id,
+                "cohort_name": cohort_name,
+                "exported_at": datetime.now(timezone.utc).isoformat(),
+                "total_enrolled_members": len(users),
+                "total_reports_archived": len(sessions),
+                "average_score": avg_score,
+                "format_version": "1.0.0",
+                "storage_safeguard_threshold": 100,
+            }
+            zf.writestr("archive_summary.json", json.dumps(summary_info, indent=2))
+
+            for idx, s in enumerate(sessions):
+                u = users_by_id.get(s.user_id)
+                d_name = u.display_name if u else "Participant"
+                sc_title = s.scenario.title if s.scenario else "Executive Scenario"
+                score = s.evaluation.overall_score if s.evaluation else 0
+                track_name = s.scenario.track.name if s.scenario and s.scenario.track else "Executive Training"
+                mode_str = "Voice Call" if s.mode == "voice" else "Written Dialogue"
+
+                safe_name = re.sub(r"[^a-zA-Z0-9_-]", "_", d_name)
+                safe_title = re.sub(r"[^a-zA-Z0-9_-]", "_", sc_title)[:30]
+                filename = f"individual_reports/{idx+1:02d}_{safe_name}_{safe_title}_Report.html"
+
+                html_report = cls._generate_standalone_report_html(
+                    participant_name=d_name,
+                    scenario_title=sc_title,
+                    track_name=track_name,
+                    mode_str=mode_str,
+                    score=score,
+                    evaluation=s.evaluation,
+                    session=s,
+                )
+                zf.writestr(filename, html_report)
+
+        return zip_buffer.getvalue()

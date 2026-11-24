@@ -32,7 +32,9 @@ async function verifyAll() {
   const results = {
     landingPage: false,
     landingMetrics: false,
+    threeReportsMetric: false,
     traineeLogin: false,
+    salesTrackToggle: false,
     scenarioNumbering: false,
     searchByNumber: false,
     voiceSwitch: false,
@@ -40,6 +42,7 @@ async function verifyAll() {
     summaryReportBullets: false,
     adminConsole: false,
     csvExportColumns: false,
+    zipArchiveExport: false,
   };
 
   try {
@@ -57,6 +60,10 @@ async function verifyAll() {
     const hasPillars = bodyHtml.includes('6') && (bodyHtml.includes('Leadership Pillars') || bodyHtml.includes('Core Competency Pillars'));
     results.landingMetrics = has60 && hasPillars;
     console.log('Correct landing metrics (60 Scenarios, 6 Pillars):', results.landingMetrics);
+
+    const has3Reports = bodyHtml.includes('3') && bodyHtml.includes('Targeted Reports');
+    results.threeReportsMetric = has3Reports;
+    console.log('3 Targeted Reports metric present:', results.threeReportsMetric);
 
     await page.screenshot({ path: path.join(SCREENSHOT_DIR, '01_landing_page.png'), fullPage: false });
 
@@ -86,6 +93,24 @@ async function verifyAll() {
       await scenariosTabBtn.click();
       await page.waitForTimeout(1200);
     }
+
+    // Verify Prominent Sales Track Toggle
+    console.log('\n--- Testing Prominent Sales Track Toggle ---');
+    const salesTab = page.locator('#track-tab-sales');
+    const leadershipTab = page.locator('#track-tab-leadership');
+    const allTab = page.locator('#track-tab-all');
+    if (await salesTab.isVisible()) {
+      await salesTab.click();
+      await page.waitForTimeout(800);
+      const salesCards = await page.locator('[id^="scenario-card-"], [id^="capability-card-"]').count();
+      console.log('Sales track filter clicked, visible cards:', salesCards);
+      results.salesTrackToggle = salesCards > 0;
+      await allTab.click();
+      await page.waitForTimeout(800);
+    } else {
+      results.salesTrackToggle = false;
+    }
+    console.log('Prominent Sales Track toggle working:', results.salesTrackToggle);
 
     // 3. SCENARIO NUMBERING & SEARCH JUMP
     console.log('\n--- 3. Testing Scenario Numbering & Jump by Number ---');
@@ -237,6 +262,25 @@ async function verifyAll() {
 
     results.csvExportColumns = hasAllCols && omittedUnwanted;
     console.log('CSV contains all required coaching columns and omitted raw IDs:', results.csvExportColumns);
+
+    // Test 100-Report Archival Safeguard ZIP Download
+    console.log('\n--- Testing 100-Report Archival Safeguard ZIP Download ---');
+    const zipExportBtn = adminPage.locator('#export-archive-zip-btn, #export-archive-banner-btn').first();
+    if (await zipExportBtn.isVisible()) {
+      const [zipDownload] = await Promise.all([
+        adminPage.waitForEvent('download', { timeout: 20000 }),
+        zipExportBtn.click(),
+      ]);
+      const zipFilename = zipDownload.suggestedFilename();
+      console.log('Downloaded ZIP Filename:', zipFilename);
+      const zipPath = path.join(SCREENSHOT_DIR, zipFilename);
+      await zipDownload.saveAs(zipPath);
+      results.zipArchiveExport = fs.existsSync(zipPath) && fs.statSync(zipPath).size > 0;
+      console.log('ZIP archive successfully downloaded to disk/desktop:', results.zipArchiveExport, 'Size:', fs.statSync(zipPath).size, 'bytes');
+    } else {
+      console.log('ZIP export button not found');
+      results.zipArchiveExport = false;
+    }
 
     await adminPage.screenshot({ path: path.join(SCREENSHOT_DIR, '06_admin_console_live.png') });
     await adminPage.close();
