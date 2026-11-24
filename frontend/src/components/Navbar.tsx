@@ -36,7 +36,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
         </div>
 
         {/* Navigation Actions */}
-        {user && (
+        {user ? (
           <div className="flex items-center space-x-1.5 sm:space-x-4">
             <nav className="flex items-center space-x-1 rounded-xl border border-slate-300 bg-slate-100 p-1 dark:border-[#1E3E62] dark:bg-[#132B45]">
               {(user.role === 'group_admin' || user.role === 'super_admin') ? (
@@ -138,6 +138,24 @@ export const Navbar: React.FC<NavbarProps> = ({ currentView, onNavigate }) => {
               className="rounded-lg p-2 text-slate-500 transition hover:bg-slate-100 hover:text-rose-600 dark:text-slate-400 dark:hover:bg-slate-800/80 dark:hover:text-rose-400 focus:outline-none focus:ring-2 focus:ring-rose-500/40"
             >
               <LogOut className="h-4 w-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center space-x-2">
+            <button
+              id="theme-toggle-btn-public"
+              onClick={toggleTheme}
+              title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              aria-label="Toggle light/dark theme"
+              className="rounded-lg p-2 text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-amber-300 transition hover:bg-slate-100 dark:hover:bg-slate-800/80"
+            >
+              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            </button>
+            <button
+              onClick={() => onNavigate('home')}
+              className="px-3.5 py-1.5 rounded-lg bg-[#0B192C] hover:bg-[#1E3E62] text-white dark:bg-[#1E3E62] dark:hover:bg-[#2D5B8D] text-xs font-bold shadow-sm transition"
+            >
+              Sign In
             </button>
           </div>
         )}

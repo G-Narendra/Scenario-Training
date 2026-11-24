@@ -253,8 +253,20 @@ const AppContent: React.FC = () => {
     );
   }
 
-  if (!isAuthenticated) {
+  const isPublicView =
+    currentView === 'home' ||
+    currentView === 'status' ||
+    currentView === 'privacy' ||
+    currentView === 'terms' ||
+    currentView === 'offline' ||
+    currentView === '404';
+
+  if (!isAuthenticated && !isPublicView) {
     return <HomePage />;
+  }
+
+  if (!isAuthenticated && currentView === 'home') {
+    return <HomePage onOpenSignIn={() => navigateTo('scenarios')} />;
   }
 
   const handleLaunchSimulation = async (scenarioId: string, mode: 'text' | 'voice') => {
