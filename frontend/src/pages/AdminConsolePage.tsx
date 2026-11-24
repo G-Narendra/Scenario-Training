@@ -231,8 +231,12 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
       a.download = `${cohortClean}_facilitator_scores.csv`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        if (a.parentNode) {
+          a.parentNode.removeChild(a);
+        }
+      }, 1000);
       showFeedback('Scores exported successfully as CSV');
     } catch (err) {
       console.error('CSV export failed', err);
@@ -254,8 +258,12 @@ export const AdminConsolePage: React.FC<AdminConsolePageProps> = ({ onViewEvalua
       a.download = `${cohortClean}_100_reports_archive.zip`;
       document.body.appendChild(a);
       a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      setTimeout(() => {
+        window.URL.revokeObjectURL(url);
+        if (a.parentNode) {
+          a.parentNode.removeChild(a);
+        }
+      }, 1000);
       showFeedback('Complete 100-report cohort archive downloaded successfully to desktop (ZIP)');
     } catch (err) {
       console.error('Archive download failed', err);

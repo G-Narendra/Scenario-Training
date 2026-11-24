@@ -534,7 +534,8 @@ class ProgressService:
             tier_color = "#b91c1c"
             tier_bg = "#fef2f2"
 
-        summary_text = html.escape(evaluation.overall_summary) if evaluation and evaluation.overall_summary else (
+        eval_summary = (getattr(evaluation, "summary", "") or getattr(evaluation, "overall_summary", "")) if evaluation else ""
+        summary_text = html.escape(eval_summary) if eval_summary else (
             "This practice session concluded early with preliminary dialogue. Practice engaging with deeper discovery questions to uncover your counterpart's underlying priorities."
             if num_score == 0
             else "Executive practice session concluded. Review prioritized coaching adjustments and practice drills below."
