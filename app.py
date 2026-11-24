@@ -20,6 +20,17 @@ try:
 except Exception as e:
     logging.warning(f"Seed script execution skipped or encountered an error: {e}")
 
+import threading
+
+def _prewarm_whisper():
+    try:
+        from backend.app.voice.whisper_engine import get_whisper_model
+        get_whisper_model()
+    except Exception as e:
+        logging.warning(f"Whisper pre-warm notice: {e}")
+
+threading.Thread(target=_prewarm_whisper, daemon=True).start()
+
 from fastapi import Request
 from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles

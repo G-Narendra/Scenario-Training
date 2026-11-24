@@ -940,17 +940,18 @@ export class VoiceClient {
                 return;
               }
               if (err.name === 'NotAllowedError') {
-                // Autoplay blocked on HTML5 Audio: attempt Web Audio fallback immediately!
-                this.playViaWebAudio(audioUrl, onPlaybackComplete).catch(() => {
-                  this.pendingSpeech = { text: clean, personaName };
-                  this.isSpeaking = false;
-                  this.callbacks.onAssistantSpeaking?.(false);
-                  this.callbacks.onAutoplayBlocked?.();
-                  if (this.isContinuousCall && !this.isMuted) {
-                    setTimeout(() => this.startAudioCapture().catch(() => {}), 200);
-                  }
-                  resolve();
-                });
+                console.warn('HTML5 Audio autoplay blocked by browser policy. Storing pending speech for direct user tap.');
+                this.pendingSpeech = { text: clean, personaName };
+                this.isSpeaking = false;
+                this.isCommitting = false;
+                this.callbacks.onAssistantSpeaking?.(false);
+                this.callbacks.onAutoplayBlocked?.();
+                if (watchdogTimer) {
+                  clearTimeout(watchdogTimer);
+                  watchdogTimer = null;
+                }
+                resolve();
+                return;
               } else {
                 console.warn('HTML5 Audio playback notice:', err.name);
                 this.playViaWebAudio(audioUrl, onPlaybackComplete);

@@ -66,22 +66,8 @@ def sync():
     )
 
     # 6. Update requirements.txt
-    print("-> Updating requirements.txt...")
-    req_src = os.path.join(root, "requirements.txt")
-    req_dst = os.path.join(target, "requirements.txt")
-    with open(req_src, "r", encoding="utf-8") as f:
-        src_reqs = set(line.strip() for line in f if line.strip() and not line.startswith("#"))
-    with open(req_dst, "r", encoding="utf-8") as f:
-        dst_lines = [line.strip() for line in f if line.strip() and not line.startswith("#")]
-        dst_reqs = set(dst_lines)
-    
-    # Merge needed requirements
-    extra = ["python-multipart>=0.0.9", "edge-tts>=7.0.0"]
-    for req in extra:
-        if not any(req.split(">=")[0].split("==")[0] in d for d in dst_reqs):
-            dst_lines.append(req)
-    with open(req_dst, "w", encoding="utf-8") as f:
-        f.write("\n".join(dst_lines) + "\n")
+    print("-> Syncing requirements.txt...")
+    shutil.copy2(os.path.join(root, "requirements.txt"), os.path.join(target, "requirements.txt"))
 
     # 7. Update app.py
     print("-> Syncing app.py...")

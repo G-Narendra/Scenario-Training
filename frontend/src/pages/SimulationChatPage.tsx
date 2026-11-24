@@ -724,8 +724,9 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       </header>
 
       {/* Autoplay Unlock Action Banner for Voice Mode */}
-      {session.mode === 'voice' && isAutoplayBlocked && (
+      {session.mode === 'voice' && (isAutoplayBlocked || voiceClient?.hasPendingSpeech()) && (
         <div 
+          id="voice-connect-audio-banner"
           onClick={async () => {
             setIsAutoplayBlocked(false);
             await voiceClient.ensureAudioContext().catch(() => {});
@@ -745,10 +746,10 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
             </div>
             <div>
               <p className="text-xs sm:text-sm font-black tracking-wide">
-                {personaName} is on the line and speaking!
+                {personaName} is on the line and ready to speak!
               </p>
               <p className="text-[11px] sm:text-xs text-orange-100 font-medium">
-                Tap anywhere on this banner to connect live call audio and hear opening statement.
+                Tap anywhere on this banner to connect call audio and begin the live dialogue.
               </p>
             </div>
           </div>
