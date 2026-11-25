@@ -281,11 +281,18 @@ const AppContent: React.FC = () => {
         });
         const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
         if (AudioCtx) {
-          const ctx = (window as unknown as { __sharedAudioContext?: AudioContext }).__sharedAudioContext || new AudioCtx();
+          const ctx = (window as unknown as { __sharedAudioContext?: AudioContext }).__sharedAudioContext || new AudioCtx({ sampleRate: 24000 });
           (window as unknown as { __sharedAudioContext?: AudioContext }).__sharedAudioContext = ctx;
           if (ctx.state === 'suspended') {
             ctx.resume().catch(() => {});
           }
+          try {
+            const silentBuf = ctx.createBuffer(1, 1, 24000);
+            const src = ctx.createBufferSource();
+            src.buffer = silentBuf;
+            src.connect(ctx.destination);
+            src.start(0);
+          } catch {}
         }
       } catch (audioErr) {
         console.debug('Audio constructor pre-warm notice:', audioErr);

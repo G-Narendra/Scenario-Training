@@ -62,10 +62,12 @@ async def seed_official_cohort(db):
         cohort.track_access = "both"
         cohort.budget_cap_usd = 1000.0
 
-    # 3. Seed Passcodes: UZAIR-2026 and NARENDRA-2026
+    # 3. Seed Passcodes: UZAIR-2026, NARENDRA-2026, ADMIN-2026, STUDENT-2026
     passcodes_to_seed = {
         "Uzair Executive Training Passcode": "UZAIR-2026",
         "Narendra Developer SuperAdmin Passcode": "NARENDRA-2026",
+        "Official Executive Admin Passcode": "ADMIN-2026",
+        "Official Trainee Cohort Passcode": "STUDENT-2026",
     }
     existing_codes = (
         await db.execute(select(Passcode).where(Passcode.cohort_id == cohort.id))

@@ -1019,8 +1019,9 @@ export class VoiceClient {
           completed = true;
           clearTimeout(bufferSafetyTimer);
           if (this.currentBufferSource === source) {
-            onComplete();
+            this.currentBufferSource = null;
           }
+          onComplete();
         }
       };
 

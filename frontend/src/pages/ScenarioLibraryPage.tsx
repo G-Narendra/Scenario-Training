@@ -229,9 +229,11 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
 
         {/* Search Input */}
         <div className="relative w-full sm:w-72">
+          <label htmlFor="scenario-search-input" className="sr-only">Search scenarios and capabilities</label>
           <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
           <input
             id="scenario-search-input"
+            aria-label="Search scenarios, skills, or enter scenario number"
             type="text"
             placeholder={viewMode === 'capabilities' ? 'Search capabilities or #number...' : 'Search scenarios, skills, or type #47...'}
             value={searchQuery}
@@ -366,7 +368,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
         <div className="flex flex-wrap items-center gap-3">
           {/* Seniority / Leadership Profile Dropdown (Requested by Uzair) */}
           <div className="flex items-center space-x-2 bg-white dark:bg-[#132B45] border-2 border-slate-300 dark:border-[#1E3E62] rounded-xl px-3 py-1.5 shadow-sm">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Profile:</span>
+            <label htmlFor="scenario-track-filter" className="text-xs font-bold text-slate-700 dark:text-slate-300">Profile:</label>
             <select
               id="scenario-track-filter"
               aria-label="Filter scenarios by leadership profile"
@@ -385,7 +387,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
           {/* In Capabilities Mode: Pillar Filter */}
           {viewMode === 'capabilities' && (
             <div className="flex items-center space-x-2 bg-white dark:bg-[#132B45] border-2 border-slate-300 dark:border-[#1E3E62] rounded-xl px-3 py-1.5 shadow-sm">
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Pillar:</span>
+              <label htmlFor="capability-pillar-filter" className="text-xs font-bold text-slate-700 dark:text-slate-300">Pillar:</label>
               <select
                 id="capability-pillar-filter"
                 aria-label="Filter scenarios by capability pillar"
@@ -404,7 +406,7 @@ export const ScenarioLibraryPage: React.FC<ScenarioLibraryPageProps> = ({
 
           {/* Difficulty Level Dropdown (Available in both views per Uzair's request) */}
           <div className="flex items-center space-x-2 bg-white dark:bg-[#132B45] border-2 border-slate-300 dark:border-[#1E3E62] rounded-xl px-3 py-1.5 shadow-sm">
-            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">Difficulty:</span>
+            <label htmlFor="catalog-difficulty-filter" className="text-xs font-bold text-slate-700 dark:text-slate-300">Difficulty:</label>
             <select
               id="catalog-difficulty-filter"
               aria-label="Filter scenarios by difficulty level"

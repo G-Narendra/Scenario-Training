@@ -143,16 +143,18 @@ export const SignInModal: React.FC<SignInModalProps> = ({
                   id="modal-passcode-input"
                   name="passcode"
                   type="text"
-                  autoComplete="off"
-                  placeholder="e.g. UZAIR-2026"
+                  autoComplete="one-time-code"
+                  aria-label="Cohort Passcode"
+                  aria-required="true"
+                  placeholder="e.g. UZAIR-2026 or ADMIN-2026"
                   value={passcode}
                   onChange={handlePasscodeChange}
                   className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-4 font-mono text-base font-bold tracking-wider text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-white dark:placeholder-slate-500"
                   required
                 />
               </div>
-              <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                Provided by Lead Facilitator Uzair for your scheduled cohort batch.
+              <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                Authorized passcodes: UZAIR-2026 (Cohort), ADMIN-2026 (Facilitator), STUDENT-2026 (Trainee), NARENDRA-2026.
               </p>
             </div>
 
@@ -168,15 +170,18 @@ export const SignInModal: React.FC<SignInModalProps> = ({
                   id="modal-displayname-input"
                   name="displayName"
                   type="text"
-                  placeholder="e.g. Sarah Jenkins"
+                  autoComplete="name"
+                  aria-label="Enrolled Full Name"
+                  aria-required="true"
+                  placeholder="e.g. Sarah Jenkins or Uzair"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
                   className="block w-full rounded-xl border border-slate-300 bg-slate-50 py-3 pl-10 pr-4 text-sm text-slate-900 placeholder-slate-400 shadow-sm transition focus:border-blue-600 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600/20 dark:border-[#1E3E62] dark:bg-[#132B45] dark:text-white dark:placeholder-slate-500"
                   required
                 />
               </div>
-              <p className="mt-1 text-[11px] text-slate-500 dark:text-slate-400">
-                Must match your whitelisted delegate name on the facilitator roster.
+              <p className="mt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                Enter your enrolled name or facilitator credentials.
               </p>
             </div>
 

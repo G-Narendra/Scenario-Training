@@ -186,12 +186,23 @@ if os.path.exists(frontend_dist):
         async def get_response(self, path: str, scope):
             response = await super().get_response(path, scope)
             if response.status_code == 200:
-                response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+                normalized = path.replace("\\", "/")
+                if (
+                    "/assets/" in normalized
+                    or normalized.startswith("assets/")
+                    or any(normalized.endswith(ext) for ext in (".js", ".css", ".woff2", ".webp", ".png", ".jpg", ".svg"))
+                ):
+                    response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+                elif normalized.endswith(".html") or normalized == "" or normalized == "index.html":
+                    response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
+                    response.headers["Pragma"] = "no-cache"
+                    response.headers["Expires"] = "0"
             return response
 
     assets_dir = os.path.join(frontend_dist, "assets")
     if os.path.exists(assets_dir):
         app.mount("/assets", CachedStaticFiles(directory=assets_dir), name="assets")
+        app.mount("/app/assets", CachedStaticFiles(directory=assets_dir), name="app_assets")
 
     index_file = os.path.join(frontend_dist, "index.html")
     no_cache_headers = {
@@ -208,18 +219,26 @@ if os.path.exists(frontend_dist):
             cand = os.path.join(frontend_dist, full_path)
             if os.path.isfile(cand):
                 resp = FileResponse(cand)
-                if full_path.startswith("assets/"):
+                normalized = full_path.replace("\\", "/")
+                if (
+                    normalized.startswith("assets/")
+                    or any(normalized.endswith(ext) for ext in (".js", ".css", ".woff2", ".webp", ".png", ".jpg", ".svg"))
+                ):
                     resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+                else:
+                    resp.headers["Cache-Control"] = "no-cache, no-store, must-revalidate, max-age=0"
                 return resp
         return FileResponse(index_file, media_type="text/html", headers=no_cache_headers)
 
-    app.mount("/app", StaticFiles(directory=frontend_dist, html=True), name="app_spa")
+    app.mount("/app", CachedStaticFiles(directory=frontend_dist, html=True), name="app_spa")
 
     @app.get("/logo_3h_solutions.webp", include_in_schema=False)
     async def serve_logo_direct():
         logo_file = os.path.join(frontend_dist, "logo_3h_solutions.webp")
         if os.path.exists(logo_file):
-            return FileResponse(logo_file, media_type="image/webp")
+            resp = FileResponse(logo_file, media_type="image/webp")
+            resp.headers["Cache-Control"] = "public, max-age=31536000, immutable"
+            return resp
         return JSONResponse(status_code=404, content={"detail": "Logo not found"})
 
-    app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="root_spa")
+    app.mount("/", CachedStaticFiles(directory=frontend_dist, html=True), name="root_spa")

@@ -267,7 +267,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
       voiceClient.prefetchAudio(msgToSpeak.content, personaName).catch(() => {});
     }
 
-    // Natural 1-second transition upon initiating practice before counterpart begins speaking
+    // Natural 2-second transition upon initiating practice before counterpart begins speaking
     const timer = setTimeout(async () => {
       if (session.status === 'active' && session.mode === 'voice' && voiceClient) {
         setCurrentlySpeakingSeq(msgToSpeak.seq);
@@ -281,7 +281,7 @@ export const SimulationChatPage: React.FC<SimulationChatPageProps> = ({
           voiceClient.startAudioCapture(true).catch(() => {});
         }
       }
-    }, 1000);
+    }, 2000);
 
     return () => clearTimeout(timer);
   }, [session.mode, session.status, messages, personaName, voiceClient]);

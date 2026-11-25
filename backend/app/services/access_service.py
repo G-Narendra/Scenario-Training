@@ -451,19 +451,28 @@ class AccessService:
         matched_cohort_id = matched_item["cohort_id"]
         matched_cohort_name = matched_item["cohort_name"]
         passcode_label = (matched_item.get("label") or "").lower()
-        is_super_admin_passcode = bool(clean_code == "NARENDRA-2026" or "narendra" in passcode_label)
-        is_cohort_passcode = bool(clean_code == "UZAIR-2026" or "uzair" in passcode_label or not is_super_admin_passcode)
+        is_admin_passcode = bool(
+            clean_code in ("ADMIN-2026", "NARENDRA-2026")
+            or "admin" in passcode_label
+            or "narendra" in passcode_label
+        )
+        is_student_passcode = bool(
+            clean_code == "STUDENT-2026"
+            or "trainee" in passcode_label
+            or "student" in passcode_label
+        )
+        is_uzair_passcode = bool(clean_code == "UZAIR-2026" or "uzair" in passcode_label)
 
         lower_name = clean_name.lower().strip()
 
-        # ─── PERSONA 1: Platform Super Admins (Narendra & Uzair) ───
-        if (is_super_admin_passcode or clean_code in ("UZAIR-2026", "NARENDRA-2026")) and lower_name in ("narendra", "super admin narendra", "narendra (super admin)"):
-            user_stmt = select(User).where(func.lower(User.display_name) == "narendra")
+        # ─── CASE 1: Administrator Passcodes (ADMIN-2026, NARENDRA-2026, or Admin Label) ───
+        if is_admin_passcode:
+            user_stmt = select(User).where(func.lower(User.display_name) == lower_name)
             user = (await db.execute(user_stmt)).scalars().first()
             if not user:
                 user = User(
                     cohort_id=matched_cohort_id,
-                    display_name="Narendra",
+                    display_name=clean_name,
                     role="super_admin",
                     is_active=True,
                     last_login_at=now,
@@ -476,7 +485,8 @@ class AccessService:
                 user.last_login_at = now
                 user.is_active = True
 
-        elif (is_super_admin_passcode or is_cohort_passcode or clean_code in ("UZAIR-2026", "NARENDRA-2026")) and lower_name in ("uzair", "admin uzair", "uzair (admin)", "uzair facilitator", "uzair hassan", "uzair hassan (admin)"):
+        # ─── CASE 2: Official Uzair Cohort Admin (Uzair entering UZAIR-2026) ───
+        elif is_uzair_passcode and lower_name in ("uzair", "admin uzair", "uzair (admin)", "uzair facilitator", "uzair hassan", "uzair hassan (admin)"):
             user_stmt = select(User).where(func.lower(User.display_name).in_(["uzair", "uzair hassan"]))
             user = (await db.execute(user_stmt)).scalars().first()
             if not user:
@@ -495,46 +505,7 @@ class AccessService:
                 user.last_login_at = now
                 user.is_active = True
 
-        elif is_super_admin_passcode and lower_name not in ("narendra", "super admin narendra", "uzair", "admin uzair"):
-            await record_login_attempt(db, ip=ip, passcode_prefix=prefix, success=False)
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Access Denied: Invalid administrator username for super admin passcode.",
-            )
-
-        # ─── PERSONA 3: Student Dev & Narendra (Participant View) ───
-        elif is_cohort_passcode and lower_name in ("dev", "student dev", "dev student", "dev (participant)", "dev (student)", "narendra", "student narendra", "narendra (student)", "narendra student"):
-            target_name = "Dev" if "dev" in lower_name else "Narendra"
-            user_stmt = select(User).where(
-                and_(User.cohort_id == matched_cohort_id, func.lower(User.display_name) == target_name.lower(), User.role == "trainee")
-            )
-            user = (await db.execute(user_stmt)).scalars().first()
-            if not user:
-                # Also check if any user with this name exists in cohort
-                existing_stmt = select(User).where(
-                    and_(User.cohort_id == matched_cohort_id, func.lower(User.display_name) == target_name.lower())
-                )
-                existing_user = (await db.execute(existing_stmt)).scalars().first()
-                if existing_user and existing_user.role != "super_admin":
-                    user = existing_user
-                    user.role = "trainee"
-                    user.last_login_at = now
-                else:
-                    user = User(
-                        cohort_id=matched_cohort_id,
-                        display_name=target_name,
-                        role="trainee",
-                        is_active=True,
-                        last_login_at=now,
-                    )
-                    db.add(user)
-                    await db.flush()
-            else:
-                user.role = "trainee"
-                user.last_login_at = now
-                user.is_active = True
-
-        # ─── PERSONA 4: Verified Cohort Participant Roster ───
+        # ─── CASE 3: Trainee / Participant (STUDENT-2026, UZAIR-2026 students, or general cohort) ───
         else:
             # Query enrolled members for this cohort
             user_stmt = select(User).where(
@@ -546,25 +517,32 @@ class AccessService:
             user = (await db.execute(user_stmt)).scalars().first()
 
             if not user:
-                # Check cohort capacity and auto-enroll the participant
-                max_members = matched_item.get("max_members") or 50
-                count_stmt = select(func.count(User.id)).where(User.cohort_id == matched_cohort_id)
-                current_count = (await db.execute(count_stmt)).scalar() or 0
-                if current_count >= max_members:
-                    await record_login_attempt(db, ip=ip, passcode_prefix=prefix, success=False)
-                    raise HTTPException(
-                        status_code=status.HTTP_403_FORBIDDEN,
-                        detail="Cohort capacity reached. Please contact your facilitator.",
+                # Also check if user exists globally
+                global_stmt = select(User).where(func.lower(func.trim(User.display_name)) == lower_name)
+                existing_global = (await db.execute(global_stmt)).scalars().first()
+                if existing_global:
+                    user = existing_global
+                    user.last_login_at = now
+                    user.is_active = True
+                else:
+                    max_members = matched_item.get("max_members") or 500
+                    count_stmt = select(func.count(User.id)).where(User.cohort_id == matched_cohort_id)
+                    current_count = (await db.execute(count_stmt)).scalar() or 0
+                    if current_count >= max_members:
+                        await record_login_attempt(db, ip=ip, passcode_prefix=prefix, success=False)
+                        raise HTTPException(
+                            status_code=status.HTTP_403_FORBIDDEN,
+                            detail="Cohort capacity reached. Please contact your facilitator.",
+                        )
+                    user = User(
+                        cohort_id=matched_cohort_id,
+                        display_name=clean_name,
+                        role="trainee",
+                        is_active=True,
+                        last_login_at=now,
                     )
-                user = User(
-                    cohort_id=matched_cohort_id,
-                    display_name=clean_name,
-                    role="trainee",
-                    is_active=True,
-                    last_login_at=now,
-                )
-                db.add(user)
-                await db.flush()
+                    db.add(user)
+                    await db.flush()
             else:
                 if not user.is_active:
                     raise HTTPException(
